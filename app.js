@@ -58,3 +58,5 @@ function sellBusiness(){if(!state.business)return toast("Nincs vállalkozásod."
 function proposal(){const r=state.relationships.find(x=>x.closeness>=85);if(!r)return toast("Ehhez legalább 85%-os kapcsolat kell.");r.type="Jegyes";r.closeness=95;log("Eljegyezted "+r.name+"-t.","Kapcsolat");render()}
 
 function refreshPage(){location.reload();}
+
+window.addEventListener("load",()=>{const v=document.getElementById("versionText");if(v)v.textContent="v"+VERSION;});
