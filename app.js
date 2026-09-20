@@ -57,6 +57,53 @@ function startBusiness(){if(state.age<18)return toast("Vállalkozást nagykorúk
 function sellBusiness(){if(!state.business)return toast("Nincs vállalkozásod.");const v=Math.round(state.business.value*(.7+Math.random()*.7));state.money+=v;log("Eladtad a vállalkozásodat "+fmt(v)+" összegért.","Üzlet");state.business=null;render()}
 function proposal(){const r=state.relationships.find(x=>x.closeness>=85);if(!r)return toast("Ehhez legalább 85%-os kapcsolat kell.");r.type="Jegyes";r.closeness=95;log("Eljegyezted "+r.name+"-t.","Kapcsolat");render()}
 
+/* Pull-to-refresh mobile gesture */
+(function setupPullToRefresh(){
+  let startY=0,startX=0,pulling=false,refreshing=false;
+  const threshold=78;
+  const indicator=document.createElement("div");
+  indicator.id="pullRefreshIndicator";
+  indicator.innerHTML='<span class="pull-icon">↓</span><span class="pull-label">Húzd le a frissítéshez</span>';
+  document.body.appendChild(indicator);
+  const setProgress=(distance)=>{
+    const progress=Math.min(1,distance/threshold);
+    indicator.style.setProperty("--pull-progress",progress);
+    indicator.classList.toggle("ready",progress>=1);
+    indicator.querySelector(".pull-icon").textContent=progress>=1?"↻":"↓";
+    indicator.querySelector(".pull-label").textContent=progress>=1?"Engedd el a frissítéshez":"Húzd le a frissítéshez";
+  };
+  window.addEventListener("touchstart",e=>{
+    if(refreshing||window.scrollY>0||e.touches.length!==1)return;
+    startY=e.touches[0].clientY;startX=e.touches[0].clientX;pulling=true;
+  },{passive:true});
+  window.addEventListener("touchmove",e=>{
+    if(!pulling||refreshing||window.scrollY>0||e.touches.length!==1)return;
+    const dy=e.touches[0].clientY-startY,dx=Math.abs(e.touches[0].clientX-startX);
+    if(dy<=0||dy<dx)return;
+    const distance=Math.min(110,dy*.55);
+    indicator.style.transform="translate(-50%, "+Math.round(distance-52)+"px)";
+    indicator.classList.add("visible");
+    setProgress(distance);
+  },{passive:true});
+  window.addEventListener("touchend",e=>{
+    if(!pulling)return;
+    pulling=false;
+    const ready=indicator.classList.contains("ready");
+    if(ready){
+      refreshing=true;
+      indicator.classList.add("refreshing");
+      indicator.querySelector(".pull-label").textContent="Frissítés…";
+      indicator.querySelector(".pull-icon").textContent="↻";
+      setTimeout(()=>location.reload(),220);
+    }else{
+      indicator.classList.remove("visible","ready");
+      indicator.style.transform="translate(-50%, -52px)";
+      setProgress(0);
+    }
+  },{passive:true});
+  window.addEventListener("touchcancel",()=>{pulling=false;indicator.classList.remove("visible","ready");indicator.style.transform="translate(-50%, -52px)";setProgress(0)},{passive:true});
+})();
+
 function refreshPage(){location.reload();}
 
 window.addEventListener("load",()=>{const v=document.getElementById("versionText");if(v)v.textContent="v"+VERSION;});
