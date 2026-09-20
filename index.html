@@ -39,7 +39,15 @@
     </section>
 
     <section class="advance-wrap">
+      <div class="life-actions left">
+        <button class="life-action" onclick="showTab('relations')" aria-label="Kapcsolatok"><span>❤️</span><b>Kapcsolatok</b></button>
+        <button class="life-action" onclick="showTab('career')" aria-label="Karrier"><span>💼</span><b>Karrier</b></button>
+      </div>
       <button id="ageBtn" class="advance" aria-label="Következő év"><span>+</span><small>KÖVETKEZŐ ÉV</small></button>
+      <div class="life-actions right">
+        <button class="life-action" onclick="showTab('finance')" aria-label="Pénz"><span>💰</span><b>Pénz</b></button>
+        <button class="life-action" onclick="showTab('activities')" aria-label="Több"><span>☰</span><b>Több</b></button>
+      </div>
     </section>
 
     <section class="stats-dock card">
@@ -47,7 +55,7 @@
       <div id="statBars" class="hud-stats"></div>
     </section>
 
-    <nav class="mobile-nav" aria-label="Főmenü">
+    <nav class="mobile-nav" aria-label="Főmenü" style="display:none">
       <button class="mobile-nav-item active" onclick="showTab('life')"><span>📖</span><b>Élet</b></button>
       <button class="mobile-nav-item" onclick="showTab('relations')"><span>❤️</span><b>Kapcsolatok</b></button>
       <button class="mobile-nav-item" onclick="showTab('career')"><span>💼</span><b>Karrier</b></button>
@@ -62,7 +70,7 @@
 </main>
 
 <div id="modal" class="modal hidden"><div class="modal-box"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></div></div>
-<div id="toast"></div><footer class="app-footer">MegaLife <span id="versionText">v0.0.19</span></footer>
+<div id="toast"></div><footer class="app-footer">MegaLife <span id="versionText">v0.0.20</span></footer>
 <script src="app.js"></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",async()=>{try{const r=await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"});await r.update()}catch(e){}})}</script>
 </body></html>
