@@ -197,3 +197,76 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
   .legacy-tab .muted,.legacy-tab small{color:#9aa3b2}
   .legacy-tab input,.legacy-tab select{background:#11151d;color:#f4f6fa;border-color:#343d4c}
 }
+
+
+/* MegaLife v0.0.19 — focused game-first mobile UI */
+@media(max-width:650px){
+  :root{
+    --mobile-bg:#090c12;--mobile-card:#121722;--mobile-card2:#171d2a;
+    --mobile-line:#252d3b;--mobile-text:#f5f7fb;--mobile-muted:#8f9aaa;
+    --mobile-accent:#7183ff;--mobile-good:#45d39a;
+  }
+  body{background:var(--mobile-bg)}
+  .topbar{height:54px;min-height:54px;padding:5px 12px;background:#0c1018;border-bottom:1px solid #202735}
+  .brand{font-size:18px;color:#eef1f7}
+  .brand span{color:var(--mobile-accent)}
+  .top-actions{gap:5px}
+  .top-actions .icon-btn{display:none}
+  .top-actions .save-top{display:block;width:42px;padding:0;background:#171e2b;border-color:#293243;color:#dce2ec}
+  .top-actions #saveBtn{font-size:0}
+  .top-actions #saveBtn::before{content:"✓";font-size:18px}
+  .top-actions #newBtn{display:none}
+  .shell{height:calc(100% - 54px);padding:7px 8px 0}
+
+  #startScreen{background:linear-gradient(180deg,#121823,#0e131c);border:1px solid #252d3b;border-radius:18px;padding:24px 17px;box-shadow:0 15px 45px #0006}
+  #startScreen .hero-icon{font-size:66px;color:var(--mobile-accent);margin-bottom:2px}
+  #startScreen .start-kicker{font-size:9px;letter-spacing:2px;font-weight:900;color:#748097;margin-top:-4px}
+  #startScreen h1{font-size:39px;color:#f7f8fb;margin:3px 0 2px;letter-spacing:-1.5px}
+  #startScreen p{font-size:13px;line-height:1.5;color:var(--mobile-muted);margin:6px auto 18px;max-width:340px}
+  #startScreen .form-grid{grid-template-columns:1fr 1fr;gap:9px;margin:0 0 9px}
+  #startScreen .form-grid label{color:#9aa5b7;font-size:10px}
+  #startScreen input{height:50px;background:#0b1018;border:1px solid #293344;color:#f5f7fb;border-radius:12px;margin-top:5px}
+  .setup-toggle{width:100%;height:42px;min-height:42px;background:transparent;border:1px solid #252f40;color:#aab4c5;border-radius:11px;font-size:12px;font-weight:800;text-align:left;padding:0 12px}
+  .setup-toggle span{float:right;font-size:18px;transition:.2s}
+  .setup-toggle.open span{transform:rotate(180deg)}
+  .advanced-setup{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding-top:9px}
+  .advanced-setup label{font-size:10px;color:#9aa5b7}
+  .advanced-setup select{height:48px;background:#0b1018;border:1px solid #293344;color:#f5f7fb;border-radius:12px;margin-top:5px}
+  #startScreen .big{margin-top:12px;height:52px;min-height:52px;border-radius:13px;background:var(--mobile-accent);font-weight:900;box-shadow:0 8px 22px #7183ff2b}
+  #startScreen #saveNotice{color:#778397}
+
+  .life-hud{grid-template-rows:58px minmax(0,1fr) 88px 84px 68px;gap:6px}
+  .profile{height:58px;min-height:58px;background:#121722;border-color:#252d3b}
+  .avatar{width:42px;height:42px;min-width:42px;background:#202838;color:#e6eaf2}
+  .profile h2{font-size:15px}
+  .hud-money b{color:var(--mobile-good);font-size:13px}
+  .story{background:#121722;border-color:#252d3b}
+  .story-head{height:61px;min-height:61px;padding:8px 11px;border-color:#252d3b}
+  .story-head h1{font-size:24px}
+  .story-more{background:#1a2230;color:#cdd4df;border:1px solid #2c3647}
+  .life-log{padding:0 12px 8px}
+  .log-entry{border-color:#202735}
+  .log-body{color:#dce1e9}
+  .log-type{background:#202838;color:#aeb8c8}
+  .advance-wrap{height:88px;min-height:88px}
+  .advance{width:78px;height:78px;min-height:78px;background:var(--mobile-accent);box-shadow:0 8px 22px #7183ff35}
+  .advance span{font-size:44px}
+  .stats-dock{height:84px;min-height:84px;background:#121722;border-color:#252d3b}
+  .hud-stat-top b{color:#eef1f6}
+  .hud-bar{background:#080c12}
+  .mobile-nav{height:68px;min-height:68px;background:#0e131c;border-color:#252d3b}
+  .mobile-nav-item{height:58px;min-height:58px;color:#758195}
+  .mobile-nav-item.active{background:#1a2240;color:#8090ff}
+  .mobile-nav-item span{font-size:20px}
+  .mobile-nav-item b{font-size:8.5px}
+
+  .legacy-tab{background:#090c12}
+  .legacy-tab .panel{background:#121722;border-color:#252d3b;box-shadow:none}
+  .legacy-tab .action{background:#171e2a;border-color:#2a3444}
+  .legacy-tab .action:active{background:#20293a}
+  .legacy-tab .list-item{border-color:#252d3b}
+  .legacy-tab .pill{background:#202838;color:#b8c1cf}
+  .tab-close{background:#1b2330;border-color:#303b4d;color:#e8ebf1}
+
+  #toast{background:#1a2230;border:1px solid #2b3546}
+}
