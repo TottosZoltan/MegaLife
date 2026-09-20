@@ -4,8 +4,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b0e13",
-  "theme_color": "#10131a",
+  "background_color": "#0d1016",
+  "theme_color": "#0d1016",
   "description": "Original browser life simulator",
   "lang": "hu",
   "icons": [
