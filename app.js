@@ -1,4 +1,4 @@
-const VERSION="0.0.3";
+const VERSION="0.0.4";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -60,3 +60,113 @@ function proposal(){const r=state.relationships.find(x=>x.closeness>=85);if(!r)r
 function refreshPage(){location.reload();}
 
 window.addEventListener("load",()=>{const v=document.getElementById("versionText");if(v)v.textContent="v"+VERSION;});
+
+/* MegaLife 0.0.4 — mobile + multi-life saves + 10,000 generated annual events */
+var currentSlot=1;
+const SLOT_COUNT=8;
+const slotKey=n=>"megalife-slot-"+n;
+
+function getSlotData(n){
+  try{return JSON.parse(localStorage.getItem(slotKey(n))||"null")}catch(e){return null}
+}
+function save(){
+  if(!state)return;
+  state.meta=state.meta||{};
+  state.meta.version=VERSION;
+  state.meta.slot=currentSlot;
+  localStorage.setItem(slotKey(currentSlot),JSON.stringify(state));
+  localStorage.setItem("megalife-active-slot",String(currentSlot));
+  toast("Mentve • Élet "+currentSlot);
+  renderSlots();
+}
+function load(){
+  const old=localStorage.getItem("megalife-save-v1");
+  if(!getSlotData(1)&&old){localStorage.setItem(slotKey(1),old);localStorage.removeItem("megalife-save-v1")}
+  currentSlot=Math.max(1,Math.min(SLOT_COUNT,Number(localStorage.getItem("megalife-active-slot"))||1));
+  const x=getSlotData(currentSlot);
+  if(x&&x.alive!==undefined){state=x;normalize();return true}
+  state=null;return false
+}
+function start(){
+  state=fresh();
+  state.meta={version:VERSION,slot:currentSlot};
+  log("Megszülettél. A történeted most kezdődik.","Sors");
+  save();render();toast("Új élet "+currentSlot+" elindítva!");
+}
+function newLife(){
+  localStorage.removeItem(slotKey(currentSlot));
+  state=null;
+  $("modal").classList.add("hidden");
+  render();
+  renderSlots();
+}
+function manageSaves(){
+  const slots=[];
+  for(let i=1;i<=SLOT_COUNT;i++){
+    const x=getSlotData(i);
+    slots.push('<div class="save-slot '+(i===currentSlot?"selected":"")+'"><div><b>💾 Élet '+i+'</b><small>'+(x?(x.first+" "+x.last+" • "+x.age+" éves • "+fmt(x.money)+" készpénz"):"Üres mentési hely")+'</small></div><div class="save-actions">'+(x?'<button class="ghost" onclick="switchSaveSlot('+i+')">Betöltés</button><button class="danger" onclick="deleteSaveSlot('+i+')">Törlés</button>':'<button class="primary" onclick="useEmptySlot('+i+')">Új élet</button>')+'</div></div>');
+  }
+  $("modalBody").innerHTML='<h2>💾 Életek és mentések</h2><p class="muted">8 teljesen különálló életet kezelhetsz. Az aktuális élet automatikusan menthető.</p><div class="save-slots">'+slots.join("")+'</div><button class="ghost big" onclick="closeModal()">Bezárás</button>';
+  $("modal").classList.remove("hidden");
+}
+function switchSaveSlot(n){
+  currentSlot=n;
+  localStorage.setItem("megalife-active-slot",String(n));
+  const x=getSlotData(n);
+  if(x){state=x;normalize();closeModal();render();toast("Élet "+n+" betöltve.");}
+  else{state=null;closeModal();render();toast("Élet "+n+" üres.");}
+}
+function useEmptySlot(n){currentSlot=n;localStorage.setItem("megalife-active-slot",String(n));state=null;closeModal();render();toast("Élet "+n+" kiválasztva. Indítsd el az új életet.");}
+function deleteSaveSlot(n){
+  if(!confirm("Törlöd az Élet "+n+" mentését?"))return;
+  localStorage.removeItem(slotKey(n));
+  if(currentSlot===n){state=null}
+  manageSaves();render();
+}
+function renderSlots(){}
+function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");$("versionText")&&($("versionText").textContent="v"+VERSION);return}
+  $("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");
+  $("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country+" • Élet "+currentSlot;$("ageText").textContent=state.age+" éves";$("yearText").textContent=" • "+state.year;$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();$("versionText")&&($("versionText").textContent="v"+VERSION);
+}
+
+/* 10,000 unique event combinations: 100 situations × 100 variants. */
+const EVENT_SITUATIONS=[
+["Egy régi barát váratlanul felhívott","Kapcsolat",["happiness",6,14]],["Találtál egy régi borítékot a fiókban","Szerencse",["money",5000,90000]],["Új hobbit próbáltál ki","Élet",["happiness",4,12]],["Egy munkahelyi feladat különösen jól sikerült","Karrier",["money",10000,120000]],["Egy közeli ismerős jó hírt osztott meg","Kapcsolat",["karma",2,7]],["Elromlott egy fontos tárgyad","Pénz",["money",-80000,-5000]],["Egy váratlan meghívást kaptál","Élet",["happiness",5,16]],["Egy online bejegyzésed sok emberhez eljutott","Közösség",["followers",100,15000]],["Egy új lehetőség került eléd","Karrier",["smarts",1,6]],["Egy családi beszélgetés közelebb hozott valakihez","Család",["happiness",5,15]]
+];
+const EVENT_VARIANTS=Array.from({length:100},(_,i)=>({adjs:["különleges","meglepő","váratlan","izgalmas","furcsa","szerencsés","nehéz","tanulságos","emlékezetes","sorsfordító"][i%10],place:["otthon","a városban","utazás közben","munka után","egy régi helyen","online","egy rendezvényen","egy boltban","a természetben","egy ismerősödnél"][Math.floor(i/10)%10],tone:i%2?"jó":"vegyes"}));
+function annualEvent(){
+  const idx=((state.age*97)+(state.year*13)+(state.stats.actions*7)+currentSlot*31)%10000;
+  const situation=EVENT_SITUATIONS[Math.floor(idx/100)];
+  const variant=EVENT_VARIANTS[idx%100];
+  const [base,type,effect]=situation;
+  let amount=rand(effect[1],effect[2]);
+  if(effect[0]==="money"){state.money=Math.max(0,state.money+amount);if(amount>0)state.stats.earned+=amount;else state.stats.spent+=Math.abs(amount)}
+  if(effect[0]==="happiness")state.happiness=clamp(state.happiness+amount);
+  if(effect[0]==="karma")state.karma=clamp(state.karma+amount);
+  if(effect[0]==="smarts")state.smarts=clamp(state.smarts+amount);
+  if(effect[0]==="followers"){state.social.followers+=amount;state.social.posts++}
+  log(base+" "+variant.adjs+" pillanat volt "+variant.place+" — "+(amount>=0?"+":"")+amount+(effect[0]==="money"?" Ft":effect[0]==="followers"?" követő":effect[0]==="happiness"?" boldogság":effect[0]==="smarts"?" intelligencia":" karma")+".",type);
+  state.stats.annualEvent=idx;
+}
+function nextYear(){
+  if(!state||!state.alive)return;
+  state.age++;state.year++;state.stats.years++;state.stats.days+=365;state.stats.actions++;
+  state.relationships.forEach(r=>r.age++);state.children.forEach(ch=>ch.age++);
+  if(state.jail>0){state.jail--;state.health=clamp(state.health-rand(1,4));state.happiness=clamp(state.happiness-rand(3,8));log("Börtönben töltöttél egy évet. Még "+state.jail+" év van hátra.","Jog")}
+  if(state.business){const profit=Math.round(state.business.value*(Math.random()*.12-.03));state.business.value=Math.max(0,state.business.value+profit);if(profit>0){state.money+=profit;state.stats.earned+=profit}log("A vállalkozásod éves eredménye: "+fmt(profit)+".","Üzlet")}
+  state.assets.forEach(a=>{if(a.income){state.money+=a.income;state.stats.earned+=a.income}});
+  if(state.age>=18&&state.jail===0){const income=state.job[1];state.money+=income;state.stats.earned+=income;if(state.job[0]!=="Munkanélküli")log("Megkaptad az éves fizetésed: "+fmt(income),"Pénz")}
+  state.bank=Math.round(state.bank*1.025);
+  const expense=state.age<18?rand(1000,6000):rand(60000,Math.max(70000,Math.round((state.job[1]||150000)/5)));
+  if(state.money>=expense){state.money-=expense;state.stats.spent+=expense}else{state.debt+=expense-state.money;state.money=0;log("Nem tudtad fedezni a kiadásaidat, nőtt a tartozásod.","Pénz")}
+  state.happiness-=rand(0,5);state.health-=state.age>60?rand(1,5):rand(0,2);
+  if(state.age===6)log("Elkezdted az általános iskolát.","Oktatás");if(state.age===14)log("Középiskolás lettél.","Oktatás");if(state.age===18)log("Nagykorú lettél.","Mérföldkő");if(state.age===65)log("Nyugdíjas korba léptél.","Mérföldkő");
+  annualEvent();
+  if(state.age>=18&&state.job[0]!=="Munkanélküli"&&Math.random()<.18){state.job=[state.job[0]+" • Előléptetve",Math.round(state.job[1]*1.18),state.job[2]];log("Előléptettek a munkahelyeden!","Karrier")}
+  if(Math.random()<.18)choiceEvent();
+  checkAchievements();
+  if(state.health<=0)die("súlyos egészségromlás");
+  else if(state.age>70&&Math.random()<Math.min(.06,(state.age-70)*.006))die(pick(["időskori természetes okok","szívprobléma","betegség"]));
+  normalize();save();render();
+}
+window.addEventListener("load",()=>{const v=$("versionText");if(v)v.textContent="v"+VERSION});
