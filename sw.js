@@ -1,4 +1,4 @@
-const VERSION="0.0.5-pullrefresh";
+const VERSION="0.0.6";
 const CACHE="megalife-"+VERSION;
 const CORE=["./","./index.html","./styles.css","./app.js","./manifest.json","./icon.svg"];
 self.addEventListener("install",event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
