@@ -1,4 +1,4 @@
-const VERSION="0.0.9";
+const VERSION="0.0.10";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -240,4 +240,233 @@ window.addEventListener("DOMContentLoaded",()=>{
   };
   if(load()){normalize();render();$("saveNotice").textContent="Mentett játék betöltve."}
   else render();
+});
+
+
+/* MegaLife v0.0.10 — BitLife-style HUD + coherent annual event engine */
+const ML_EVENT_POOLS=[
+ {name:"Pénzügy",items:[
+  ["Adó-visszatérítés érkezett","Pénz",()=>{let n=rand(18000,140000);state.money+=n;state.stats.earned+=n;return "Adó-visszatérítésként "+fmt(n)+" érkezett a számládra."}],
+  ["Elromlott egy fontos háztartási géped","Pénz",()=>{let n=rand(25000,180000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "A javítás és csere összesen "+fmt(n)+"-ba került."}],
+  ["Visszakaptál egy régi kauciót","Pénz",()=>{let n=rand(30000,160000);state.money+=n;state.stats.earned+=n;return "Egy régi kaucióból "+fmt(n)+" érkezett."}],
+  ["Egy számlát kétszer vontak le","Pénz",()=>{let n=rand(7000,45000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "Egy téves levonás miatt "+fmt(n)+"-nal kevesebb pénzed maradt."}],
+  ["Találtál egy jobb banki megtakarítást","Pénz",()=>{let n=rand(5000,30000);state.bank+=n;return "Átutaltál "+fmt(n)+"-ot a megtakarításodba, és jobb kamatot kapsz."}]
+ ]},
+ {name:"Munka",items:[
+  ["Új feladatot bíztak rád","Karrier",()=>{state.discipline=clamp(state.discipline+rand(2,6));return "A plusz felelősséget jól kezelted; a fegyelem értéked nőtt."}],
+  ["Béremelést kaptál","Karrier",()=>{if(state.job[0]==="Munkanélküli")return "Még nincs munkahelyed, ezért most csak tapasztalatot szereztél.";state.job=[state.job[0],Math.round(state.job[1]*1.07),state.job[2]];return "A fizetésed 7%-kal emelkedett a teljesítményed miatt."}],
+  ["Egy kolléga ajánlott egy lehetőséget","Karrier",()=>{state.smarts=clamp(state.smarts+rand(1,4));return "Egy új szakmai kapcsolatot szereztél, és sokat tanultál tőle."}],
+  ["Nehéz hónapok jöttek a munkahelyeden","Karrier",()=>{state.happiness=clamp(state.happiness-rand(4,10));return "A munkahelyi bizonytalanság megterhelt."}],
+  ["Egy ügyfél külön megköszönte a munkádat","Karrier",()=>{state.happiness=clamp(state.happiness+rand(3,8));state.karma=clamp(state.karma+rand(1,4));return "Jó érzés volt látni, hogy másnak is számít, amit csinálsz."}]
+ ]},
+ {name:"Egészség",items:[
+  ["Egy rövid betegség ledöntött","Egészség",()=>{state.health=clamp(state.health-rand(4,13));return "Néhány nap pihenésre volt szükséged, de felépültél."}],
+  ["Elkezdtél rendszeresen sétálni","Egészség",()=>{state.health=clamp(state.health+rand(3,8));state.happiness=clamp(state.happiness+rand(1,5));return "A rendszeres mozgás érezhetően javított a közérzeteden."}],
+  ["Egy rutinellenőrzésen jó hírt kaptál","Egészség",()=>{state.health=clamp(state.health+rand(2,6));return "Nem találtak komoly problémát, megnyugodtál."}],
+  ["Túl sokáig halogattad a pihenést","Egészség",()=>{state.health=clamp(state.health-rand(3,9));state.happiness=clamp(state.happiness-rand(2,7));return "A kimerültség végül utolért."}],
+  ["Egy régi panaszod javult","Egészség",()=>{state.health=clamp(state.health+rand(4,10));return "A kezelés és a pihenés meghozta az eredményét."}]
+ ]},
+ {name:"Kapcsolatok",items:[
+  ["Egy régi barát újra felbukkant","Kapcsolat",()=>{state.happiness=clamp(state.happiness+rand(4,10));return "Újra felvetted a kapcsolatot valakivel a múltadból."}],
+  ["Egy fontos embernek szüksége volt rád","Kapcsolat",()=>{state.karma=clamp(state.karma+rand(2,7));state.happiness=clamp(state.happiness+rand(2,6));return "Segítettél neki, és közelebb kerültetek egymáshoz."}],
+  ["Félreértés alakult ki köztetek","Kapcsolat",()=>{if(state.relationships.length){state.relationships[0].closeness=clamp(state.relationships[0].closeness-rand(5,16));}state.happiness=clamp(state.happiness-rand(2,7));return "Egy félreértés miatt feszült lett egy közeli kapcsolatod."}],
+  ["Egy közös program sokat jelentett","Kapcsolat",()=>{if(state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness+rand(6,14));state.happiness=clamp(state.happiness+rand(4,9));return "Egy közös élmény közelebb hozott valakihez."}],
+  ["Új ismeretséget kötöttél","Kapcsolat",()=>{state.stats.relationships++;state.happiness=clamp(state.happiness+rand(2,6));return "Egy teljesen új emberrel ismerkedtél meg."}]
+ ]},
+ {name:"Tanulás",items:[
+  ["Egy vizsgád jobban sikerült a vártnál","Oktatás",()=>{state.smarts=clamp(state.smarts+rand(4,10));return "A befektetett munka meghozta az eredményét."}],
+  ["Egy mentor segített","Oktatás",()=>{state.smarts=clamp(state.smarts+rand(3,8));state.discipline=clamp(state.discipline+rand(1,5));return "Hasznos tanácsokat kaptál, amelyeket később is kamatoztatsz."}],
+  ["Rájöttél, hogy más módszerrel tanulsz jobban","Oktatás",()=>{state.smarts=clamp(state.smarts+rand(2,6));return "Megtaláltad a számodra hatékonyabb tanulási módszert."}],
+  ["Egy rossz eredmény elvette a kedved","Oktatás",()=>{state.happiness=clamp(state.happiness-rand(3,8));return "Egy kudarc most visszavetett, de tanultál belőle."}],
+  ["Új hobbit kezdtél tanulni","Oktatás",()=>{state.smarts=clamp(state.smarts+rand(1,5));state.happiness=clamp(state.happiness+rand(2,7));return "Az új hobbi egyszerre adott sikerélményt és új tudást."}]
+ ]},
+ {name:"Otthon",items:[
+  ["Kisebb felújítást csináltál","Otthon",()=>{let n=rand(30000,250000);if(state.assets.length){state.money=Math.max(0,state.money-n);state.stats.spent+=n;state.happiness=clamp(state.happiness+rand(4,9));return "A felújítás "+fmt(n)+"-ba került, de sokkal jobban érzed magad otthon."}return "Még nincs saját ingatlanod, ezért most csak tervezted a felújítást."}],
+  ["Jó szomszédra találtál","Otthon",()=>{state.happiness=clamp(state.happiness+rand(2,6));return "A környék barátságosabbnak tűnik, mint korábban."}],
+  ["Megdrágultak a lakhatási költségeid","Otthon",()=>{let n=rand(25000,120000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "A megnövekedett rezsi és karbantartás "+fmt(n)+" plusz kiadást jelentett."}],
+  ["Egy családi emlék került elő","Otthon",()=>{state.happiness=clamp(state.happiness+rand(3,8));return "Egy régi tárgy emlékeztetett arra, honnan indultál."}],
+  ["Elvesztettél egy kisebb értéktárgyat","Otthon",()=>{let n=rand(5000,70000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "A pótlása körülbelül "+fmt(n)+"-ba került."}]
+ ]},
+ {name:"Szerencse",items:[
+  ["Kaparós sorsjegyet vettél","Szerencse",()=>mlScratch()],
+  ["Egy régi ismerős tartozását visszafizette","Szerencse",()=>{let n=rand(10000,90000);state.money+=n;state.stats.earned+=n;return "Váratlanul visszakaptál "+fmt(n)+"-ot egy régi kölcsönből."}],
+  ["Egy kis versenyen nyertél","Szerencse",()=>{let n=rand(10000,150000);state.money+=n;state.stats.earned+=n;return "Egy versenyen "+fmt(n)+" pénzdíjat nyertél."}],
+  ["Találtál egy jó vételt","Szerencse",()=>{let n=rand(15000,90000);state.money+=n;state.stats.earned+=n;return "Egy továbbértékesített tárgyon "+fmt(n)+" hasznod lett."}],
+  ["Késedelmi díjat sikerült elengedtetned","Szerencse",()=>{let n=rand(10000,80000);state.debt=Math.max(0,state.debt-n);return "Egy szolgáltató méltányosságból "+fmt(n)+" tartozást elengedett."}]
+ ]},
+ {name:"Közösség",items:[
+  ["Egy posztod szokatlanul jól teljesített","Közösség",()=>{let n=rand(2000,35000);state.social.followers+=n;state.social.posts++;return "A tartalmad felkapott lett: +"+n.toLocaleString("hu-HU")+" követő."}],
+  ["Meghívtak egy közösségi eseményre","Közösség",()=>{state.happiness=clamp(state.happiness+rand(4,10));return "Új embereket ismertél meg, és jól érezted magad."}],
+  ["Egy kommentvita feleslegesen elfajult","Közösség",()=>{state.happiness=clamp(state.happiness-rand(2,7));return "Egy online vita több energiát vitt el, mint amennyit ért."}],
+  ["Segítettél egy helyi kezdeményezésben","Közösség",()=>{state.karma=clamp(state.karma+rand(3,9));return "Időt szántál egy közösségi ügyre."}],
+  ["Egy ajánlás miatt új lehetőséghez jutottál","Közösség",()=>{state.smarts=clamp(state.smarts+rand(1,4));return "Valaki ajánlott egy lehetőséget, amit érdemes lesz később kihasználnod."}]
+ ]},
+ {name:"Közlekedés",items:[
+  ["Lekésted a járatodat","Utazás",()=>{state.happiness=clamp(state.happiness-rand(2,6));return "Új jegyet kellett venned, és elvesztettél néhány órát."}],
+  ["Találtál egy olcsóbb utazási lehetőséget","Utazás",()=>{let n=rand(10000,60000);state.money+=n;state.stats.earned+=n;return "Az út szervezésén "+fmt(n)+"-ot spóroltál."}],
+  ["Kisebb közlekedési kár keletkezett","Utazás",()=>{let n=rand(30000,220000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "A javítás "+fmt(n)+"-ba került."}],
+  ["Egy spontán kiruccanás jól sikerült","Utazás",()=>{state.happiness=clamp(state.happiness+rand(5,12));return "Egy rövid kiruccanásból emlékezetes élmény lett."}],
+  ["Egy idegen városban hasznos kapcsolatot szereztél","Utazás",()=>{state.smarts=clamp(state.smarts+rand(1,5));return "Az utazás alatt valakitől olyan tanácsot kaptál, amit később felhasználhatsz."}]
+ ]},
+ {name:"Élethelyzet",items:[
+  ["Új felelősséget vállaltál","Mérföldkő",()=>{state.discipline=clamp(state.discipline+rand(3,8));return "A nagyobb felelősség eleinte nehéz volt, de sokat fejlődtél."}],
+  ["Egy régi célodat végre kipipáltad","Mérföldkő",()=>{state.happiness=clamp(state.happiness+rand(7,14));return "Jó érzés volt látni, hogy egy régi terved végre valóra vált."}],
+  ["Új rutint alakítottál ki","Mérföldkő",()=>{state.discipline=clamp(state.discipline+rand(3,7));state.health=clamp(state.health+rand(1,4));return "A következetesebb rutin lassan éreztette a hatását."}],
+  ["Egy döntésed miatt tanultál valami fontosat","Mérföldkő",()=>{state.smarts=clamp(state.smarts+rand(2,6));return "Nem minden úgy alakult, ahogy tervezted, de értékes tapasztalatot szereztél."}],
+  ["Egy váratlan változás átírta a terveidet","Mérföldkő",()=>{state.happiness=clamp(state.happiness-rand(1,7));state.discipline=clamp(state.discipline+rand(1,5));return "Alkalmazkodnod kellett, és végül jobban bírtad, mint gondoltad."}]
+ ]}
+];
+
+function mlScratch(){
+ const r=Math.random()*100;
+ let prize=0;
+ if(r<87)prize=0; else if(r<94)prize=3000; else if(r<97)prize=5000; else if(r<98.5)prize=10000; else if(r<98.9)prize=50000; else if(r<99.99)prize=1000000; else prize=100000000;
+ const ticket=3000;state.money=Math.max(0,state.money-ticket);state.stats.spent+=ticket;
+ if(prize){state.money+=prize;state.stats.earned+=prize;return "A "+fmt(ticket)+"-os kaparós sorsjegyen "+fmt(prize)+"-ot nyertél ("+(prize===100000000?"0,01%":prize===1000000?"1,09%":"különleges nyerőosztály") + ").";}
+ return "A "+fmt(ticket)+"-os kaparós sorsjegy nem nyert. A nagy nyeremények esélye nagyon alacsony volt.";
+}
+
+function mlAnnualEvent(){
+ const eligible=ML_EVENT_POOLS.filter(p=>{
+   if(p.name==="Munka"&&state.age<18)return false;
+   if(p.name==="Tanulás"&&(state.age<6||state.age>70))return false;
+   if(p.name==="Közlekedés"&&state.age<5)return false;
+   return true;
+ });
+ const pool=pick(eligible),item=pick(pool.items),detail=item[2]();
+ log(item[0]+". "+detail,pool.name);
+ state.stats.annualEvent=(state.stats.annualEvent||0)+1;
+}
+
+const ML_CHOICES=[
+ {title:"Munkahelyi ajánlat",text:"Egy másik cég jobb fizetést ígér, de próbaidővel. Mit teszel?",choices:[
+  ["Elfogadom a váltást",()=>{state.money+=120000;state.stats.earned+=120000;state.job=[state.job[0]==="Munkanélküli"?"Irodai asszisztens":state.job[0],Math.round(state.job[1]*1.15),state.job[2]];return ["Azonnali fizetésemelést kapsz.","A következő évben 35% eséllyel csalódást okoz a munkahely."]}],
+  ["Maradok",()=>{state.happiness=clamp(state.happiness+5);return ["Biztonságban maradtál.","A jelenlegi munkahelyeden 10% eséllyel kapsz később emelést."]}]
+ ]},
+ {title:"Családi pénzügy",text:"Egy közeli családtag átmenetileg segítséget kér tőled.",choices:[
+  ["Segítek",()=>{let n=Math.min(state.money,120000);state.money-=n;state.stats.spent+=n;state.karma=clamp(state.karma+7);return [""+fmt(n)+"-ot adtál.","Később 40% eséllyel viszonozza a segítséget."]}],
+  ["Most nem tudok segíteni",()=>{state.happiness=clamp(state.happiness-2);return ["Most a saját pénzügyeidet védted.","A kapcsolatotok egy ideig kissé hűvösebb lesz."]}]
+ ]},
+ {title:"Egészség vagy spórolás",text:"Egy vizsgálatot javasolnak, de a magánellátás drága.",choices:[
+  ["Elmegyek",()=>{let n=rand(45000,120000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;state.health=clamp(state.health+8);return ["A vizsgálat "+fmt(n)+"-ba került, de megnyugtató eredményt kaptál.","A következő 2 évben kisebb eséllyel romlik az egészséged."]}],
+  ["Várok",()=>{state.money+=0;return ["Most megtakarítottad a pénzt.","A következő évben 18% eséllyel kellemetlenebb tünet jelentkezik."]}]
+ ]},
+ {title:"Könnyű pénz",text:"Egy ismerős gyors, de kockázatos pénzkeresetet ajánl.",choices:[
+  ["Belevágok",()=>{if(Math.random()<.62){let n=rand(80000,500000);state.money+=n;state.stats.earned+=n;return ["+"+fmt(n)+" gyors bevétel.","A módszer később 25% eséllyel veszteséget okoz."]}let n=rand(50000,220000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return ["+"+fmt(0)+" bevétel, viszont "+fmt(n)+"-ot veszítettél.","A tanulság megmarad."]}],
+  ["Nem vállalom",()=>{state.discipline=clamp(state.discipline+3);return ["A biztosabb utat választottad.","A döntésed növelte a pénzügyi fegyelmedet."]}]
+ ]},
+ {title:"Kapcsolati fordulópont",text:"A párod komolyabb közös jövőt szeretne, de neked vannak kétségeid.",choices:[
+  ["Beszélünk róla",()=>{if(state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness+8);return ["Őszintén átbeszéltétek a terveket.","Ha a kapcsolat 80% fölé kerül, később eljegyzésre is lehetőség nyílhat."]}],
+  ["Elodázom",()=>{if(state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness-8);return ["Most nem akartál dönteni.","A halogatás később feszültséget okozhat."]}]
+ ]},
+ {title:"Tanulás vagy munka",text:"Felajánlanak egy képzést, de mellette kevesebb időd marad dolgozni.",choices:[
+  ["Tanulok",()=>{state.smarts=clamp(state.smarts+7);state.discipline=clamp(state.discipline+4);return ["A képzést választottad.","2 évig nagyobb eséllyel kapsz jobb állást."]}],
+  ["Dolgozom tovább",()=>{let n=rand(70000,180000);state.money+=n;state.stats.earned+=n;return ["Idén "+fmt(n)+" extra bevételt szereztél.","A képzés lehetősége később már nem biztos, hogy elérhető."]}]
+ ]},
+ {title:"Lakhatási döntés",text:"Olcsóbb lakást találsz messzebb a munkahelyedtől.",choices:[
+  ["Költözöm",()=>{let n=rand(80000,220000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return ["A költözés "+fmt(n)+"-ba került.","A következő évektől kisebbek lesznek a havi kiadásaid."]}],
+  ["Maradok",()=>{state.happiness=clamp(state.happiness+3);return ["Nem vállaltad a költözés stresszét.","A magasabb lakhatási költség viszont megmarad."]}]
+ ]},
+ {title:"Véletlen lehetőség",text:"Egy barátod közös kisvállalkozást indítana veled.",choices:[
+  ["Beszállok",()=>{let n=Math.min(state.money,300000);state.money-=n;state.stats.spent+=n;state.business=state.business||{name:"Közös vállalkozás",value:Math.max(300000,n*2),profit:0};return ["Befektettél "+fmt(n)+"-ot.","A következő 3 évben a vállalkozás értéke változhat."]}],
+  ["Kihagyom",()=>{state.discipline=clamp(state.discipline+2);return ["Most nem vállaltál plusz kockázatot.","A kapcsolat megmarad, de a lehetőség elúszhat."]}]
+ ]}
+];
+
+function mlApplyDelayed(){
+ if(!Array.isArray(state.pendingConsequences))state.pendingConsequences=[];
+ const due=state.pendingConsequences.filter(x=>x.dueYear<=state.year);
+ state.pendingConsequences=state.pendingConsequences.filter(x=>x.dueYear>state.year);
+ due.forEach(x=>{if(Math.random()<x.chance){if(x.kind==="money"){state.money=Math.max(0,state.money+x.amount);if(x.amount>0)state.stats.earned+=x.amount;else state.stats.spent+=Math.abs(x.amount);log(x.text+(x.amount>=0?" +"+fmt(x.amount):" "+fmt(Math.abs(x.amount))+" veszteség"),"Következmény")}else if(x.kind==="health")state.health=clamp(state.health+x.amount);else if(x.kind==="closeness"&&state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness+x.amount);log(x.text,"Következmény")}});}
+
+function choiceEvent(){
+ if(!state||state.age<8||Math.random()>.24)return;
+ const c=pick(ML_CHOICES);
+ $("modalBody").innerHTML='<div class="eyebrow">DÖNTÉSI HELYZET</div><h2>'+c.title+'</h2><p class="muted">'+c.text+'</p>'+c.choices.map((x,i)=>'<button class="choice" onclick="mlResolveChoice('+i+')">'+x[0]+'</button>').join("");
+ window.__mlChoice=c;
+ $("modal").classList.remove("hidden");
+}
+function mlResolveChoice(i){
+ const c=window.__mlChoice;if(!c)return;
+ const result=c.choices[i][1]();
+ const now=result[0],future=result[1];
+ if(future){
+   state.pendingConsequences=state.pendingConsequences||[];
+   state.pendingConsequences.push({dueYear:state.year+rand(1,3),chance:.4,kind:"money",amount:rand(15000,90000),text:future});
+ }
+ log(now,"Döntés");
+ window.__mlChoice=null;$("modal").classList.add("hidden");normalize();save();render();
+}
+
+function renderStats(){
+ const data=[["❤️","Egészség",state.health],["😊","Boldogság",state.happiness],["🧠","Intelligencia",state.smarts],["✨","Kinézet",state.looks],["🎯","Fegyelem",state.discipline]];
+ $("statBars").innerHTML=data.map(x=>'<div class="hud-stat"><div class="hud-stat-top"><span>'+x[0]+' '+x[1]+'</span><b>'+Math.round(x[2])+'</b></div><div class="hud-bar"><i style="width:'+x[2]+'%"></i></div></div>').join("");
+}
+function renderLife(){
+ const el=$("lifeLog");if(!el)return;
+ const events=state.events.slice(0,22);
+ el.innerHTML=events.length?events.map(e=>'<article class="log-entry"><div class="log-year">'+e.age+' ÉV<br>'+e.year+'</div><div class="log-body"><span class="log-type">'+(e.type||"Élet")+'</span>'+String(e.text||"")+'</div></article>').join(""):'<div class="muted" style="padding:25px 0">A történeted itt fog megjelenni.</div>';
+ const cr=$("quickRelations"),cc=$("quickCareer"),cf=$("quickCash"),ca=$("quickAssets");
+ if(cr)cr.textContent=state.relationships.length+" kapcsolat";
+ if(cc)cc.textContent=state.job[0];
+ if(cf)cf.textContent=fmt(state.money);
+ if(ca)ca.textContent=state.assets.length+" tárgy";
+}
+function render(){
+ if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");if($("versionText"))$("versionText").textContent="v"+VERSION;return}
+ normalize();$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");
+ $("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();
+ $("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country+" • Élet "+(currentSlot||1);
+ $("ageText").textContent=state.age+" éves";$("yearText").textContent=" • "+state.year;$("wealth").textContent=fmt(wealth());
+ renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();
+ if($("versionText"))$("versionText").textContent="v"+VERSION;
+}
+
+function nextYear(){
+ if(!state||!state.alive)return;
+ state.age++;state.year++;state.stats.years++;state.stats.days+=365;state.stats.actions++;
+ state.relationships.forEach(r=>r.age=(Number(r.age)||state.age)+1);state.children.forEach(ch=>ch.age=(Number(ch.age)||0)+1);
+ mlApplyDelayed();
+ if(state.jail>0){state.jail--;state.health=clamp(state.health-rand(1,4));state.happiness=clamp(state.happiness-rand(3,8));log("Börtönben töltöttél egy évet. Még "+state.jail+" év van hátra.","Jog")}
+ if(state.business){const profit=Math.round(state.business.value*(Math.random()*.12-.03));state.business.value=Math.max(0,state.business.value+profit);if(profit>=0){state.money+=profit;state.stats.earned+=profit}else{state.money=Math.max(0,state.money+profit);state.stats.spent+=Math.abs(profit)}log("A vállalkozásod éves eredménye: "+fmt(profit)+".","Üzlet")}
+ state.assets.forEach(a=>{if(a.income){state.money+=a.income;state.stats.earned+=a.income}});
+ if(state.age>=18&&state.jail===0){const income=state.job[1]||0;if(income){state.money+=income;state.stats.earned+=income;log("Megkaptad az éves fizetésed: "+fmt(income)+".","Pénz")}}
+ state.bank=Math.round(state.bank*1.025);
+ const expense=state.age<18?rand(18000,70000):rand(700000,Math.max(900000,Math.round((state.job[1]||180000)/2)));
+ if(state.money>=expense){state.money-=expense;state.stats.spent+=expense}else{state.debt+=expense-state.money;state.money=0;log("Az éves kiadásaid meghaladták a készpénzedet. A hiányból "+fmt(expense-state.money)+" tartozás lett.","Pénz")}
+ state.happiness=clamp(state.happiness-rand(0,4));state.health=clamp(state.health-(state.age>60?rand(1,5):rand(0,2)));
+ if(state.age===6)log("Elkezdted az általános iskolát.","Oktatás");
+ if(state.age===14)log("Középiskolás lettél.","Oktatás");
+ if(state.age===18)log("Nagykorú lettél.","Mérföldkő");
+ if(state.age===65)log("Nyugdíjas korba léptél.","Mérföldkő");
+ mlAnnualEvent();
+ if(state.age>=18&&state.job[0]!=="Munkanélküli"&&Math.random()<.15){state.job=[state.job[0],Math.round(state.job[1]*1.08),state.job[2]];log("Éves teljesítményértékelés után 8%-os béremelést kaptál.","Karrier")}
+ choiceEvent();
+ checkAchievements();
+ if(state.health<=0)die("súlyos egészségromlás");else if(state.age>70&&Math.random()<Math.min(.06,(state.age-70)*.006))die(pick(["időskori természetes okok","szívprobléma","betegség"]));
+ normalize();save();render();
+}
+
+function showTab(tab){
+ const ids=["life","relations","career","finance","assets","activities","achievements","stats"];
+ if(tab==="life"){render();return}
+ const el=$("tab-"+tab);if(!el)return;
+ ["life","relations","career","finance","assets","activities","achievements","stats"].forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
+ el.classList.remove("hidden");
+ if(tab==="relations")renderRelations();if(tab==="career")renderCareer();if(tab==="finance")renderFinance();if(tab==="assets")renderAssets();if(tab==="activities")renderActivities();if(tab==="achievements")renderAchievements();if(tab==="stats")renderStatsTab();
+}
+
+function newLife(){
+ try{localStorage.removeItem(slotKey(currentSlot))}catch(e){}
+ state=null;$("modal").classList.add("hidden");$("gameScreen").classList.add("hidden");$("startScreen").classList.remove("hidden");$("saveNotice").textContent="Új élet indítására kész.";render();
+}
+
+window.addEventListener("DOMContentLoaded",()=>{
+ const startBtn=$("startBtn"),ageBtn=$("ageBtn"),saveBtn=$("saveBtn"),newBtn=$("newBtn"),modalClose=$("modalClose");
+ if(startBtn)startBtn.onclick=()=>start();
+ if(ageBtn)ageBtn.onclick=()=>state&&state.alive?nextYear():showDeath();
+ if(saveBtn)saveBtn.onclick=()=>save();
+ if(newBtn)newBtn.onclick=e=>{e.preventDefault();if(confirm("Biztosan új életet kezdesz?"))newLife()};
+ if(modalClose)modalClose.onclick=()=>{$("modal").classList.add("hidden");window.__mlChoice=null};
+ if(load()){normalize();render();$("saveNotice").textContent="Mentett játék betöltve."}else render();
 });
