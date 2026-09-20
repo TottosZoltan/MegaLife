@@ -1,3 +1,4 @@
+const VERSION="0.0.2";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -55,3 +56,5 @@ function resolveChoice(i){const fn=window.__choices&&window.__choices[i];closeMo
 function startBusiness(){if(state.age<18)return toast("Vállalkozást nagykorúként indíthatsz.");if(state.business)return toast("Már van vállalkozásod.");if(state.money<1000000)return toast("Legalább 1 000 000 Ft indulótőke kell.");state.money-=1000000;state.business={name:pick(["Nova Labs","Urban Works","Pixel Forge","Mega Market","Stellar Studio"]),value:1000000};log("Elindítottad a saját vállalkozásodat: "+state.business.name+".","Üzlet");render()}
 function sellBusiness(){if(!state.business)return toast("Nincs vállalkozásod.");const v=Math.round(state.business.value*(.7+Math.random()*.7));state.money+=v;log("Eladtad a vállalkozásodat "+fmt(v)+" összegért.","Üzlet");state.business=null;render()}
 function proposal(){const r=state.relationships.find(x=>x.closeness>=85);if(!r)return toast("Ehhez legalább 85%-os kapcsolat kell.");r.type="Jegyes";r.closeness=95;log("Eljegyezted "+r.name+"-t.","Kapcsolat");render()}
+
+function refreshPage(){location.reload();}
