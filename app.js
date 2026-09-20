@@ -1,4 +1,4 @@
-const VERSION="0.0.19";
+const VERSION="0.0.20";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -460,9 +460,6 @@ function showTab(tab){
  if(tab==="life"){closeTabs();render();return}
  const el=$("tab-"+tab);if(!el)return;
  ids.forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
- let close=el.querySelector(".tab-close");
- if(!close){close=document.createElement("button");close.className="tab-close";close.type="button";close.setAttribute("aria-label","Bezárás");close.textContent="×";close.onclick=closeTabs;el.prepend(close)}
- el.classList.remove("hidden");
  if(tab==="relations")renderRelations();
  if(tab==="career")renderCareer();
  if(tab==="finance")renderFinance();
@@ -470,9 +467,25 @@ function showTab(tab){
  if(tab==="activities")renderActivities();
  if(tab==="achievements")renderAchievements();
  if(tab==="stats")renderStatsTab();
+ el.classList.remove("hidden");
+ let close=el.querySelector(".tab-close");
+ if(!close){
+   close=document.createElement("button");
+   close.className="tab-close";
+   close.type="button";
+   close.setAttribute("aria-label","Bezárás");
+   close.textContent="×";
+   close.onclick=closeTabs;
+   el.prepend(close);
+ }
+ document.querySelectorAll(".mobile-nav-item").forEach(b=>b.classList.remove("active"));
+ const map={relations:1,career:2,finance:3,assets:4,activities:5};
+ const nav=document.querySelectorAll(".mobile-nav-item")[map[tab]];
+ if(nav)nav.classList.add("active");
 }
 function closeTabs(){
  ["life","relations","career","finance","assets","activities","achievements","stats"].forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
+ document.querySelectorAll(".mobile-nav-item").forEach((b,i)=>b.classList.toggle("active",i===0));
 }
 
 function newLife(){
