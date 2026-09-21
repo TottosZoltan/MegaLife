@@ -7,7 +7,7 @@ const sw=fs.readFileSync("sw.js","utf8");
 const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
-assert.equal(VERSION,"0.1.6","app.js version");
+assert.equal(VERSION,"0.1.7","app.js version");
 assert.equal((html.match(/v0\.1\.5/g)||[]).length,2,"index version badge/footer");
 assert.match(sw,/const VERSION="0\.1\.5";/,"service worker version");
 
@@ -34,6 +34,8 @@ assert.match(app,/function ensureTabChrome015\(tab\)/,"sticky tab chrome missing
 assert.match(app,/function closeTabs\(\)/,"tab close function missing");
 assert.match(app,/ml-tab-open/,"main-screen-only tab state missing");
 assert.match(app,/ml-page-open/,"full-screen page state missing");
+assert.match(app,/MegaLife v0\.1\.7/,"v0.1.7 navigation hardening missing");
+assert.match(app,/ml-tab-close,\.ml-tab-back/,"sticky navigation delegation missing");
 assert.match(app,/choiceEvents>0&&state\.age>=8/,"choice-event setting must be respected");
 assert.match(app,/function randomLifeEvent\(\)\{return null\}/,"legacy uncontrolled random events must be disabled");
 assert.match(app,/state\.meta\.choiceYear===state\.year/,"duplicate yearly choice guard missing");
@@ -45,4 +47,4 @@ assert.equal(manifest.lang,"hu");
 assert.equal(manifest.display,"standalone");
 assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>0,"PWA icon missing");
 
-console.log("MegaLife v0.1.6 release smoke tests: PASS");
+console.log("MegaLife v0.1.7 release smoke tests: PASS");
