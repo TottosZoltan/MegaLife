@@ -1,4 +1,4 @@
-const VERSION="0.1.4";
+const VERSION="0.1.5";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -69,54 +69,67 @@ function startBusiness(){if(state.age<18)return toast("Vállalkozást nagykorúk
 function sellBusiness(){if(!state.business)return toast("Nincs vállalkozásod.");const v=Math.round(state.business.value*(.7+Math.random()*.7));state.money+=v;log("Eladtad a vállalkozásodat "+fmt(v)+" összegért.","Üzlet");state.business=null;render()}
 function proposal(){if(state.age<18)return toast("18 éves kor előtt nem jegyezheted el.");if(state.flags.married)return toast("Már házas vagy.");if(state.relationships.some(x=>x.type==="Jegyes"))return toast("Már el vagy jegyezve.");const r=state.relationships.find(x=>x.closeness>=85&&x.type!=="Házastárs");if(!r)return toast("Ehhez legalább 85%-os kapcsolat kell.");r.type="Jegyes";r.closeness=95;log("Eljegyezted "+r.name+"-t.","Kapcsolat");render()}
 
-/* Pull-to-refresh mobile gesture */
-(function setupPullToRefresh(){
-  let startY=0,startX=0,pulling=false,refreshing=false;
-  const threshold=45;
+/* MegaLife v0.1.5 — main-screen-only pull-to-refresh */
+(function setupPullToRefresh015(){
+  let startY=0,startX=0,pulling=false,refreshing=false,startScroller=null;
+  const threshold=48;
   const indicator=document.createElement("div");
   indicator.id="pullRefreshIndicator";
   indicator.innerHTML='<span class="pull-icon">↓</span><span class="pull-label">Húzd le a frissítéshez</span>';
   document.body.appendChild(indicator);
-  const setProgress=(distance)=>{
+  const setProgress=distance=>{
     const progress=Math.min(1,distance/threshold);
     indicator.style.setProperty("--pull-progress",progress);
     indicator.classList.toggle("ready",progress>=1);
     indicator.querySelector(".pull-icon").textContent=progress>=1?"↻":"↓";
     indicator.querySelector(".pull-label").textContent=progress>=1?"Engedd el a frissítéshez":"Húzd le a frissítéshez";
   };
+  const reset=()=>{
+    pulling=false;startScroller=null;
+    indicator.classList.remove("visible","ready","refreshing");
+    indicator.style.transform="translate(-50%, -58px)";
+    setProgress(0);
+  };
   window.addEventListener("touchstart",e=>{
-    if(refreshing||window.scrollY>0||e.touches.length!==1)return;
-    startY=e.touches[0].clientY;startX=e.touches[0].clientX;pulling=true;
+    if(refreshing||document.body.classList.contains("ml-tab-open")||$("gameScreen")?.classList.contains("hidden")||e.touches.length!==1)return;
+    const scroller=e.target.closest(".life-log");
+    if(scroller&&scroller.scrollTop>0)return;
+    if(!scroller&&window.scrollY>0)return;
+    startScroller=scroller;
+    startY=e.touches[0].clientY;
+    startX=e.touches[0].clientX;
+    pulling=true;
   },{passive:true});
   window.addEventListener("touchmove",e=>{
-    if(!pulling||refreshing||window.scrollY>0||e.touches.length!==1)return;
+    if(!pulling||refreshing||document.body.classList.contains("ml-tab-open")||e.touches.length!==1)return;
+    if(startScroller&&startScroller.scrollTop>0){reset();return;}
     const dy=e.touches[0].clientY-startY,dx=Math.abs(e.touches[0].clientX-startX);
     if(dy<=0||dy<dx)return;
-    const distance=Math.min(130,dy*.85);
-    indicator.style.transform="translate(-50%, "+Math.round(distance-52)+"px)";
+    const distance=Math.min(150,dy*.9);
+    indicator.style.transform="translate(-50%, "+Math.round(distance-58)+"px)";
     indicator.classList.add("visible");
     setProgress(distance);
   },{passive:true});
-  window.addEventListener("touchend",e=>{
+  window.addEventListener("touchend",()=>{
     if(!pulling)return;
-    pulling=false;
     const ready=indicator.classList.contains("ready");
     if(ready){
       refreshing=true;
-      indicator.classList.add("refreshing");
-      indicator.querySelector(".pull-label").textContent="Frissítés…";
+      indicator.classList.add("visible","refreshing");
+      indicator.querySelector(".pull-label").textContent="Frissítés folyamatban…";
       indicator.querySelector(".pull-icon").textContent="↻";
-      setTimeout(()=>location.reload(),1400);
-    }else{
-      indicator.classList.remove("visible","ready");
-      indicator.style.transform="translate(-50%, -52px)";
-      setProgress(0);
-    }
+      setTimeout(()=>refreshPage(),900);
+    }else reset();
   },{passive:true});
-  window.addEventListener("touchcancel",()=>{pulling=false;indicator.classList.remove("visible","ready");indicator.style.transform="translate(-50%, -52px)";setProgress(0)},{passive:true});
+  window.addEventListener("touchcancel",reset,{passive:true});
 })();
+function refreshPage(){
+  showRefreshOverlay();
+  const b=$("refreshBtn");
+  if(b){b.disabled=true;b.setAttribute("aria-busy","true");}
+  setTimeout(()=>location.reload(),1400);
+}
 
-function refreshPage(){location.reload();}
 
 window.addEventListener("load",()=>{const v=document.getElementById("versionText");if(v)v.textContent="v"+VERSION;});
 
@@ -1294,4 +1307,52 @@ mlOpenDecision012=function(){
     }
   }
   return ok;
+};
+
+
+/* MegaLife v0.1.5 — mobile page separation, sticky controls and main-only pull gesture */
+const ML_TAB_TITLES_015={
+  relations:"Kapcsolatok",career:"Karrier",finance:"Pénzügyek",assets:"Vagyon",
+  activities:"Mindennapok",achievements:"Eredmények",stats:"Statisztikák",social:"Közösségi élet"
+};
+function ensureTabChrome015(tab){
+  if(!tab)return;
+  const old=tab.querySelector(".ml-tab-chrome");
+  if(old)old.remove();
+  const title=ML_TAB_TITLES_015[tab.id.replace("tab-","")]||"MegaLife";
+  tab.insertAdjacentHTML("afterbegin",'<div class="ml-tab-chrome"><button type="button" class="ml-tab-back" onclick="closeTabs()" aria-label="Vissza">‹</button><div class="ml-tab-title">'+title+'</div><button type="button" class="ml-tab-close" onclick="closeTabs()" aria-label="Bezárás">×</button></div>');
+}
+function closeTabs(){
+  document.querySelectorAll(".legacy-tab").forEach(e=>e.classList.add("hidden"));
+  document.body.classList.remove("ml-tab-open");
+  const game=$("gameScreen");
+  if(game)game.classList.remove("ml-tab-dim");
+  if(state){
+    renderPendingConsequences();
+    mlReturnShortcut();
+  }
+}
+showTab=function(tab){
+  if(!state)return;
+  if(tab==="life"){closeTabs();return;}
+  const target=$("tab-"+tab);
+  if(!target)return;
+  document.querySelectorAll(".legacy-tab").forEach(e=>e.classList.add("hidden"));
+  target.classList.remove("hidden");
+  target.classList.add("ml-page-open");
+  document.body.classList.add("ml-tab-open");
+  const game=$("gameScreen");
+  if(game)game.classList.add("ml-tab-dim");
+  ensureTabChrome015(target);
+  mlRememberMenu(tab);
+  mlReturnShortcut();
+};
+const _mlRender015=render;
+render=function(){
+  _mlRender015();
+  if(state){
+    document.querySelectorAll(".legacy-tab").forEach(tab=>{
+      if(!tab.classList.contains("hidden"))ensureTabChrome015(tab);
+    });
+  }
 };
