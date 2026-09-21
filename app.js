@@ -1,4 +1,4 @@
-const VERSION="0.0.31";
+const VERSION="0.0.32";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -707,24 +707,24 @@ function mlEventPool(){
   // Negative events deliberately dominate the pool. Positive events are rarer,
   // and childhood cash gifts are especially rare.
   add(16,0,120,"negative","🤒 Megbetegedtél",()=>{const n=rand(3,10);state.health=clamp(state.health-n);state.happiness=clamp(state.happiness-rand(1,5));return "Beteg lettél, ezért néhány napig rosszabbul érezted magad."});
-  add(11,3,17,"negative","📚 Iskolai nehézség",()=>{state.discipline=clamp(state.discipline-rand(2,6));state.happiness=clamp(state.happiness-rand(2,6));return "Nehezebben ment egy iskolai időszak, és ez megviselt."});
-  add(9,6,17,"negative","😔 Baráti konfliktus",()=>{state.happiness=clamp(state.happiness-rand(3,9));if(state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness-rand(3,10));return "Összekaptál valakivel, aki fontos volt neked."});
-  add(8,10,17,"negative","📱 Elveszett tárgy",()=>{state.happiness=clamp(state.happiness-rand(2,6));return "Elhagytál egy számodra fontos tárgyat."});
-  add(7,14,17,"negative","💔 Csalódás",()=>{state.happiness=clamp(state.happiness-rand(4,10));return "Egy fontos ismerkedés vagy barátság csalódást okozott."});
-  add(10,16,120,"negative","😵 Stresszes időszak",()=>{state.health=clamp(state.health-rand(1,5));state.happiness=clamp(state.happiness-rand(3,8));return "Stresszes időszakon mentél keresztül."});
+  add(11,3,17,"negative","📚 Iskolai nehézség",()=>{state.discipline=clamp(state.discipline-rand(2,6));state.happiness=clamp(state.happiness-rand(2,6));return "Nehéz időszakod volt az iskolában, és ez megviselt."});
+  add(9,6,17,"negative","😔 Baráti konfliktus",()=>{state.happiness=clamp(state.happiness-rand(3,9));if(state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness-rand(3,10));return "Összevesztél valakivel, aki fontos neked."});
+  add(8,10,17,"negative","📱 Elvesztettél egy fontos tárgyat",()=>{state.happiness=clamp(state.happiness-rand(2,6));return "Elvesztettél egy fontos tárgyat."});
+  add(7,14,17,"negative","💔 Csalódás",()=>{state.happiness=clamp(state.happiness-rand(4,10));return "Egy fontos ismerkedés vagy barátság csalódással végződött."});
+  add(10,16,120,"negative","😵 Stresszes időszak",()=>{state.health=clamp(state.health-rand(1,5));state.happiness=clamp(state.happiness-rand(3,8));return "Stresszes időszakod volt."});
   add(9,18,120,"negative","💸 Váratlan kiadás",()=>{const n=rand(15000,90000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const s=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=s}return "Egy váratlan kiadás terhelte a pénzügyeidet: "+fmt(n)+"."});
-  add(7,18,120,"negative","🏠 Háztartási probléma",()=>{const n=rand(10000,70000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const s=n-state.money;state.money=0;state.debt+=s}return "Elromlott valami otthon, és javításra kellett költened."});
+  add(7,18,120,"negative","🏠 Háztartási probléma",()=>{const n=rand(10000,70000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const s=n-state.money;state.money=0;state.debt+=s}return "Elromlott valami otthon, ezért javításra kellett költened."});
   add(6,18,120,"negative","💼 Munkahelyi gond",()=>{if(state.job[0]!=="Munkanélküli"){state.happiness=clamp(state.happiness-rand(3,8));if(Math.random()<.12){state.job=jobs[0];return "Komoly gond alakult ki a munkahelyeden, és elvesztetted az állásod."}return "Nehéz helyzet alakult ki a munkahelyeden."}return "Álláskeresőként egy újabb nehéz időszakot éltél át."});
-  add(4,18,120,"negative","🚗 Közlekedési költség",()=>{if(state.assets.some(x=>x.name==="Autó")){const n=rand(20000,120000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "Az autód javításra szorult."}return "A közlekedés a vártnál többe került."});
+  add(4,18,120,"negative","🚗 Közlekedési költség",()=>{if(state.assets.some(x=>x.name==="Autó")){const n=rand(20000,120000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "Az autód javításra szorult."}return "A közlekedés többe került a vártnál."});
 
-  add(7,0,120,"neutral","👨‍👩‍👧 Családi nap",()=>{state.happiness=clamp(state.happiness+rand(1,5));return "Együtt töltöttél egy nyugodt napot a családoddal."});
-  add(6,6,17,"neutral","🎒 Új élmény az iskolában",()=>{state.smarts=clamp(state.smarts+rand(1,3));return "Egy iskolai projekt vagy program új élményt adott."});
-  add(5,8,17,"neutral","🎨 Új érdeklődés",()=>{state.happiness=clamp(state.happiness+rand(1,4));return "Találtál valamit, ami felkeltette az érdeklődésedet."});
+  add(7,0,120,"neutral","👨‍👩‍👧 Családi nap",()=>{state.happiness=clamp(state.happiness+rand(1,5));return "Egy nyugodt napot töltöttél a családoddal."});
+  add(6,6,17,"neutral","🎒 Új élmény az iskolában",()=>{state.smarts=clamp(state.smarts+rand(1,3));return "Egy iskolai program vagy projekt új élményt adott."});
+  add(5,8,17,"neutral","🎨 Új érdeklődési kör",()=>{state.happiness=clamp(state.happiness+rand(1,4));return "Találtál valamit, ami felkeltette az érdeklődésedet."});
   add(5,14,120,"neutral","👥 Új ismeretség",()=>{if(state.relationships.length<12){const r={name:pick(names.female.concat(names.male).concat(names.neutral))+" "+pick(surnames),age:Math.max(14,state.age+rand(-2,3)),type:"Ismerős",closeness:rand(30,55)};state.relationships.push(r);state.stats.relationships++;return "Megismerkedtél "+r.name+"-nel."}return "Új emberekkel találkoztál, de egyik kapcsolat sem lett komoly."});
   add(4,0,17,"positive","🎁 Családi ajándék",()=>{if(Math.random()>0.035)return "A családod kedveskedett neked valamivel, de pénzt nem kaptál.";const n=rand(1000,8000);state.money+=n;state.stats.earned+=n;return "Nagyon ritka alkalomként a családod "+fmt(n)+" Ft-tal megajándékozott."});
-  add(5,6,17,"positive","🏫 Jó eredmény",()=>{state.smarts=clamp(state.smarts+rand(2,5));state.happiness=clamp(state.happiness+rand(2,6));return "Egy fontos feladatban vagy dolgozatban jól teljesítettél."});
-  add(3,18,120,"positive","💰 Extra bevétel",()=>{if(state.job[0]==="Munkanélküli")return "Egy alkalmi lehetőség felmerült, de most nem tudtad kihasználni.";const n=rand(15000,70000);state.money+=n;state.stats.earned+=n;return "Egy kisebb extra munkából "+fmt(n)+" bevételed lett."});
-  add(3,18,120,"positive","❤️ Támogatás",()=>{if(!state.relationships.length)return "Valaki kedvesen melletted állt egy nehezebb időszakban.";state.relationships[0].closeness=clamp(state.relationships[0].closeness+rand(3,8));state.happiness=clamp(state.happiness+rand(2,5));return state.relationships[0].name+" támogatott egy nehezebb időszakban."});
+  add(5,6,17,"positive","🏫 Jó eredmény",()=>{state.smarts=clamp(state.smarts+rand(2,5));state.happiness=clamp(state.happiness+rand(2,6));return "Jól teljesítettél egy fontos feladatban vagy dolgozatban."});
+  add(3,18,120,"positive","💰 Extra bevétel",()=>{if(state.job[0]==="Munkanélküli")return "Egy alkalmi lehetőség felmerült, de most nem tudtad kihasználni.";const n=rand(15000,70000);state.money+=n;state.stats.earned+=n;return "Egy kisebb pluszmunkából "+fmt(n)+" bevételed lett."});
+  add(3,18,120,"positive","❤️ Támogatás",()=>{if(!state.relationships.length)return "Valaki melletted állt egy nehezebb időszakban.";state.relationships[0].closeness=clamp(state.relationships[0].closeness+rand(3,8));state.happiness=clamp(state.happiness+rand(2,5));return state.relationships[0].name+" támogatott egy nehezebb időszakban."});
   return E;
 }
 function annualEvent(){
@@ -829,4 +829,52 @@ function annualEvent(){
     log(result,e.kind==="negative"?"Nehézség":e.kind==="positive"?"Szerencse":"Élet");
   }
   state.stats.annualEvents=settings.randomEvents;
+}
+
+/* MegaLife v0.0.32 — contextual event weighting + Hungarian text cleanup */
+function mlEventContextScore32(e,ctx){
+  let weight=Math.max(1,Number(e.weight)||1);
+  const t=String(e.title||"");
+  if(t.includes("Megbetegedtél")) weight*=ctx.health<45?2.2:ctx.health<65?1.5:.75;
+  if(t.includes("Iskolai nehézség")||t.includes("Egyetemi nyomás")||t.includes("Egyetemi siker")) weight*=ctx.university?1.25:1;
+  if(t.includes("Baráti konfliktus")) weight*=ctx.relationships>0?1.35:.6;
+  if(t.includes("Csalódás")||t.includes("Kapcsolati feszültség")) weight*=ctx.partner?(ctx.closeness<45?1.7:1.15):.4;
+  if(t.includes("Stresszes időszak")||t.includes("Munkahelyi gond")) weight*=ctx.employed?(ctx.discipline<45?1.45:.9):.45;
+  if(t.includes("Váratlan kiadás")||t.includes("Háztartási probléma")) weight*=ctx.adult?(ctx.money<100000?1.45:1):.7;
+  if(t.includes("Közlekedési költség")||t.includes("Autójavítás")) weight*=ctx.car?(ctx.money<200000?1.6:1):.35;
+  if(t.includes("Ingatlanprobléma")) weight*=ctx.house?(ctx.money<300000?1.5:1):.25;
+  if(t.includes("Hitelteher")) weight*=ctx.loan?1.4:.2;
+  if(t.includes("Vállalkozási probléma")||t.includes("Vállalkozási siker")) weight*=ctx.business?(ctx.money<300000?1.35:1):.25;
+  if(t.includes("Közösségi visszajelzés")||t.includes("Online növekedés")) weight*=ctx.social?(ctx.socialFollowers>10000?1.3:1):.2;
+  if(t.includes("Gyermek körüli")||t.includes("Családi öröm")) weight*=ctx.children?(ctx.childrenCount>1?1.2:1):.2;
+  if(t.includes("Háziállat")) weight*=ctx.pet?1.25:.2;
+  if(t.includes("Munkahelyi elismerés")||t.includes("Extra bevétel")) weight*=ctx.employed?(ctx.discipline>=60?1.25:.95):.2;
+  if(t.includes("Jó eredmény")) weight*=ctx.smarts>=65?1.3:.9;
+  return weight;
+}
+function mlContextEventPool32(){
+  const base=mlContextEventPool31();
+  const ctx=mlLifeContext();
+  ctx.health=Number(state.health)||0;
+  ctx.discipline=Number(state.discipline)||0;
+  ctx.smarts=Number(state.smarts)||0;
+  ctx.money=Number(state.money)||0;
+  ctx.relationships=state.relationships.length;
+  const partner=state.relationships.find(r=>/pár|partner|barát|barátnő|vőlegény|menyasszony/i.test(String(r.type||"")));
+  ctx.closeness=partner?Number(partner.closeness)||0:0;
+  ctx.childrenCount=state.children.length;
+  ctx.socialFollowers=Number(state.social&&state.social.followers)||0;
+  return base.map(e=>({...e,weight:mlEventContextScore32(e,ctx)}));
+}
+function annualEvent(){
+  const settings=mlEventSettings();
+  const used=[];
+  for(let n=0;n<settings.randomEvents;n++){
+    const pool=mlContextEventPool32().filter(x=>!used.includes(x.title));
+    if(!pool.length)break;
+    const e=mlWeightedPick(pool);used.push(e.title);
+    const result=e.run();
+    log(result,e.kind==="negative"?"Nehézség":e.kind==="positive"?"Szerencse":"Élet");
+  }
+  state.stats.annualEvents=Math.min(settings.randomEvents,used.length);
 }
