@@ -1,4 +1,4 @@
-const VERSION="0.1.2";
+const VERSION="0.1.3";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -1203,3 +1203,56 @@ nextYear=function(){
    throw e;
  }
 };
+
+
+/* MegaLife v0.1.3 — longer refresh feedback + visible new-event pulse */
+const ML_NEW_EVENT_IDS_013=new Set();
+const _mlLog013=log;
+log=function(text,type="Élet"){
+  _mlLog013(text,type);
+  const e=state?.events?.[state.events.length-1];
+  if(e){
+    e.id=e.id||("evt-"+Date.now()+"-"+Math.random().toString(36).slice(2,8));
+    ML_NEW_EVENT_IDS_013.add(e.id);
+  }
+};
+const _mlRenderMainLifeLog013=renderMainLifeLog;
+renderMainLifeLog=function(){
+  _mlRenderMainLifeLog013();
+  const events=[...state.events].sort((x,y)=>(Number(x.age)||0)-(Number(y.age)||0)||(Number(x.year)||0)-(Number(y.year)||0)).slice(-24);
+  const nodes=[...document.querySelectorAll("#lifeLog .thread-event")];
+  let n=0;
+  for(const e of events){
+    const node=nodes[n++];
+    if(node&&e.id){
+      node.dataset.eventId=e.id;
+      if(ML_NEW_EVENT_IDS_013.has(e.id))node.classList.add("ml-new-event");
+    }
+  }
+  if(ML_NEW_EVENT_IDS_013.size){
+    setTimeout(()=>{
+      document.querySelectorAll("#lifeLog .ml-new-event").forEach(el=>el.classList.remove("ml-new-event"));
+      ML_NEW_EVENT_IDS_013.clear();
+    },2800);
+  }
+};
+function showRefreshOverlay(){
+  const e=$("refreshOverlay");
+  if(e){
+    e.classList.remove("hidden");
+    const small=e.querySelector("small");
+    if(small)small.textContent="Az oldal újratöltése folyamatban…";
+  }
+  const p=$("pullRefreshIndicator");
+  if(p){
+    p.classList.add("visible","refreshing");
+    p.querySelector(".pull-icon").textContent="↻";
+    p.querySelector(".pull-label").textContent="Frissítés folyamatban…";
+  }
+}
+function refreshPage(){
+  showRefreshOverlay();
+  const b=$("refreshBtn");
+  if(b){b.disabled=true;b.setAttribute("aria-busy","true");}
+  setTimeout(()=>location.reload(),1400);
+}
