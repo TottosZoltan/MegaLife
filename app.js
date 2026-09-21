@@ -1,4 +1,4 @@
-const VERSION="0.0.28";
+const VERSION="0.0.29";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -497,3 +497,161 @@ const _renderMainLifeLog=renderMainLifeLog;
 renderMainLifeLog=function(){_renderMainLifeLog();scrollLifeLogToLatest()}
 function showRefreshOverlay(){const e=$("refreshOverlay");if(e)e.classList.remove("hidden");const p=$("pullRefreshIndicator");if(p){p.classList.add("visible","refreshing");p.querySelector(".pull-icon").textContent="↻";p.querySelector(".pull-label").textContent="Frissítés…"}}
 function refreshPage(){showRefreshOverlay();setTimeout(()=>location.reload(),420)}
+
+
+/* MegaLife v0.0.29 — age-aware life simulation + childhood economy */
+const ML_ACTION_RULES={
+  exercise:{min:6,msg:"6 éves kortól önállóan edzhetsz."},
+  meditate:{min:8,msg:"8 éves kortól tanulhatsz meditálni."},
+  party:{min:16,msg:"Bulizni 16 éves kortól lehet."},
+  social:{min:10,msg:"Közösségi médiát 10 éves kortól használhatsz."},
+  travel:{min:10,msg:"Önálló utazás 10 éves kortól lehetséges."},
+  pet:{min:10,msg:"Háziállatot 10 éves kortól vállalhatsz."},
+  crime:{min:16,msg:"Ehhez még túl fiatal vagy."},
+  date:{min:14,msg:"Randizni 14 éves kortól lehet."},
+  proposal:{min:18,msg:"Eljegyzéshez nagykorúnak kell lenned."},
+  marriage:{min:18,msg:"Házasság 18 éves kortól lehetséges."},
+  child:{min:18,msg:"Gyermekvállalás 18 éves kortól lehetséges."},
+  job:{min:16,msg:"Munkát 16 éves kortól vállalhatsz."},
+  university:{min:18,max:35,msg:"Az egyetemhez 18–35 év közötti életkor szükséges."},
+  bank:{min:18,msg:"Saját bankszámlát 18 éves kortól kezelhetsz."},
+  loan:{min:18,msg:"Hitelt 18 éves kortól vehetsz fel."},
+  invest:{min:18,msg:"Befektetni 18 éves kortól lehet."},
+  gamble:{min:18,msg:"Szerencsejáték csak 18 éves kortól érhető el."},
+  house:{min:18,msg:"Saját ingatlant 18 éves kortól vásárolhatsz."},
+  car:{min:18,msg:"Saját autót 18 éves kortól vásárolhatsz."},
+  luxury:{min:18,msg:"Luxuscikket 18 éves kortól vásárolhatsz."},
+  business:{min:18,msg:"Vállalkozást 18 éves kortól indíthatsz."},
+  hobby:{min:6,msg:"Hobbit 6 éves kortól kezdhetsz."}
+};
+function mlCanAction(key,quiet=true){
+  const r=ML_ACTION_RULES[key]; if(!r||!state)return true;
+  if(state.age<r.min||r.max!==undefined&&state.age>r.max){if(quiet)toast(r.msg);return false}
+  return true
+}
+const _mlFresh29=fresh;
+fresh=function(){const x=_mlFresh29();x.money=0;x.bank=0;x.debt=0;x.flags=x.flags||{};x.flags.pocketMoneyYear=-1;x.flags.childhoodSupported=true;return x};
+
+function mlPocketAmount(){
+  if(state.age<=8)return rand(500,2500);
+  if(state.age<=12)return rand(1000,5000);
+  if(state.age<=15)return rand(2500,9000);
+  return rand(5000,18000);
+}
+function requestPocketMoney(){
+  if(!state||state.age<6||state.age>17)return toast("Zsebpénzt 6–17 éves kor között kérhetsz.");
+  if(state.flags.pocketMoneyYear===state.year)return toast("Idén már beszéltél a szüleiddel a zsebpénzről.");
+  const amount=mlPocketAmount();
+  $("modalBody").innerHTML='<div class="eyebrow">GYEREKKOR • PÉNZ</div><h2>💬 Kérsz zsebpénzt?</h2><p class="muted">A szüleidtől kérhetsz egy kis pénzt erre az évre. Az összeg az életkorodtól és a fegyelmedtől is függ.</p><button class="choice" onclick="mlPocketDecision('+amount+',true)">💰 Igen, kérek zsebpénzt</button><button class="choice" onclick="mlPocketDecision(0,false)">🙅 Nem kérek</button>';
+  $("modal").classList.remove("hidden");
+}
+function mlPocketDecision(amount,asked){
+  state.flags.pocketMoneyYear=state.year;
+  if(asked){
+    const generous=Math.random()<(.72+Math.min(.15,state.discipline/1000));
+    if(generous){
+      const bonus=Math.round(amount*(.8+Math.random()*.45));
+      state.money+=bonus;state.stats.earned+=bonus;
+      log("Zsebpénzt kaptál a szüleidtől: "+fmt(bonus)+".","Család");
+      toast("💰 Kaptál "+fmt(bonus)+" zsebpénzt.");
+    }else{
+      state.happiness=clamp(state.happiness-2);
+      log("Idén nem kaptál zsebpénzt a szüleidtől.","Család");
+      toast("Idén nem kaptál zsebpénzt.");
+    }
+  }else log("Úgy döntöttél, hogy idén nem kérsz zsebpénzt.","Döntés");
+  $("modal").classList.add("hidden");save();render();
+}
+function mlChildSupportYear(){
+  if(!state||state.age<6||state.age>17)return;
+  if(state.flags.pocketMoneyYear===state.year)return;
+  requestPocketMoney();
+}
+
+const _mlNextYear29=nextYear;
+nextYear=function(){
+  if(!state||!state.alive)return;
+  const minor=state.age<18;
+  const parentBuffer=minor?10000:0;
+  if(parentBuffer)state.money+=parentBuffer;
+  _mlNextYear29();
+  if(minor&&state&&state.alive)state.money=Math.max(0,state.money-parentBuffer);
+  if(state&&state.alive){
+    normalize();save();render();
+    if(state.age>=6&&state.age<=17)setTimeout(mlChildSupportYear,140);
+  }
+};
+
+const _mlActivity29=activity;
+activity=function(t){
+  if(!state)return;
+  const key=t;
+  if(!mlCanAction(key))return;
+  if(t==="doctor"&&state.age<18){
+    const before=state.money;state.money+=50000;
+    _mlActivity29(t);
+    if(state&&state.alive)state.money=Math.max(0,state.money-50000);
+    render();save();return;
+  }
+  _mlActivity29(t);
+};
+const _mlTravel29=travel;
+travel=function(){if(mlCanAction("travel"))_mlTravel29()};
+const _mlPet29=pet;
+pet=function(){if(mlCanAction("pet"))_mlPet29()};
+const _mlCrime29=crime;
+crime=function(){if(mlCanAction("crime"))_mlCrime29()};
+const _mlDate29=dateAction;
+dateAction=function(){if(mlCanAction("date"))_mlDate29()};
+const _mlProposal29=proposal;
+proposal=function(){if(mlCanAction("proposal"))_mlProposal29()};
+const _mlMarry29=marryAction;
+marryAction=function(){if(mlCanAction("marriage"))_mlMarry29()};
+const _mlChild29=childAction;
+childAction=function(){if(mlCanAction("child"))_mlChild29()};
+const _mlStudy29=study;
+study=function(){if(state.age<6)return toast("Még túl fiatal vagy az iskolai tanuláshoz.");_mlStudy29()};
+const _mlUniversity29=university;
+university=function(){if(mlCanAction("university"))_mlUniversity29()};
+const _mlGetJob29=getJob;
+getJob=function(i){if(mlCanAction("job"))_mlGetJob29(i)};
+const _mlBank29=bank;
+bank=function(amount){if(!mlCanAction("bank"))return;_mlBank29(amount)};
+const _mlLoan29=loan;
+loan=function(){if(!mlCanAction("loan"))return;_mlLoan29()};
+const _mlInvest29=invest;
+invest=function(){if(!mlCanAction("invest"))return;_mlInvest29()};
+const _mlGamble29=gamble;
+gamble=function(){if(!mlCanAction("gamble"))return;_mlGamble29()};
+const _mlBuyHouse29=buyHouse;
+buyHouse=function(){if(mlCanAction("house"))_mlBuyHouse29()};
+const _mlBuyCar29=buyCar;
+buyCar=function(){if(mlCanAction("car"))_mlBuyCar29()};
+const _mlBuyLuxury29=buyLuxury;
+buyLuxury=function(){if(mlCanAction("luxury"))_mlBuyLuxury29()};
+const _mlStartBusiness29=startBusiness;
+startBusiness=function(){if(mlCanAction("business"))_mlStartBusiness29()};
+
+function renderActivities(){
+  const a=[];
+  if(state.age>=6)a.push('<button class="action" onclick="activity(\'exercise\')"><b>🏋️ Edzés</b><small>Egészség +, boldogság +</small></button>');
+  if(state.age>=8)a.push('<button class="action" onclick="activity(\'meditate\')"><b>🧘 Meditáció</b><small>Boldogság és fegyelem +</small></button>');
+  if(state.age>=16)a.push('<button class="action" onclick="activity(\'party\')"><b>🎉 Buli</b><small>Boldogság +, pénz −</small></button>');
+  a.push('<button class="action" onclick="activity(\'doctor\')"><b>🏥 Orvos</b><small>'+(state.age<18?"A szüleid fizetik.":"Egészség javítása.")+'</small></button>');
+  if(state.age>=10)a.push('<button class="action" onclick="activity(\'social\')"><b>📱 Közösségi média</b><small>Posztolj és építs közönséget.</small></button>');
+  if(state.age>=10)a.push('<button class="action" onclick="travel()"><b>✈️ Utazás</b><small>Új helyek és élmények.</small></button>');
+  if(state.age>=16)a.push('<button class="action" onclick="crime()"><b>🕶️ Bűncselekmény</b><small>Nagy kockázat, jogi következmények.</small></button>');
+  if(state.age>=10)a.push('<button class="action" onclick="pet()"><b>🐕 Háziállat</b><small>Új családtag és rendszeres kiadás.</small></button>');
+  if(state.age>=6&&state.age<=17)a.push('<button class="action" onclick="requestPocketMoney()"><b>💰 Zsebpénz</b><small>Kérj a szüleidtől vagy utasítsd el.</small></button>');
+  $("tab-activities").innerHTML=panel("Mindennapok",'<div class="grid">'+a.join("")+'</div>')+renderHobbies();
+}
+function renderFinance(){
+  const adult=state.age>=18;
+  $("tab-finance").innerHTML=panel("Pénzügyek",'<div class="grid"><div class="action"><b>Készpénz</b><small>'+fmt(state.money)+'</small></div><div class="action"><b>Bank</b><small>'+fmt(state.bank)+'</small></div><div class="action"><b>Tartozás</b><small>'+fmt(state.debt)+'</small></div><div class="action"><b>Teljes vagyon</b><small>'+fmt(wealth())+'</small></div></div>')+
+    (adult?panel("Felnőtt pénzügyek",'<div class="grid"><button class="action" onclick="bank(50000)"><b>🏦 Betét</b><small>50 000 Ft bankba</small></button><button class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>50 000 Ft kivétele</small></button><button class="action" onclick="loan()"><b>💸 Hitel</b><small>Hitel és tartozás</small></button><button class="action" onclick="invest()"><b>📈 Befektetés</b><small>Kockázatos hozam</small></button><button class="action" onclick="gamble()"><b>🎰 Szerencsejáték</b><small>18+</small></button></div>'):panel("Gyermekkori pénz",'<div class="action"><b>👨‍👩‍👧 Szülői támogatás</b><small>6–17 évesen évente kérhetsz zsebpénzt.</small></div>');
+}
+function renderAssets(){
+  const a=state.assets.map((x,i)=>'<div class="list-item"><div><b>'+x.icon+" "+x.name+'</b><br><small class="muted">Érték: '+fmt(x.value)+'</small></div><button class="ghost" onclick="sellAsset('+i+')">Eladás</button></div>').join("")||'<p class="muted">Még nincs jelentős vagyontárgyad.</p>';
+  const buys=state.age>=18?'<div class="grid"><button class="action" onclick="buyHouse()"><b>🏠 Lakás</b><small>6 000 000 Ft</small></button><button class="action" onclick="buyCar()"><b>🚗 Autó</b><small>3 000 000 Ft</small></button><button class="action" onclick="buyLuxury()"><b>💎 Luxusóra</b><small>1 200 000 Ft</small></button></div>':'<p class="muted">Saját vagyontárgyakat 18 éves kortól vásárolhatsz.</p>';
+  $("tab-assets").innerHTML=panel("Vagyontárgyak",a)+panel("Vásárlás",buys);
+}
