@@ -1,4 +1,4 @@
-const VERSION="0.0.24";
+const VERSION="0.0.25";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -480,3 +480,13 @@ function profileSettings(){
 function showRefreshOverlay(){const e=$("refreshOverlay");if(e)e.classList.remove("hidden")}
 function refreshPage(){showRefreshOverlay();setTimeout(()=>location.reload(),420)}
 function showTab(tab){const ids=["life","relations","career","finance","assets","activities","achievements","stats","social"];if(tab==="life"){closeTabs();render();return}const el=$("tab-"+tab);if(!el)return;ids.forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});if(tab==="relations")renderRelations();if(tab==="career")renderCareer();if(tab==="finance")renderFinance();if(tab==="assets")renderAssets();if(tab==="activities")renderActivities();if(tab==="achievements")renderAchievements();if(tab==="stats")renderStatsTab();if(tab==="social")renderSocial();el.classList.remove("hidden");let back=el.querySelector(".tab-back");if(!back){back=document.createElement("button");back.className="tab-back";back.type="button";back.setAttribute("aria-label","Vissza");back.textContent="‹";back.onclick=closeTabs;el.prepend(back)}}
+
+/* MegaLife v0.0.25 — restore main life journal rendering */
+function renderMainLifeLog(){
+ const box=$("lifeLog");if(!box)return;
+ const events=[...state.events].sort((a,b)=>(Number(b.age)||0)-(Number(a.age)||0)||(Number(b.year)||0)-(Number(a.year)||0));
+ if(!events.length){box.innerHTML='<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>';return}
+ const groups={};events.slice(0,24).forEach(e=>{const key=(Number(e.age)||0)+"|"+(Number(e.year)||0);(groups[key]??=[]).push(e)});
+ box.innerHTML=Object.entries(groups).map(([key,items])=>{const [age,year]=key.split("|");return '<section class="life-thread"><div class="thread-node"><span>'+age+'</span><small>'+year+'</small></div><div class="thread-content"><div class="thread-title">'+age+' éves <span>'+year+'</span></div><div class="thread-events">'+items.map(e=>'<article class="thread-event"><span class="tag">'+(e.type||"Élet")+'</span><div>'+String(e.text||"")+'</div></article>').join("")+'</div></div></section>'}).join("");
+}
+function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("ageText").textContent=state.age+" éves";$("yearText").textContent=" • "+state.year;$("wealth").textContent=fmt(wealth());renderStats();renderMainLifeLog();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial()}
