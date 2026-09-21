@@ -1,4 +1,4 @@
-const VERSION="0.0.30";
+const VERSION="0.0.31";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -674,7 +674,7 @@ function renderAssets(){
 }
 
 
-/* MegaLife v0.0.30 — realistic annual event engine + configurable event frequency */
+/* MegaLife v0.0.31 — realistic annual event engine + configurable event frequency */
 const ML_EVENT_DEFAULTS={randomEvents:2,choiceEvents:1};
 function mlEventSettings(){
   try{
@@ -771,4 +771,62 @@ function choiceEvent(){
     $("modal").classList.remove("hidden");
     return; // one modal at a time; remaining configured choices can appear next year
   }
+}
+
+/* MegaLife v0.0.31 — context-aware event eligibility */
+function mlLifeContext(){
+  const job=Array.isArray(state.job)?state.job:null;
+  const employed=!!(job&&job[0]&&job[0]!=="Munkanélküli");
+  const university=!!(state.flags&&state.flags.university) || /egyetem|hallgat/i.test(String(state.education||""));
+  const married=!!(state.flags&&state.flags.married) || state.relationships.some(r=>/házastárs|férj|feleség/i.test(String(r.type||"")));
+  const partner=state.relationships.some(r=>/pár|partner|barát|barátnő|vőlegény|menyasszony/i.test(String(r.type||"")));
+  const children=Array.isArray(state.children)&&state.children.length>0;
+  const pet=!!state.pet;
+  const car=Array.isArray(state.assets)&&state.assets.some(x=>/autó|kocsi/i.test(String(x.name||"")));
+  const house=Array.isArray(state.assets)&&state.assets.some(x=>/lakás|ház|ingatlan|otthon/i.test(String(x.name||"")));
+  const business=!!state.business;
+  const loan=Number(state.debt)>0;
+  const social=!!(state.social&&state.social.platforms&&Object.keys(state.social.platforms).length);
+  return {age:Number(state.age)||0,adult:(Number(state.age)||0)>=18,employed,university,married,partner,children,pet,car,house,business,loan,social};
+}
+function mlEventAllowed31(title,ctx){
+  const t=String(title||"");
+  if(t.includes("Munkahelyi gond")||t.includes("Extra bevétel")) return ctx.employed;
+  if(t.includes("Közlekedési költség")) return ctx.car;
+  if(t.includes("Háztartási probléma")) return ctx.house;
+  if(t.includes("Baráti konfliktus")) return ctx.partner || state.relationships.length>0;
+  if(t.includes("Csalódás")) return ctx.partner;
+  return true;
+}
+function mlContextEventPool31(){
+  const base=mlEventPool().filter(e=>mlEventAllowed31(e.title,mlLifeContext()));
+  const ctx=mlLifeContext();
+  const add=(weight,kind,title,run,when)=>{if(when(ctx))base.push({weight,kind,title,run})};
+  add(6,"negative","🎓 Egyetemi nyomás",()=>{state.happiness=clamp(state.happiness-rand(3,8));state.discipline=clamp(state.discipline-rand(1,4));return "Az egyetemi terhelés egy időre megviselt."},c=>c.university);
+  add(5,"negative","👶 Gyermek körüli váratlan kiadás",()=>{const n=rand(10000,60000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const d=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=d}return "A gyermekeddel kapcsolatban váratlan kiadás merült fel: "+fmt(n)+"."},c=>c.children);
+  add(5,"negative","🐾 Háziállat állatorvosi költsége",()=>{const n=rand(8000,50000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const d=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=d}return "A háziállatodnak állatorvosi ellátásra volt szüksége."},c=>c.pet);
+  add(5,"negative","🚗 Autójavítás",()=>{const n=rand(20000,120000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const d=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=d}return "Az autód váratlanul javításra szorult."},c=>c.car);
+  add(4,"negative","🏠 Ingatlanprobléma",()=>{const n=rand(30000,150000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const d=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=d}return "Az ingatlanodnál javítási probléma merült fel."},c=>c.house);
+  add(4,"negative","💳 Hitelteher",()=>{const n=Math.max(5000,Math.round(state.debt*0.04));state.debt+=n;return "A meglévő tartozásod miatt további kamatteher jelent meg: "+fmt(n)+"."},c=>c.loan);
+  add(4,"negative","🏢 Vállalkozási probléma",()=>{const n=rand(20000,100000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const d=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=d}return "A vállalkozásodnál váratlan költség merült fel."},c=>c.business);
+  add(4,"negative","📱 Közösségi visszajelzés",()=>{state.happiness=clamp(state.happiness-rand(2,6));return "Egy online posztod negatív visszajelzéseket kapott."},c=>c.social);
+  add(4,"negative","❤️ Kapcsolati feszültség",()=>{state.happiness=clamp(state.happiness-rand(2,7));const r=state.relationships.find(x=>/pár|partner|barát|barátnő|vőlegény|menyasszony/i.test(String(x.type||"")));if(r)r.closeness=clamp(r.closeness-rand(3,9));return "Feszültebb időszak alakult ki a kapcsolatodban."},c=>c.partner);
+  add(3,"positive","💼 Munkahelyi elismerés",()=>{const n=rand(10000,50000);state.money+=n;state.stats.earned+=n;state.happiness=clamp(state.happiness+rand(2,5));return "Jól teljesítettél a munkában, és extra jutalmat kaptál: "+fmt(n)+"."},c=>c.employed);
+  add(3,"positive","🏢 Vállalkozási siker",()=>{const n=rand(20000,120000);state.money+=n;state.stats.earned+=n;return "A vállalkozásod egy jó időszakot zárt: +"+fmt(n)+"."},c=>c.business);
+  add(3,"positive","📱 Online növekedés",()=>{for(const p of Object.values(state.social.platforms)){p.followers+=rand(20,180)}state.social.followers=Object.values(state.social.platforms).reduce((n,x)=>n+(x.followers||0),0);return "A közösségi profiljaid az átlagosnál jobban teljesítettek."},c=>c.social);
+  add(3,"positive","🎓 Egyetemi siker",()=>{state.smarts=clamp(state.smarts+rand(2,5));state.happiness=clamp(state.happiness+rand(1,4));return "Egyetemi teljesítményedre pozitív visszajelzést kaptál."},c=>c.university);
+  add(3,"positive","👶 Családi öröm",()=>{state.happiness=clamp(state.happiness+rand(3,7));return "Egy örömteli pillanatot éltél át a gyermekeddel."},c=>c.children);
+  return base;
+}
+function annualEvent(){
+  const settings=mlEventSettings();
+  const used=[];
+  for(let n=0;n<settings.randomEvents;n++){
+    const pool=mlContextEventPool31().filter(x=>!used.includes(x.title));
+    if(!pool.length)break;
+    const e=mlWeightedPick(pool);used.push(e.title);
+    const result=e.run();
+    log(result,e.kind==="negative"?"Nehézség":e.kind==="positive"?"Szerencse":"Élet");
+  }
+  state.stats.annualEvents=settings.randomEvents;
 }
