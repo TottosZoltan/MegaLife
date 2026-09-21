@@ -1,4 +1,4 @@
-const VERSION="0.0.25";
+const VERSION="0.0.26";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -484,7 +484,7 @@ function showTab(tab){const ids=["life","relations","career","finance","assets",
 /* MegaLife v0.0.25 — restore main life journal rendering */
 function renderMainLifeLog(){
  const box=$("lifeLog");if(!box)return;
- const events=[...state.events].sort((a,b)=>(Number(b.age)||0)-(Number(a.age)||0)||(Number(b.year)||0)-(Number(a.year)||0));
+ const events=[...state.events].sort((a,b)=>(Number(a.age)||0)-(Number(b.age)||0)||(Number(a.year)||0)-(Number(b.year)||0));
  if(!events.length){box.innerHTML='<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>';return}
  const groups={};events.slice(0,24).forEach(e=>{const key=(Number(e.age)||0)+"|"+(Number(e.year)||0);(groups[key]??=[]).push(e)});
  box.innerHTML=Object.entries(groups).map(([key,items])=>{const [age,year]=key.split("|");return '<section class="life-thread"><div class="thread-node"><span>'+age+'</span><small>'+year+'</small></div><div class="thread-content"><div class="thread-title">'+age+' éves <span>'+year+'</span></div><div class="thread-events">'+items.map(e=>'<article class="thread-event"><span class="tag">'+(e.type||"Élet")+'</span><div>'+String(e.text||"")+'</div></article>').join("")+'</div></div></section>'}).join("");
