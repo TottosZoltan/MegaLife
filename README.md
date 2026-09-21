@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.1.6**. A következő kiadás innen **v0.1.7** lesz;
+**Jelenlegi stabil fejlesztési ág: v0.1.7**.
 
 ## Jelenlegi rendszerek
 
@@ -53,3 +53,12 @@ A játék további verzióiban bővíthető részletesebb családfával, vállal
 - a sticky fejléc most teljes szélességben, a képernyő tetejéhez igazítva jelenik meg
 - safe-area támogatás az iPhone felső kivágásához
 - a jobb oldali X és a bal oldali vissza gomb nem csúszik be a tartalom alá
+
+
+### v0.1.7
+- javítva a teljes képernyős oldalak navigációja
+- a sticky bal oldali vissza és jobb oldali X gomb delegált eseménykezelést kapott
+- a navigációs gombok minden újrarenderelés után is kattinthatók maradnak
+- az akciók megbízhatóbban visszatérnek a fő életképernyőre
+- a bezárás törli az előző oldal állapotát is, így nem marad beragadt overlay
+- a sticky fejléc kattintható területe külön, magasabb réteget kapott mobilon
