@@ -1,4 +1,4 @@
-const VERSION="0.0.23";
+const VERSION="0.0.24";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -475,3 +475,8 @@ function profileNewLife(){
 function profileSettings(){
   $("modalBody").innerHTML='<div class="profile-hub"><h2>⚙️ Beállítások</h2><div class="profile-section"><div class="profile-section-title">Játék</div><button class="action" onclick="toggleSetup();toast(\'A karakter részletes beállításai az új élet indításakor érhetők el.\')"><b>🎛️ Karakterbeállítások</b><small>Az új élet indulásakor választható.</small></button></div><div class="profile-section"><div class="profile-section-title">Mentés</div><button class="action" onclick="save();toast(\'Élet elmentve.\')"><b>💾 Automatikus mentés</b><small>Az élet előrehaladáskor is mentésre kerül.</small></button></div><button class="ghost big profile-close" onclick="renderProfileHub()">← Vissza a profilhoz</button></div>';
 }
+
+/* MegaLife v0.0.24 — tab back button and refresh feedback */
+function showRefreshOverlay(){const e=$("refreshOverlay");if(e)e.classList.remove("hidden")}
+function refreshPage(){showRefreshOverlay();setTimeout(()=>location.reload(),420)}
+function showTab(tab){const ids=["life","relations","career","finance","assets","activities","achievements","stats","social"];if(tab==="life"){closeTabs();render();return}const el=$("tab-"+tab);if(!el)return;ids.forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});if(tab==="relations")renderRelations();if(tab==="career")renderCareer();if(tab==="finance")renderFinance();if(tab==="assets")renderAssets();if(tab==="activities")renderActivities();if(tab==="achievements")renderAchievements();if(tab==="stats")renderStatsTab();if(tab==="social")renderSocial();el.classList.remove("hidden");let back=el.querySelector(".tab-back");if(!back){back=document.createElement("button");back.className="tab-back";back.type="button";back.setAttribute("aria-label","Vissza");back.textContent="‹";back.onclick=closeTabs;el.prepend(back)}}
