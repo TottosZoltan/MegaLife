@@ -8,8 +8,8 @@ const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
 assert.equal(VERSION,"0.1.5","app.js version");
-assert.equal((html.match(/v0\.1\.2/g)||[]).length,2,"index version badge/footer");
-assert.match(sw,/const VERSION="0\.1\.2";/,"service worker version");
+assert.equal((html.match(/v0\.1\.5/g)||[]).length,2,"index version badge/footer");
+assert.match(sw,/const VERSION="0\.1\.5";/,"service worker version");
 
 assert.doesNotThrow(()=>new Function(app),"app.js syntax");
 
@@ -30,7 +30,10 @@ for(const expr of inline){
 assert.match(app,/state\.events\.push\(\{age:state\.age,year:state\.year/,"journal must append newest entries");
 assert.match(app,/state\.events\.slice\(-80\)/,"journal history must be bounded from the newest side");
 assert.match(app,/events\.slice\(-24\)/,"rendered journal must show recent history");
-assert.match(app,/function ensureTabBackButtons\(\)/,"back-button persistence guard missing");
+assert.match(app,/function ensureTabChrome015\(tab\)/,"sticky tab chrome missing");
+assert.match(app,/function closeTabs\(\)/,"tab close function missing");
+assert.match(app,/ml-tab-open/,"main-screen-only tab state missing");
+assert.match(app,/ml-page-open/,"full-screen page state missing");
 assert.match(app,/choiceEvents>0&&state\.age>=8/,"choice-event setting must be respected");
 assert.match(app,/function randomLifeEvent\(\)\{return null\}/,"legacy uncontrolled random events must be disabled");
 assert.match(app,/state\.meta\.choiceYear===state\.year/,"duplicate yearly choice guard missing");
