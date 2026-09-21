@@ -1029,7 +1029,7 @@ function mlQueueConsequence(kind,title,text,run){
   state.pendingConsequences.push({id:"c"+Date.now()+rand(10,99),dueYear:state.year+1,kind,title,text,runKey:run});
 }
 function mlConsequenceDefinitions(action,before,after){
-  if(action==="buyCar"&&!before.assets===after.assets)return;
+  if(action==="buyCar"&&after.assets<=before.assets)return;
   const chance=Math.random();
   if(action==="buyCar"&&after.assets>before.assets&&chance<.45)mlQueueConsequence("vehicle","🚗 Autószerviz","Az autódnak éves szervizre van szüksége.", "car-service");
   if(action==="pet"&&!before.pet&&after.pet&&chance<.55)mlQueueConsequence("pet","🐾 Állatorvosi ellenőrzés","A háziállatodnak esedékes egy ellenőrzés.", "vet-check");
