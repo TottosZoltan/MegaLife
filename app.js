@@ -974,3 +974,23 @@ renderLife=function(){
   const target=box.querySelector(".panel:last-child");
   if(target)target.innerHTML="<h3>Életnapló</h3>"+(timeline||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>');
 };
+
+/* MegaLife v0.1.0 — choice-event guarantee */
+const _mlChoiceRelease01=choiceEvent;
+choiceEvent=function(){
+  if(!state||state.age<8)return;
+  const settings=mlEventSettings();
+  if(settings.choiceEvents<=0)return;
+  state.meta=state.meta||{};
+  if(state.meta.choiceYear===state.year)return;
+  if(Array.isArray(ML_CHOICES)&&ML_CHOICES.length){
+    const c=pick(ML_CHOICES);
+    $("modalBody").innerHTML='<div class="eyebrow">DÖNTÉSI HELYZET</div><h2>'+c.title+'</h2><p class="muted">'+c.text+'</p>'+c.choices.map((x,i)=>'<button class="choice" onclick="mlResolveChoice('+i+')">'+x[0]+'</button>').join("");
+    window.__mlChoice=c;
+    $("modal").classList.remove("hidden");
+    state.meta.choiceYear=state.year;
+    return;
+  }
+  _mlChoiceRelease01();
+  if($("modal")&&!$("modal").classList.contains("hidden"))state.meta.choiceYear=state.year;
+}
