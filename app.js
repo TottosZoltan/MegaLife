@@ -1,4 +1,4 @@
-const VERSION="0.1.1";
+const VERSION="0.1.2";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -995,7 +995,7 @@ choiceEvent=function(){
 }
 
 
-/* MegaLife v0.1.1 — action feedback, consequences and home return flow */
+/* MegaLife v0.1.2 — decision-first events and readable mobile HUD */
 function mlSnapshot(){
   return {
     money:Number(state.money)||0,bank:Number(state.bank)||0,debt:Number(state.debt)||0,
@@ -1108,9 +1108,8 @@ showTab=function(tab){
 const _mlRender011=render;
 render=function(){
   _mlRender011();
-  if(state){renderPendingConsequences();mlReturnShortcut()}
+  if(state){renderPendingConsequences();mlReturnShortcut();mlChoiceBanner012()}
 };
-["interact","activity","travel","pet","crime","dateAction","proposal","marryAction","childAction","study","university","getJob","bank","loan","invest","gamble","buyHouse","buyCar","buyLuxury","sellAsset","startBusiness","sellBusiness","startHobby","practiceHobby","joinSocial","socialPost","socialTrend"].forEach(mlWrapAction);
 const _mlPocket011=mlPocketDecision;
 mlPocketDecision=function(...args){
   const before=mlSnapshot();const result=_mlPocket011(...args);setTimeout(()=>mlActionFeedback("pocketMoney",before),0);return result;
@@ -1123,4 +1122,73 @@ normalize=function(){
   if(!state)return;
   state.pendingConsequences=(Array.isArray(state.pendingConsequences)?state.pendingConsequences:[]).filter(x=>x&&typeof x==="object").slice(-4);
   state.pendingConsequences.forEach(x=>{x.dueYear=Number(x.dueYear)||state.year;x.title=mlSafeText(x.title,"Következő lépés");x.text=mlSafeText(x.text,"Az előző döntésednek következménye lett.");x.kind=mlSafeText(x.kind,"general");x.runKey=mlSafeText(x.runKey,"")});
+};
+
+/* v0.1.2 — make real decision situations interactive instead of passive events */
+const ML_DECISION_EVENTS_012=[
+ {id:"school",min:8,max:17,weight:8,title:"📚 Iskolai döntés",text:"Fontos dolgozatod lesz. Mit teszel?",options:[
+  {label:"Tanulok",run:()=>{state.smarts=clamp(state.smarts+4);state.discipline=clamp(state.discipline+2);state.happiness=clamp(state.happiness-2);log("Tanultál a fontos dolgozatra. +Intelligencia, +Fegyelem, −Boldogság.","Döntés")}},
+  {label:"Pihenek",run:()=>{state.happiness=clamp(state.happiness+4);state.smarts=clamp(state.smarts-1);log("A pihenést választottad a tanulás helyett. +Boldogság, −Intelligencia.","Döntés")}}
+ ]},
+ {id:"friends",min:10,weight:7,title:"🤝 Baráti döntés",text:"Egy barátodnak szüksége van rád, de neked is tele van a napod. Mit teszel?",options:[
+  {label:"Segítek neki",run:()=>{state.happiness=clamp(state.happiness+3);state.karma=clamp(state.karma+3);state.discipline=clamp(state.discipline-1);log("Időt szántál a barátodra. +Boldogság, +Karma.","Döntés")}},
+  {label:"A saját dolgaimmal foglalkozom",run:()=>{state.discipline=clamp(state.discipline+2);state.happiness=clamp(state.happiness-1);log("A saját feladataidat választottad. +Fegyelem, −Boldogság.","Döntés")}}
+ ]},
+ {id:"money",min:16,weight:6,title:"💰 Pénzügyi döntés",text:"Váratlanul plusz pénzhez jutottál. Mire használod?",options:[
+  {label:"Félreteszem",run:()=>{const n=rand(5000,25000);state.bank+=n;state.discipline=clamp(state.discipline+2);log("A plusz pénz egy részét félretetted: "+fmt(n)+".","Döntés")}},
+  {label:"Elköltöm magamra",run:()=>{const n=rand(3000,18000);state.money+=n;state.money-=n;state.happiness=clamp(state.happiness+5);log("A plusz pénzt élményre költötted. +Boldogság.","Döntés")}}
+ ]},
+ {id:"work",min:18,weight:7,requires:s=>!!s.job,title:"💼 Munkahelyi döntés",text:"A munkahelyeden kapsz egy plusz feladatot. Többet kereshetsz, de kevesebb szabadidőd marad.",options:[
+  {label:"Elvállalom",run:()=>{const n=rand(10000,60000);state.money+=n;state.stats.earned+=n;state.discipline=clamp(state.discipline+3);state.happiness=clamp(state.happiness-3);log("Elvállaltad a plusz feladatot: +"+fmt(n)+" pénz, +Fegyelem, −Boldogság.","Döntés")}},
+  {label:"Nem vállalom",run:()=>{state.happiness=clamp(state.happiness+2);state.discipline=clamp(state.discipline-1);log("A szabadidőt választottad a plusz munka helyett. +Boldogság.","Döntés")}}
+ ]},
+ {id:"health",min:18,weight:5,title:"🏥 Egészségügyi döntés",text:"Egy ideje nem érzed magad teljesen jól. Mit teszel?",options:[
+  {label:"Elmegyek orvoshoz",run:()=>{const n=rand(5000,30000);if(state.money>=n){state.money-=n;state.stats.spent+=n;state.health=clamp(state.health+7);log("Orvoshoz mentél és kivizsgáltattad magad. +Egészség, −Pénz.","Döntés")}else{state.health=clamp(state.health+2);log("Orvoshoz mentél, de csak alapvizsgálatra volt elég pénzed. +Egészség.","Döntés")}}},
+  {label:"Pihenek és figyelek magamra",run:()=>{state.health=clamp(state.health+3);state.happiness=clamp(state.happiness+2);log("Pihentél és jobban figyeltél magadra. +Egészség, +Boldogság.","Döntés")}}
+ ]},
+ {id:"relationship",min:18,weight:5,requires:s=>s.relationships?.length>0,title:"❤️ Kapcsolati döntés",text:"A párod több időt szeretne veled tölteni. Mit teszel?",options:[
+  {label:"Időt szánok rá",run:()=>{state.happiness=clamp(state.happiness+5);state.karma=clamp(state.karma+1);log("Időt töltöttél a pároddal. +Boldogság.","Döntés")}},
+  {label:"Most a saját dolgaim fontosabbak",run:()=>{state.discipline=clamp(state.discipline+1);state.happiness=clamp(state.happiness-4);log("A saját dolgaidat választottad. −Boldogság, +Fegyelem.","Döntés")}}
+ ]}
+];
+function mlDecisionPool012(){
+ return ML_DECISION_EVENTS_012.filter(e=>state.age>=e.min&&(e.max===undefined||state.age<=e.max)&&(!e.requires||e.requires(state)));
+}
+function mlPickDecision012(){
+ const pool=mlDecisionPool012();if(!pool.length)return null;
+ return pool[Math.floor(Math.random()*pool.length)];
+}
+function mlChoiceBanner012(){
+ const box=$("choiceBanner");if(!box||!state)return;
+ const c=state.meta?.activeDecision;
+ if(!c){return}
+ box.classList.remove("hidden");
+ box.innerHTML='<div class="decision-card"><div class="decision-kicker">DÖNTÉSI HELYZET</div><h3>'+mlSafeText(c.title,"Döntés")+'</h3><p>'+mlSafeText(c.text,"Mit választasz?")+'</p><div class="decision-options">'+c.options.map((o,i)=>'<button class="action decision-option" onclick="mlResolveDecision012('+i+')"><b>'+mlSafeText(o.label,"Választás")+'</b></button>').join("")+'</div></div>';
+}
+function mlOpenDecision012(){
+ if(!state||state.meta?.activeDecision)return false;
+ const c=mlPickDecision012();if(!c)return false;
+ state.meta=state.meta||{};state.meta.activeDecision={id:c.id,title:c.title,text:c.text,options:c.options.map((o,i)=>({label:o.label,index:i}))};
+ state.meta.activeDecisionPayload=c;
+ mlChoiceBanner012();return true;
+}
+function mlResolveDecision012(i){
+ const a=state.meta?.activeDecisionPayload;
+ if(!a||!a.options?.[i])return;
+ const picked=a.options[i];
+ state.meta.activeDecision=null;state.meta.activeDecisionPayload=null;
+ picked.run();normalize();save();render();toast("✓ Döntés rögzítve: "+picked.label);
+ setTimeout(()=>mlCloseTabsAfterAction(),80);
+}
+const _mlNextYear012=nextYear;
+nextYear=function(){
+ if(!state||!state.alive)return _mlNextYear012();
+ const had=state.meta?.activeDecision;
+ if(had)return toast("Előbb válassz a jelenlegi döntési helyzetben.");
+ const result=_mlNextYear012();
+ if(state&&state.alive&&state.meta?.activeDecision==null&&mlEventSettings().choiceEvents>0&&state.age>=8){
+   if(mlOpenDecision012())toast("Új döntési helyzet vár rád.");
+ }
+ normalize();save();render();
+ return result;
 };
