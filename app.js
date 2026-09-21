@@ -1,4 +1,4 @@
-const VERSION="0.1.3";
+const VERSION="0.1.4";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -72,7 +72,7 @@ function proposal(){if(state.age<18)return toast("18 éves kor előtt nem jegyez
 /* Pull-to-refresh mobile gesture */
 (function setupPullToRefresh(){
   let startY=0,startX=0,pulling=false,refreshing=false;
-  const threshold=78;
+  const threshold=45;
   const indicator=document.createElement("div");
   indicator.id="pullRefreshIndicator";
   indicator.innerHTML='<span class="pull-icon">↓</span><span class="pull-label">Húzd le a frissítéshez</span>';
@@ -92,7 +92,7 @@ function proposal(){if(state.age<18)return toast("18 éves kor előtt nem jegyez
     if(!pulling||refreshing||window.scrollY>0||e.touches.length!==1)return;
     const dy=e.touches[0].clientY-startY,dx=Math.abs(e.touches[0].clientX-startX);
     if(dy<=0||dy<dx)return;
-    const distance=Math.min(110,dy*.55);
+    const distance=Math.min(130,dy*.85);
     indicator.style.transform="translate(-50%, "+Math.round(distance-52)+"px)";
     indicator.classList.add("visible");
     setProgress(distance);
@@ -106,7 +106,7 @@ function proposal(){if(state.age<18)return toast("18 éves kor előtt nem jegyez
       indicator.classList.add("refreshing");
       indicator.querySelector(".pull-label").textContent="Frissítés…";
       indicator.querySelector(".pull-icon").textContent="↻";
-      setTimeout(()=>location.reload(),220);
+      setTimeout(()=>location.reload(),1400);
     }else{
       indicator.classList.remove("visible","ready");
       indicator.style.transform="translate(-50%, -52px)";
@@ -1134,7 +1134,7 @@ const ML_DECISION_EVENTS_012=[
   {label:"Segítek neki",run:()=>{state.happiness=clamp(state.happiness+3);state.karma=clamp(state.karma+3);state.discipline=clamp(state.discipline-1);log("Időt szántál a barátodra. +Boldogság, +Karma.","Döntés")}},
   {label:"A saját dolgaimmal foglalkozom",run:()=>{state.discipline=clamp(state.discipline+2);state.happiness=clamp(state.happiness-1);log("A saját feladataidat választottad. +Fegyelem, −Boldogság.","Döntés")}}
  ]},
- {id:"money",min:16,weight:6,title:"💰 Pénzügyi döntés",text:"Váratlanul plusz pénzhez jutottál. Mire használod?",options:[
+ {id:"money",min:16,weight:6,title:"💰 Pénzügyi döntés",text:"Váratlanul plusz pénzhez jutottál. Mire használod?",onOpen:()=>{const n=rand(5000,25000);state.money+=n;state.stats.earned+=n;log("Váratlanul kaptál "+fmt(n)+" Ft-ot.","Pénz")},options:[
   {label:"Félreteszem",run:()=>{const n=rand(5000,25000);state.money+=n;state.bank+=n;state.money-=n;state.discipline=clamp(state.discipline+2);log("A plusz pénzt félretetted: "+fmt(n)+".","Döntés")}},
   {label:"Elköltöm magamra",run:()=>{const n=rand(3000,18000);state.money+=n;state.money-=n;state.happiness=clamp(state.happiness+5);log("A plusz pénzt élményre költötted. +Boldogság.","Döntés")}}
  ]},
@@ -1256,3 +1256,23 @@ function refreshPage(){
   if(b){b.disabled=true;b.setAttribute("aria-busy","true");}
   setTimeout(()=>location.reload(),1400);
 }
+
+
+/* MegaLife v0.1.4 — life phase HUD */
+function mlLifePhase014(age){
+  if(age<6)return "👶 Kisgyermekkor";
+  if(age<14)return "🧒 Gyermekkor";
+  if(age<18)return "🎒 Kamaszkor";
+  if(age<30)return "🌱 Fiatal felnőttkor";
+  if(age<50)return "🏡 Felnőttkor";
+  if(age<65)return "⭐ Érett felnőttkor";
+  return "🧓 Időskor";
+}
+const _mlRender014=render;
+render=function(){
+  _mlRender014();
+  if(state){
+    const meta=$("pMeta");
+    if(meta)meta.textContent=state.age+" éves • "+mlLifePhase014(state.age)+" • "+state.country;
+  }
+};
