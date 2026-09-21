@@ -1,4 +1,4 @@
-const VERSION="0.0.33";
+const VERSION="0.1.0";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -879,3 +879,98 @@ function annualEvent(){
   }
   state.stats.annualEvents=Math.min(settings.randomEvents,used.length);
 }
+
+
+/* MegaLife v0.1.0 — release hardening, deterministic settings and save compatibility */
+function mlSafeText(value,fallback=""){
+  return String(value??fallback).replace(/[<>]/g,"").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").trim().slice(0,80)||fallback;
+}
+const _mlNormalizeRelease=normalize;
+normalize=function(){
+  _mlNormalizeRelease();
+  if(!state)return;
+  state.alive=state.alive!==false;
+  state.first=mlSafeText(state.first,"Alex");
+  state.last=mlSafeText(state.last,"Life");
+  state.country=mlSafeText(state.country,"Magyarország");
+  state.money=Math.max(0,Math.round(Number(state.money)||0));
+  state.bank=Math.max(0,Math.round(Number(state.bank)||0));
+  state.debt=Math.max(0,Math.round(Number(state.debt)||0));
+  state.health=clamp(Number(state.health)||0);
+  state.happiness=clamp(Number(state.happiness)||0);
+  state.smarts=clamp(Number(state.smarts)||0);
+  state.looks=clamp(Number(state.looks)||0);
+  state.discipline=clamp(Number(state.discipline)||0);
+  state.karma=clamp(Number(state.karma)||0);
+  state.relationships=Array.isArray(state.relationships)?state.relationships:[];
+  state.children=Array.isArray(state.children)?state.children:[];
+  state.assets=Array.isArray(state.assets)?state.assets:[];
+  state.crimes=Array.isArray(state.crimes)?state.crimes:[];
+  state.hobbies=Array.isArray(state.hobbies)?state.hobbies:[];
+  state.events=Array.isArray(state.events)?state.events:[];
+  state.achievements=Array.isArray(state.achievements)?state.achievements:[];
+  state.social=state.social&&typeof state.social==="object"?state.social:{followers:0,posts:0,platforms:{}};
+  state.social.followers=Math.max(0,Math.round(Number(state.social.followers)||0));
+  state.social.posts=Math.max(0,Math.round(Number(state.social.posts)||0));
+  state.social.platforms=state.social.platforms&&typeof state.social.platforms==="object"?state.social.platforms:{};
+  Object.values(state.social.platforms).forEach(p=>{
+    if(!p||typeof p!=="object")return;
+    p.handle=mlSafeText(p.handle,"@megalife");
+    p.followers=Math.max(0,Math.round(Number(p.followers)||0));
+    p.posts=Math.max(0,Math.round(Number(p.posts)||0));
+    p.likes=Math.max(0,Math.round(Number(p.likes)||0));
+  });
+  state.stats=state.stats&&typeof state.stats==="object"?state.stats:{};
+  for(const k of["years","earned","spent","days","actions","relationships","children","crimes","investProfit","annualEvents"])state.stats[k]=Math.max(0,Number(state.stats[k])||0);
+  state.pendingConsequences=Array.isArray(state.pendingConsequences)?state.pendingConsequences:[];
+  state.flags=state.flags&&typeof state.flags==="object"?state.flags:{};
+  state.flags.married=!!state.flags.married;
+  state.flags.university=!!state.flags.university;
+  state.meta=state.meta&&typeof state.meta==="object"?state.meta:{};
+  state.meta.version=VERSION;
+  state.meta.slot=currentSlot||1;
+  if(state.events.length>80)state.events=state.events.slice(-80);
+};
+const _mlSaveRelease=save;
+save=function(){
+  if(!state)return false;
+  try{normalize();_mlSaveRelease();return true}catch(e){console.error("MegaLife mentési hiba:",e);toast("A mentés nem sikerült.");return false}
+};
+function randomLifeEvent(){return null}
+const _mlChoiceRelease=choiceEvent;
+choiceEvent=function(){
+  if(!state||state.age<8)return;
+  const settings=mlEventSettings();
+  if(settings.choiceEvents<=0)return;
+  state.meta=state.meta||{};
+  if(state.meta.choiceYear===state.year)return;
+  _mlChoiceRelease();
+  if($("modal")&&!$("modal").classList.contains("hidden"))state.meta.choiceYear=state.year;
+}
+const _mlNextYearRelease=nextYear;
+nextYear=function(){
+  if(!state||!state.alive)return;
+  _mlNextYearRelease();
+  if(state&&state.alive){
+    const settings=mlEventSettings();
+    if(settings.choiceEvents>0&&state.age>=8&&state.meta?.choiceYear!==state.year)choiceEvent();
+    normalize();save();render();
+    if(state.age>=6&&state.age<=17&&state.flags.pocketMoneyYear!==state.year)setTimeout(mlChildSupportYear,140);
+  }
+}
+const _mlRenderLifeRelease=renderLife;
+renderLife=function(){
+  if(!state)return;
+  _mlRenderLifeRelease();
+  const box=$("tab-life");
+  if(!box)return;
+  const events=[...state.events].sort((a,b)=>(Number(a.age)||0)-(Number(b.age)||0)||(Number(a.year)||0)-(Number(b.year)||0));
+  const groups={};
+  events.slice(-24).forEach(e=>{const key=(Number(e.age)||0)+"|"+(Number(e.year)||0);(groups[key]??=[]).push(e)});
+  const timeline=Object.entries(groups).map(([key,items])=>{
+    const [age,year]=key.split("|");
+    return '<section class="life-thread"><div class="thread-node"><span>'+age+'</span><small>'+year+'</small></div><div class="thread-content"><div class="thread-title">'+age+' éves <span>'+year+'</span></div><div class="thread-events">'+items.map(e=>'<article class="thread-event"><span class="tag">'+mlSafeText(e.type||"Élet","Élet")+'</span><div>'+mlSafeText(e.text||"")+'</div></article>').join("")+'</div></div></section>';
+  }).join("");
+  const target=box.querySelector(".panel:last-child");
+  if(target)target.innerHTML="<h3>Életnapló</h3>"+(timeline||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>');
+};
