@@ -1276,3 +1276,22 @@ render=function(){
     if(meta)meta.textContent=state.age+" éves • "+mlLifePhase014(state.age)+" • "+state.country;
   }
 };
+
+
+/* MegaLife v0.1.4 — decision opening effects */
+const _mlOpenDecision014=mlOpenDecision012;
+mlOpenDecision012=function(){
+  if(!state||state.meta?.activeDecision)return false;
+  const beforeEvents=state.events?.length||0;
+  const ok=_mlOpenDecision014();
+  if(ok){
+    const payload=state.meta?.activeDecisionPayload;
+    if(payload?.onOpen){
+      payload.onOpen();
+      normalize();
+      save();
+      render();
+    }
+  }
+  return ok;
+};
