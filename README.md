@@ -2,6 +2,10 @@
 
 A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim műfajból merít ihletet. Nem használ más játékok forráskódját vagy assetjeit.
 
+## Release
+
+**Jelenlegi stabil fejlesztési ág: v0.1.0**. A következő kiadás innen **v0.1.1** lesz.
+
 ## Jelenlegi rendszerek
 
 - karaktergenerálás, ország, nem, név
@@ -26,6 +30,10 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 ## Futtatás
 
 A projekt statikus: az index.html megnyitásával vagy GitHub Pages-szel futtatható.
+
+## Tesztelés
+
+A repository tartalmaz statikus release smoke teszteket, amelyek ellenőrzik a JavaScript szintaxist, a verziókonzisztenciát, a kritikus DOM-elemeket és a fő játékrendszerek jelenlétét. A teljes böngészős és valódi mobil-eszközös teszt továbbra is külön manuális ellenőrzést igényel.
 
 ## Következő fejlesztési irányok
 
