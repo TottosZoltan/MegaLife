@@ -8,8 +8,8 @@ const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
 assert.equal(VERSION,"0.1.1","app.js version");
-assert.equal((html.match(/v0\.1\.0/g)||[]).length,2,"index version badge/footer");
-assert.match(sw,/const VERSION="0\.1\.0";/,"service worker version");
+assert.equal((html.match(/v0\.1\.1/g)||[]).length,2,"index version badge/footer");
+assert.match(sw,/const VERSION="0\.1\.1";/,"service worker version");
 
 assert.doesNotThrow(()=>new Function(app),"app.js syntax");
 
