@@ -1135,7 +1135,7 @@ const ML_DECISION_EVENTS_012=[
   {label:"A saját dolgaimmal foglalkozom",run:()=>{state.discipline=clamp(state.discipline+2);state.happiness=clamp(state.happiness-1);log("A saját feladataidat választottad. +Fegyelem, −Boldogság.","Döntés")}}
  ]},
  {id:"money",min:16,weight:6,title:"💰 Pénzügyi döntés",text:"Váratlanul plusz pénzhez jutottál. Mire használod?",options:[
-  {label:"Félreteszem",run:()=>{const n=rand(5000,25000);state.bank+=n;state.discipline=clamp(state.discipline+2);log("A plusz pénz egy részét félretetted: "+fmt(n)+".","Döntés")}},
+  {label:"Félreteszem",run:()=>{const n=rand(5000,25000);state.money+=n;state.bank+=n;state.money-=n;state.discipline=clamp(state.discipline+2);log("A plusz pénzt félretetted: "+fmt(n)+".","Döntés")}},
   {label:"Elköltöm magamra",run:()=>{const n=rand(3000,18000);state.money+=n;state.money-=n;state.happiness=clamp(state.happiness+5);log("A plusz pénzt élményre költötted. +Boldogság.","Döntés")}}
  ]},
  {id:"work",min:18,weight:7,requires:s=>!!s.job,title:"💼 Munkahelyi döntés",text:"A munkahelyeden kapsz egy plusz feladatot. Többet kereshetsz, de kevesebb szabadidőd marad.",options:[
