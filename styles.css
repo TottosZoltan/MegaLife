@@ -292,3 +292,16 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 @media(max-width:650px){.social-intro{font-size:13px;line-height:1.5}.social-list{display:grid;gap:10px}.social-card{background:#171e2a;border:1px solid #2a3444;border-radius:14px;padding:14px}.social-card-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}.social-icon{width:46px;height:46px;border-radius:13px;background:#202838;display:grid;place-items:center;font-size:23px}.social-card-head b{display:block;font-size:16px}.social-card-head small{display:block;color:#8f9aaa;font-size:11px;margin-top:2px}.social-meta{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:5px;margin:8px 0 10px}.social-meta span{background:#101620;border:1px solid #252f3d;border-radius:8px;padding:7px 5px;text-align:center;font-size:10px;color:#b9c2d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.social-actions .action{min-height:58px}.social-total{display:flex;align-items:baseline;gap:9px}.social-total b{font-size:27px;color:#eef1f7}.social-total span{font-size:11px;color:#8f9aaa}}
 
 @media(max-width:650px){.life-thread{display:grid;grid-template-columns:48px 1fr;position:relative;min-height:66px;padding:0 0 8px}.life-thread:before{content:"";position:absolute;left:23px;top:45px;bottom:-4px;width:2px;background:#293548}.life-thread:last-child:before{display:none}.thread-node{position:relative;z-index:1;width:48px;height:48px;border-radius:50%;background:#202a3a;border:2px solid #3b4a61;display:flex;flex-direction:column;align-items:center;justify-content:center}.thread-node span{font-size:13px;font-weight:900;color:#fff}.thread-node small{font-size:8px;color:#8f9aaa}.thread-content{padding:0 0 10px 10px}.thread-title{font-size:13px;font-weight:900;color:#eef1f7;margin:2px 0 7px}.thread-title span{font-size:10px;font-weight:700;color:#7f8a9d;margin-left:5px}.thread-events{display:grid;gap:6px}.thread-event{position:relative;background:#171e2a;border:1px solid #293548;border-radius:11px;padding:9px 10px;font-size:12px;line-height:1.4;color:#d7dde7}.thread-event .tag{display:inline-block;margin-bottom:4px;color:#7fc5ff;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}}
+
+
+/* MegaLife v0.0.22 — hobby cards */
+@media(max-width:650px){
+  .hobby-card{background:#171e2a;border:1px solid #2a3444;border-radius:14px;padding:13px;margin-bottom:9px}
+  .hobby-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+  .hobby-head b{font-size:15px;color:#f4f6fa}
+  .hobby-head span{font-size:10px;font-weight:900;color:#9ba7ba;background:#202838;border:1px solid #303b4d;border-radius:999px;padding:5px 8px}
+  .hobby-card>small{display:block;color:#8f9aaa;font-size:11px;line-height:1.4;margin-bottom:8px}
+  .hobby-bar{height:7px;background:#0b1018;border-radius:99px;overflow:hidden;margin-bottom:9px}
+  .hobby-bar i{display:block;height:100%;background:#7183ff;border-radius:99px}
+  .hobby-card .action{min-height:56px}
+}
