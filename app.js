@@ -473,7 +473,21 @@ function profileNewLife(){
   closeModal();newLife();
 }
 function profileSettings(){
-  $("modalBody").innerHTML='<div class="profile-hub"><h2>⚙️ Beállítások</h2><div class="profile-section"><div class="profile-section-title">Játék</div><button class="action" onclick="toggleSetup();toast(\'A karakter részletes beállításai az új élet indításakor érhetők el.\')"><b>🎛️ Karakterbeállítások</b><small>Az új élet indulásakor választható.</small></button></div><div class="profile-section"><div class="profile-section-title">Mentés</div><button class="action" onclick="save();toast(\'Élet elmentve.\')"><b>💾 Automatikus mentés</b><small>Az élet előrehaladáskor is mentésre kerül.</small></button></div><button class="ghost big profile-close" onclick="renderProfileHub()">← Vissza a profilhoz</button></div>';
+  const s=mlEventSettings();
+  $("modalBody").innerHTML='<div class="profile-hub"><h2>⚙️ Beállítások</h2>'+
+    '<div class="profile-section"><div class="profile-section-title">Éves események</div>'+
+    '<label class="settings-field"><b>🎲 Random események / év</b><small>Alapértelmezett: 2. Az események többsége negatív vagy semleges.</small><select id="randomEventCount"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>'+
+    '<label class="settings-field"><b>⚖️ Választós esemény / év</b><small>Alapértelmezett: 1. A döntési helyzetek külön jelennek meg.</small><select id="choiceEventCount"><option value="0">0</option><option value="1">1</option></select></label>'+
+    '<button class="primary action" onclick="saveEventSettingsFromUI()"><b>💾 Beállítások mentése</b><small>Azonnal érvénybe lépnek a következő évben.</small></button></div>'+
+    '<div class="profile-section"><div class="profile-section-title">Mentés</div><button class="action" onclick="save();toast(\'Élet elmentve.\')"><b>💾 Automatikus mentés</b><small>Az élet előrehaladáskor is mentésre kerül.</small></button></div>'+
+    '<button class="ghost big profile-close" onclick="renderProfileHub()">← Vissza a profilhoz</button></div>';
+  setTimeout(()=>{const r=$("randomEventCount"),c=$("choiceEventCount");if(r)r.value=String(s.randomEvents);if(c)c.value=String(Math.min(1,s.choiceEvents))},0);
+}
+function saveEventSettingsFromUI(){
+  const r=$("randomEventCount"),c=$("choiceEventCount");
+  const s=mlSaveEventSettings(r?r.value:2,c?c.value:1);
+  toast("Eseménybeállítások mentve: "+s.randomEvents+" random + "+s.choiceEvents+" választós / év.");
+  profileSettings();
 }
 
 /* MegaLife v0.0.24 — tab back button and refresh feedback */
