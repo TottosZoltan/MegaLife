@@ -698,3 +698,29 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
     margin:-64px -18px 10px!important;
   }
 }
+
+
+/* MegaLife v0.1.7 — navigation controls must stay above page content */
+@media(max-width:650px){
+  .legacy-tab.ml-page-open>.ml-tab-chrome{
+    position:fixed!important;
+    top:env(safe-area-inset-top)!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:58px!important;
+    min-height:58px!important;
+    margin:0!important;
+    z-index:1001!important;
+    pointer-events:auto!important;
+  }
+  .legacy-tab.ml-page-open>.ml-tab-chrome button{
+    position:relative!important;
+    z-index:1002!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+  }
+  .legacy-tab.ml-page-open{
+    padding-top:calc(68px + env(safe-area-inset-top))!important;
+  }
+}
