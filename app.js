@@ -1,4 +1,4 @@
-const VERSION="0.1.0";
+const VERSION="0.1.1";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -993,3 +993,134 @@ choiceEvent=function(){
   _mlChoiceRelease01();
   if($("modal")&&!$("modal").classList.contains("hidden"))state.meta.choiceYear=state.year;
 }
+
+
+/* MegaLife v0.1.1 — action feedback, consequences and home return flow */
+function mlSnapshot(){
+  return {
+    money:Number(state.money)||0,bank:Number(state.bank)||0,debt:Number(state.debt)||0,
+    health:Number(state.health)||0,happiness:Number(state.happiness)||0,smarts:Number(state.smarts)||0,
+    looks:Number(state.looks)||0,discipline:Number(state.discipline)||0,karma:Number(state.karma)||0,
+    followers:Number(state.social?.followers)||0,children:Array.isArray(state.children)?state.children.length:0,
+    relationships:Array.isArray(state.relationships)?state.relationships.length:0,
+    assets:Array.isArray(state.assets)?state.assets.length:0,events:Array.isArray(state.events)?state.events.length:0,
+    job:Array.isArray(state.job)?state.job[0]:"",business:!!state.business,pet:!!state.pet,jail:Number(state.jail)||0
+  };
+}
+function mlNumDiff(a,b,key,label,positive=" +",negative=" −"){
+  const d=(Number(b[key])||0)-(Number(a[key])||0);
+  if(!d)return "";
+  const sign=d>0?positive:negative;
+  const v=Math.abs(Math.round(d));
+  return label+" "+sign+((key==="money"||key==="bank"||key==="debt")?fmt(v):v);
+}
+function mlActionEffects(before,after){
+  const out=[];
+  [["health","Egészség"],["happiness","Boldogság"],["smarts","Intelligencia"],["looks","Kinézet"],["discipline","Fegyelem"],["karma","Karma"],["money","Pénz"],["bank","Bank"],["debt","Tartozás"],["followers","Követők"],["children","Gyerekek"],["relationships","Kapcsolatok"],["assets","Vagyontárgyak"],["jail","Börtönévek"]].forEach(([k,l])=>{const x=mlNumDiff(before,after,k,l);if(x)out.push(x)});
+  if(before.job!==after.job)out.push("Munka: "+after.job);
+  if(!before.business&&after.business)out.push("Vállalkozás indult");
+  if(before.business&&!after.business)out.push("Vállalkozás lezárva");
+  if(!before.pet&&after.pet)out.push("Új háziállat");
+  return out;
+}
+function mlQueueConsequence(kind,title,text,run){
+  state.pendingConsequences=Array.isArray(state.pendingConsequences)?state.pendingConsequences:[];
+  if(state.pendingConsequences.length>=4)return;
+  state.pendingConsequences.push({id:"c"+Date.now()+rand(10,99),dueYear:state.year+1,kind,title,text,runKey:run});
+}
+function mlConsequenceDefinitions(action,before,after){
+  if(action==="buyCar"&&!before.assets===after.assets)return;
+  const chance=Math.random();
+  if(action==="buyCar"&&after.assets>before.assets&&chance<.45)mlQueueConsequence("vehicle","🚗 Autószerviz","Az autódnak éves szervizre van szüksége.", "car-service");
+  if(action==="pet"&&!before.pet&&after.pet&&chance<.55)mlQueueConsequence("pet","🐾 Állatorvosi ellenőrzés","A háziállatodnak esedékes egy ellenőrzés.", "vet-check");
+  if(action==="startBusiness"&&!before.business&&after.business&&chance<.55)mlQueueConsequence("business","🏢 Üzleti adminisztráció","A vállalkozásodnak el kell intézned egy költséges adminisztratív feladatot.", "business-admin");
+  if(action==="socialPost"&&after.followers>before.followers&&chance<.3)mlQueueConsequence("social","📣 Megkeresés","Egy új követő megkeresett egy együttműködési lehetőséggel.", "social-deal");
+  if(action==="travel"&&after.happiness>before.happiness&&chance<.25)mlQueueConsequence("travel","📸 Utazási emlék","Az utazásod után készíthetsz egy fotósorozatot és megoszthatod.", "travel-post");
+}
+function mlRunConsequence(i){
+  const c=state.pendingConsequences?.[i];
+  if(!c)return;
+  let message="";
+  if(c.runKey==="car-service"){const n=rand(45000,140000);if(state.money<n){state.debt+=n-state.money;state.money=0;message="Nem volt elég pénzed a szervizre, ezért tartozás keletkezett: "+fmt(n)+"."}else{state.money-=n;state.stats.spent+=n;message="Kifizetted az autó szervizét: "+fmt(n)+"."}}
+  if(c.runKey==="vet-check"){const n=rand(15000,65000);if(state.money<n){state.happiness=clamp(state.happiness-4);message="Nem tudtad teljesen kifizetni az állatorvost, ezért elhalasztottad az ellenőrzést."}else{state.money-=n;state.stats.spent+=n;state.health=clamp(state.health+2);message="Elvitted az állatodat ellenőrzésre: "+fmt(n)+"."}}
+  if(c.runKey==="business-admin"){const n=rand(30000,120000);if(state.money<n){state.debt+=n-state.money;state.money=0;message="Az adminisztrációt csak tartozásból tudtad rendezni: "+fmt(n)+"."}else{state.money-=n;state.stats.spent+=n;state.discipline=clamp(state.discipline+2);message="Elintézted a vállalkozás adminisztrációját: "+fmt(n)+"."}}
+  if(c.runKey==="social-deal"){const gain=rand(200,2500);state.social.followers+=gain;state.happiness=clamp(state.happiness+3);message="Elfogadtad az együttműködést: +"+gain+" követő."}
+  if(c.runKey==="travel-post"){const gain=rand(80,900);state.social.followers+=gain;state.social.posts++;message="Megosztottad az utazási fotóidat: +"+gain+" követő."}
+  if(message){log(message,"Következmény");state.social.followers=Object.values(state.social.platforms||{}).reduce((n,x)=>n+(x.followers||0),0)}
+  state.pendingConsequences.splice(i,1);normalize();save();render();toast("↪ "+message);setTimeout(()=>mlCloseTabsAfterAction(),60);
+}
+function renderPendingConsequences(){
+  const box=$("choiceBanner");if(!box||!state)return;
+  const due=(state.pendingConsequences||[]).filter(x=>Number(x.dueYear||0)<=state.year);
+  if(!due.length){box.classList.add("hidden");box.innerHTML="";return}
+  const c=due[0],i=state.pendingConsequences.indexOf(c);
+  box.classList.remove("hidden");
+  box.innerHTML='<div class="action consequence-card"><b>↪ '+mlSafeText(c.title,"Következő lépés")+'</b><small>'+mlSafeText(c.text,"Az előző döntésednek következménye lett.")+'</small><button class="action consequence-button" onclick="mlRunConsequence('+i+')"><b>Folytatom</b><small>Hajtsd végre ezt a következő lépést.</small></button><button class="ghost consequence-skip" onclick="mlSkipConsequence('+i+')">Most kihagyom</button></div>';
+}
+function mlSkipConsequence(i){
+  const c=state.pendingConsequences?.[i];if(!c)return;
+  state.pendingConsequences.splice(i,1);log("Kihagytad: "+mlSafeText(c.title,"egy következő lépést")+".","Döntés");save();render();setTimeout(()=>mlCloseTabsAfterAction(),60);
+}
+function mlCloseTabsAfterAction(){
+  closeTabs();render();scrollLifeLogToLatest();
+}
+function mlActionFeedback(action,before){
+  if(!state||!state.alive)return;
+  const after=mlSnapshot(),effects=mlActionEffects(before,after);
+  if(after.events===before.events&&effects.length===0)return;
+  if(effects.length){
+    const msg="Hatás: "+effects.slice(0,5).join(" • ");
+    log(msg,"Hatás");
+    toast("✨ "+msg);
+  }
+  mlConsequenceDefinitions(action,before,after);
+  save();render();renderPendingConsequences();
+  setTimeout(()=>mlCloseTabsAfterAction(),70);
+}
+function mlWrapAction(name){
+  const fn=window[name];if(typeof fn!=="function"||fn.__ml011)return;
+  const wrapped=function(...args){
+    if(!state||!state.alive)return fn.apply(this,args);
+    const before=mlSnapshot();
+    const result=fn.apply(this,args);
+    setTimeout(()=>mlActionFeedback(name,before),0);
+    return result;
+  };
+  wrapped.__ml011=true;window[name]=wrapped;
+}
+function mlRememberMenu(tab){
+  if(state){state.meta=state.meta||{};state.meta.lastMenu=tab}
+}
+function mlReturnShortcut(){
+  const box=$("returnShortcut");if(!box||!state)return;
+  const tab=state.meta?.lastMenu;
+  const labels={relations:"Kapcsolatok",career:"Karrier",finance:"Pénz",assets:"Vagyon",activities:"Mindennapok",achievements:"Eredmények",stats:"Statisztikák",social:"Közösségi élet"};
+  if(!tab||!labels[tab]){box.classList.add("hidden");return}
+  box.classList.remove("hidden");box.innerHTML='<button type="button" class="return-shortcut" onclick="showTab(&quot;'+tab+'&quot;)">↩ '+labels[tab]+' megnyitása</button>';
+}
+const _mlShowTab011=showTab;
+showTab=function(tab){
+  mlRememberMenu(tab);
+  _mlShowTab011(tab);
+  if(tab==="life")return;
+  setTimeout(()=>{mlReturnShortcut();},0);
+};
+const _mlRender011=render;
+render=function(){
+  _mlRender011();
+  if(state){renderPendingConsequences();mlReturnShortcut()}
+};
+["interact","activity","travel","pet","crime","dateAction","proposal","marryAction","childAction","study","university","getJob","bank","loan","invest","gamble","buyHouse","buyCar","buyLuxury","sellAsset","startBusiness","sellBusiness","startHobby","practiceHobby","joinSocial","socialPost","socialTrend"].forEach(mlWrapAction);
+const _mlPocket011=mlPocketDecision;
+mlPocketDecision=function(...args){
+  const before=mlSnapshot();const result=_mlPocket011(...args);setTimeout(()=>mlActionFeedback("pocketMoney",before),0);return result;
+};
+
+/* v0.1.1 consequence migration */
+const _mlNormalize011=normalize;
+normalize=function(){
+  _mlNormalize011();
+  if(!state)return;
+  state.pendingConsequences=(Array.isArray(state.pendingConsequences)?state.pendingConsequences:[]).filter(x=>x&&typeof x==="object").slice(-4);
+  state.pendingConsequences.forEach(x=>{x.dueYear=Number(x.dueYear)||state.year;x.title=mlSafeText(x.title,"Következő lépés");x.text=mlSafeText(x.text,"Az előző döntésednek következménye lett.");x.kind=mlSafeText(x.kind,"general");x.runKey=mlSafeText(x.runKey,"")});
+};
