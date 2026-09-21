@@ -429,3 +429,49 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
   .life-action{width:49px;height:52px;min-height:52px}.life-action span{font-size:18px}.life-action b{font-size:7px}
   .stats-dock{height:62px;min-height:62px;padding:5px 7px}
 }
+
+/* MegaLife v0.1.2 — larger, more readable mobile HUD */
+@media(max-width:650px){
+  .topbar{height:58px;min-height:58px;padding:5px 10px}
+  .brand{font-size:19px}
+  .brand small{font-size:9px}
+  .top-actions button{min-height:44px;height:44px}
+  .profile-btn{width:44px;height:44px;font-size:21px}
+  .shell{height:calc(100dvh - 58px);padding:5px 7px 0}
+  .life-hud{grid-template-rows:58px minmax(0,1fr) 84px 74px;gap:6px}
+  .profile{height:58px;min-height:58px;padding:6px 10px}
+  .avatar{width:44px;height:44px;min-width:44px;font-size:20px}
+  .profile h2{font-size:16px}
+  .profile-main .muted{font-size:10px}
+  .hud-money span{font-size:8px}.hud-money b{font-size:14px}
+  .story-head{height:62px;min-height:62px;padding:7px 11px}
+  .story-head h1{font-size:25px}
+  .story-title .eyebrow{font-size:9px}
+  .life-log{font-size:14px;padding:0 10px 10px}
+  .thread-title,.thread-event{font-size:14px;line-height:1.42}
+  .thread-title{font-weight:850}
+  .return-shortcut{min-height:46px;font-size:14px}
+  .advance-wrap{height:84px;min-height:84px;grid-template-columns:1fr 88px 1fr;gap:3px}
+  .advance{width:82px;height:82px;min-height:82px}
+  .advance span{font-size:44px}.advance small{font-size:8px}
+  .life-action{width:62px;height:66px;min-height:66px}
+  .life-action span{font-size:23px}.life-action b{font-size:9px}
+  .stats-dock{height:74px;min-height:74px;padding:8px 9px}
+  .dock-title{font-size:8px}.hud-stat-top{font-size:8px}.hud-stat-top b{font-size:11px}
+  .hud-bar{height:6px}
+  .decision-card{padding:15px;border:1px solid #394568;border-radius:15px;background:#121a2c;margin:8px 0}
+  .decision-kicker{font-size:10px;font-weight:900;letter-spacing:.08em;opacity:.7}
+  .decision-card h3{font-size:20px;line-height:1.2;margin:5px 0}
+  .decision-card p{font-size:15px;line-height:1.45;margin:7px 0 12px}
+  .decision-options{display:grid;gap:9px}
+  .decision-option{min-height:52px!important;font-size:15px!important;text-align:left}
+}
+@media(max-width:380px){
+  .topbar{height:54px;min-height:54px}.shell{height:calc(100dvh - 54px)}
+  .life-hud{grid-template-rows:54px minmax(0,1fr) 78px 68px}
+  .profile{height:54px;min-height:54px}.avatar{width:40px;height:40px;min-width:40px}
+  .story-head{height:57px;min-height:57px}.story-head h1{font-size:23px}
+  .advance-wrap{height:78px;min-height:78px;grid-template-columns:1fr 82px 1fr}
+  .advance{width:76px;height:76px;min-height:76px}
+  .life-action{width:58px;height:61px;min-height:61px}
+}
