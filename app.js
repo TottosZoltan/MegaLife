@@ -647,8 +647,11 @@ function renderActivities(){
 }
 function renderFinance(){
   const adult=state.age>=18;
-  $("tab-finance").innerHTML=panel("Pénzügyek",'<div class="grid"><div class="action"><b>Készpénz</b><small>'+fmt(state.money)+'</small></div><div class="action"><b>Bank</b><small>'+fmt(state.bank)+'</small></div><div class="action"><b>Tartozás</b><small>'+fmt(state.debt)+'</small></div><div class="action"><b>Teljes vagyon</b><small>'+fmt(wealth())+'</small></div></div>')+
-    (adult?panel("Felnőtt pénzügyek",'<div class="grid"><button class="action" onclick="bank(50000)"><b>🏦 Betét</b><small>50 000 Ft bankba</small></button><button class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>50 000 Ft kivétele</small></button><button class="action" onclick="loan()"><b>💸 Hitel</b><small>Hitel és tartozás</small></button><button class="action" onclick="invest()"><b>📈 Befektetés</b><small>Kockázatos hozam</small></button><button class="action" onclick="gamble()"><b>🎰 Szerencsejáték</b><small>18+</small></button></div>'):panel("Gyermekkori pénz",'<div class="action"><b>👨‍👩‍👧 Szülői támogatás</b><small>6–17 évesen évente kérhetsz zsebpénzt.</small></div>');
+  const summary=panel("Pénzügyek",`<div class="grid"><div class="action"><b>Készpénz</b><small>${fmt(state.money)}</small></div><div class="action"><b>Bank</b><small>${fmt(state.bank)}</small></div><div class="action"><b>Tartozás</b><small>${fmt(state.debt)}</small></div><div class="action"><b>Teljes vagyon</b><small>${fmt(wealth())}</small></div></div>`);
+  const tools=adult
+    ? panel("Felnőtt pénzügyek",`<div class="grid"><button class="action" onclick="bank(50000)"><b>🏦 Betét</b><small>50 000 Ft bankba</small></button><button class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>50 000 Ft kivétele</small></button><button class="action" onclick="loan()"><b>💸 Hitel</b><small>Hitel és tartozás</small></button><button class="action" onclick="invest()"><b>📈 Befektetés</b><small>Kockázatos hozam</small></button><button class="action" onclick="gamble()"><b>🎰 Szerencsejáték</b><small>18+</small></button></div>`)
+    : panel("Gyermekkori pénz",`<div class="action"><b>👨‍👩‍👧 Szülői támogatás</b><small>6–17 évesen évente kérhetsz zsebpénzt.</small></div>`);
+  $("tab-finance").innerHTML=summary+tools;
 }
 function renderAssets(){
   const a=state.assets.map((x,i)=>'<div class="list-item"><div><b>'+x.icon+" "+x.name+'</b><br><small class="muted">Érték: '+fmt(x.value)+'</small></div><button class="ghost" onclick="sellAsset('+i+')">Eladás</button></div>').join("")||'<p class="muted">Még nincs jelentős vagyontárgyad.</p>';
