@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.1.1**. A következő kiadás innen **v0.1.1** lesz.
+**Jelenlegi stabil fejlesztési ág: v0.1.1**. A következő kiadás innen **v0.1.2** lesz.
 
 ## Jelenlegi rendszerek
 
