@@ -11,7 +11,7 @@
 <div id="app">
 <header class="topbar">
   <div class="brand">MEGA<span>LIFE</span><small> LIFE SIMULATOR</small></div>
-  <div class="top-actions"><button id="refreshBtn" class="icon-btn" onclick="refreshPage()" aria-label="Frissítés">↻</button><button class="ghost save-top" onclick="manageSaves()" aria-label="Mentések">💾</button><button id="saveBtn" class="ghost save-top">Mentés</button><button id="newBtn" class="danger">Új élet</button></div>
+  <div class="top-actions"><button id="refreshBtn" class="icon-btn" onclick="refreshPage()" aria-label="Frissítés">↻</button><button class="profile-btn" onclick="openProfile()" aria-label="Profil">👤</button></div>
 </header>
 
 <main id="game" class="shell">
@@ -69,8 +69,8 @@
 </section>
 </main>
 
-<div id="modal" class="modal hidden"><div class="modal-box"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></div></div>
-<div id="toast"></div><footer class="app-footer">MegaLife <span id="versionText">v0.0.22</span></footer>
+<div id="modal" class="modal hidden"><div class="modal-box"><div id="modalBody"></div></div></div>
+<div id="toast"></div><footer class="app-footer">MegaLife <span id="versionText">v0.0.23</span></footer>
 <script src="app.js"></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",async()=>{try{const r=await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"});await r.update()}catch(e){}})}</script>
 </body></html>
