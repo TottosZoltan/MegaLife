@@ -1,4 +1,4 @@
-const VERSION="0.0.22";
+const VERSION="0.0.23";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -430,3 +430,48 @@ function renderLife(){
  $("tab-life").innerHTML=jail+traits+panel("Életút",f)+panel("Életnapló",years||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>');
 }
 
+
+/* MegaLife v0.0.23 — final mobile navigation */
+function closeTabs(){
+  ["life","relations","career","finance","assets","activities","achievements","stats","social"].forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
+}
+function showTab(tab){
+  const ids=["life","relations","career","finance","assets","activities","achievements","stats","social"];
+  if(tab==="life"){closeTabs();render();return}
+  const el=$("tab-"+tab);if(!el)return;
+  ids.forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
+  if(tab==="relations")renderRelations();
+  if(tab==="career")renderCareer();
+  if(tab==="finance")renderFinance();
+  if(tab==="assets")renderAssets();
+  if(tab==="activities")renderActivities();
+  if(tab==="achievements")renderAchievements();
+  if(tab==="stats")renderStatsTab();
+  if(tab==="social")renderSocial();
+  if(tab==="life")renderLife();
+  el.classList.remove("hidden");
+}
+function profileSlotButton(n){
+  const x=getSlotData(n),active=n===currentSlot;
+  return '<button class="profile-slot '+(active?'active ':'')+(!x?'empty':'')+'" onclick="profileSelectSlot('+n+')"><b>Élet '+n+'</b><small>'+(x?(x.first+" "+x.last+" • "+x.age+" év"):"Üres")+'</small></button>';
+}
+function renderProfileHub(){
+  const x=state;
+  const current=x?(x.first+" "+x.last):"Nincs aktív élet";
+  const meta=x?(x.age+" éves • "+(x.job&&x.job[0]||"—")):"Válassz vagy indíts életet";
+  $("modalBody").innerHTML='<div class="profile-hub"><div class="profile-hub-head"><div class="profile-hub-avatar">'+(x&&x.first?x.first[0].toUpperCase():"👤")+'</div><div><b>'+current+'</b><small>'+meta+'</small></div></div><div class="profile-section"><div class="profile-section-title">Életek</div><div class="profile-slots">'+Array.from({length:SLOT_COUNT},(_,i)=>profileSlotButton(i+1)).join("")+'</div></div><div class="profile-row"><button class="primary action" onclick="profileNewLife()"><b>✨ Új élet</b><small>Új történet indítása</small></button><button class="action" onclick="profileSettings()"><b>⚙️ Beállítások</b><small>Játék és alkalmazás</small></button></div><div class="profile-row"><button class="action" onclick="save();toast(\'Élet elmentve.\');renderProfileHub()"><b>💾 Mentés</b><small>Aktuális élet mentése</small></button><button class="action" onclick="refreshPage()"><b>↻ Frissítés</b><small>Alkalmazás újratöltése</small></button></div><button class="ghost big profile-close" onclick="closeModal()">Kész</button></div>';
+}
+function openProfile(){renderProfileHub();$("modal").classList.remove("hidden")}
+function profileSelectSlot(n){
+  currentSlot=n;localStorage.setItem("megalife-active-slot",String(n));
+  const x=getSlotData(n);
+  if(x){state=x;normalize();closeModal();render();toast("Élet "+n+" betöltve.")}
+  else{state=null;closeModal();render();toast("Élet "+n+" kiválasztva. Indítsd el az új életet.")}
+}
+function profileNewLife(){
+  if(!confirm("Biztosan új életet kezdesz?"))return;
+  closeModal();newLife();
+}
+function profileSettings(){
+  $("modalBody").innerHTML='<div class="profile-hub"><h2>⚙️ Beállítások</h2><div class="profile-section"><div class="profile-section-title">Játék</div><button class="action" onclick="toggleSetup();toast(\'A karakter részletes beállításai az új élet indításakor érhetők el.\')"><b>🎛️ Karakterbeállítások</b><small>Az új élet indulásakor választható.</small></button></div><div class="profile-section"><div class="profile-section-title">Mentés</div><button class="action" onclick="save();toast(\'Élet elmentve.\')"><b>💾 Automatikus mentés</b><small>Az élet előrehaladáskor is mentésre kerül.</small></button></div><button class="ghost big profile-close" onclick="renderProfileHub()">← Vissza a profilhoz</button></div>';
+}
