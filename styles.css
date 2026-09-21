@@ -538,7 +538,7 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 }
 
 
-/* MegaLife v0.1.5 — separated full-screen pages + sticky right X */
+/* MegaLife v0.1.6 — remove legacy back button and align sticky tab chrome */
 @media(max-width:650px){
   body.ml-tab-open{overflow:hidden}
   body.ml-tab-open #pullRefreshIndicator{display:none!important}
@@ -662,4 +662,39 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
   .ml-tab-title{text-align:center;color:#f4f6fa;font-size:17px;font-weight:900}
   .ml-tab-back,.ml-tab-close{width:42px;height:42px;border-radius:12px;border:1px solid #354158;background:#17202e;color:#fff;font-size:28px;display:grid;place-items:center}
   .ml-tab-close{justify-self:end}
+}
+
+/* MegaLife v0.1.6 — the old .tab-back was still being injected by legacy render code */
+.legacy-tab .tab-back{display:none!important}
+@media(max-width:650px){
+  .legacy-tab.ml-page-open{
+    padding:calc(60px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom))!important;
+  }
+  .legacy-tab.ml-page-open>.ml-tab-chrome{
+    position:fixed;
+    top:env(safe-area-inset-top);
+    left:0;
+    right:0;
+    width:100%;
+    margin:0!important;
+    min-height:56px;
+    height:56px;
+    padding:6px 10px;
+    padding-left:max(10px,env(safe-area-inset-left));
+    padding-right:max(10px,env(safe-area-inset-right));
+    border-radius:0;
+    box-sizing:border-box;
+  }
+  .legacy-tab.ml-page-open>.ml-tab-chrome .ml-tab-back,
+  .legacy-tab.ml-page-open>.ml-tab-chrome .ml-tab-close{
+    position:relative;
+    z-index:2;
+  }
+}
+@media(min-width:651px){
+  .legacy-tab.ml-page-open>.ml-tab-chrome{
+    position:sticky;
+    top:0;
+    margin:-64px -18px 10px!important;
+  }
 }
