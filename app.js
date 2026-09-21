@@ -422,7 +422,7 @@ function renderLife(){
  const groups={};
  [...state.events].sort((a,b)=>(Number(a.age)||0)-(Number(b.age)||0)||(Number(a.year)||0)-(Number(b.year)||0)).forEach(e=>{const key=(Number(e.age)||0)+"|"+(Number(e.year)||0);(groups[key]??=[]).push(e)});
  const years=Object.entries(groups).map(([key,items])=>{const parts=key.split("|"),age=parts[0],year=parts[1];return '<section class="life-thread"><div class="thread-node"><span>'+age+'</span><small>'+year+'</small></div><div class="thread-content"><div class="thread-title">'+age+' éves <span>'+year+'</span></div><div class="thread-events">'+items.map(e=>'<article class="thread-event"><span class="tag">'+(e.type||"Élet")+"</span><div>"+String(e.text||"")+"</div></article>").join("")+"</div></div></section>"}).join("");
- const f='<div class="grid"><div class="action"><b>👨‍👩‍👧 Szülők</b><small>'+state.family.parents.map(p=>p.name).join(" • ")+"</small></div><div class="action"><b>👶 Gyerekek</b><small>"+state.children.length+" gyermek</small></div><div class="action"><b>👥 Testvérek</b><small>"+state.family.siblings+" testvér</small></div><div class="action"><b>💼 Munka</b><small>"+state.job[0]+"</small></div></div>";
+ const f='<div class="grid"><div class="action"><b>👨‍👩‍👧 Szülők</b><small>'+state.family.parents.map(p=>p.name).join(" • ")+"</small></div><div class=\"action\"><b>👶 Gyerekek</b><small>"+state.children.length+" gyermek</small></div><div class=\"action\"><b>👥 Testvérek</b><small>"+state.family.siblings+" testvér</small></div><div class=\"action\"><b>💼 Munka</b><small>"+state.job[0]+"</small></div></div>";
  $("tab-life").innerHTML=jail+traits+panel("Életút",f)+panel("Életnapló",years||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>');
 }
 
