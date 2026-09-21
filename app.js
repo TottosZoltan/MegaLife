@@ -1185,10 +1185,21 @@ nextYear=function(){
  if(!state||!state.alive)return _mlNextYear012();
  const had=state.meta?.activeDecision;
  if(had)return toast("Előbb válassz a jelenlegi döntési helyzetben.");
- const result=_mlNextYear012();
- if(state&&state.alive&&state.meta?.activeDecision==null&&mlEventSettings().choiceEvents>0&&state.age>=8){
-   if(mlOpenDecision012())toast("Új döntési helyzet vár rád.");
+ const savedChoiceSetting=localStorage.getItem("megalife-event-settings");
+ try{
+   const cfg=mlEventSettings();
+   localStorage.setItem("megalife-event-settings",JSON.stringify({...cfg,choiceEvents:0}));
+   const result=_mlNextYear012();
+   if(savedChoiceSetting===null)localStorage.removeItem("megalife-event-settings");
+   else localStorage.setItem("megalife-event-settings",savedChoiceSetting);
+   if(state&&state.alive&&state.meta?.activeDecision==null&&cfg.choiceEvents>0&&state.age>=8){
+     if(mlOpenDecision012())toast("Új döntési helyzet vár rád.");
+   }
+   normalize();save();render();
+   return result;
+ }catch(e){
+   if(savedChoiceSetting===null)localStorage.removeItem("megalife-event-settings");
+   else localStorage.setItem("megalife-event-settings",savedChoiceSetting);
+   throw e;
  }
- normalize();save();render();
- return result;
 };
