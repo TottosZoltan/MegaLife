@@ -475,3 +475,18 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
   .advance{width:76px;height:76px;min-height:76px}
   .life-action{width:58px;height:61px;min-height:61px}
 }
+
+
+/* MegaLife v0.1.3 — make new journal events noticeably flash */
+#lifeLog .thread-event.ml-new-event{
+  animation:megalife-event-flash .48s ease-in-out 5;
+  border-color:#7183ff;
+  box-shadow:0 0 0 2px #7183ff22,0 0 22px #7183ff55;
+}
+@keyframes megalife-event-flash{
+  0%,100%{opacity:1;transform:scale(1)}
+  45%{opacity:.55;transform:scale(1.018)}
+}
+@media(max-width:650px){
+  #lifeLog .thread-event.ml-new-event{animation-duration:.44s;animation-iteration-count:5}
+}
