@@ -1,4 +1,4 @@
-const VERSION="0.0.29";
+const VERSION="0.0.30";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -657,4 +657,104 @@ function renderAssets(){
   const a=state.assets.map((x,i)=>'<div class="list-item"><div><b>'+x.icon+" "+x.name+'</b><br><small class="muted">Érték: '+fmt(x.value)+'</small></div><button class="ghost" onclick="sellAsset('+i+')">Eladás</button></div>').join("")||'<p class="muted">Még nincs jelentős vagyontárgyad.</p>';
   const buys=state.age>=18?'<div class="grid"><button class="action" onclick="buyHouse()"><b>🏠 Lakás</b><small>6 000 000 Ft</small></button><button class="action" onclick="buyCar()"><b>🚗 Autó</b><small>3 000 000 Ft</small></button><button class="action" onclick="buyLuxury()"><b>💎 Luxusóra</b><small>1 200 000 Ft</small></button></div>':'<p class="muted">Saját vagyontárgyakat 18 éves kortól vásárolhatsz.</p>';
   $("tab-assets").innerHTML=panel("Vagyontárgyak",a)+panel("Vásárlás",buys);
+}
+
+
+/* MegaLife v0.0.30 — realistic annual event engine + configurable event frequency */
+const ML_EVENT_DEFAULTS={randomEvents:2,choiceEvents:1};
+function mlEventSettings(){
+  try{
+    const x=JSON.parse(localStorage.getItem("megalife-event-settings")||"{}");
+    return {
+      randomEvents:Math.max(0,Math.min(6,Number(x.randomEvents??ML_EVENT_DEFAULTS.randomEvents))),
+      choiceEvents:Math.max(0,Math.min(3,Number(x.choiceEvents??ML_EVENT_DEFAULTS.choiceEvents)))
+    };
+  }catch(e){return {...ML_EVENT_DEFAULTS}}
+}
+function mlSaveEventSettings(randomEvents,choiceEvents){
+  const x={
+    randomEvents:Math.max(0,Math.min(6,Number(randomEvents)||0)),
+    choiceEvents:Math.max(0,Math.min(3,Number(choiceEvents)||0))
+  };
+  localStorage.setItem("megalife-event-settings",JSON.stringify(x));
+  return x;
+}
+function mlWeightedPick(list){
+  const total=list.reduce((n,x)=>n+x.weight,0);
+  let r=Math.random()*total;
+  for(const x of list){r-=x.weight;if(r<=0)return x}
+  return list[list.length-1];
+}
+function mlEventPool(){
+  const a=state.age,adult=a>=18;
+  const E=[];
+  const add=(weight,min,max,kind,title,run)=>{if(a<min||(max!==undefined&&a>max))return;E.push({weight,kind,title,run})};
+
+  // Negative events deliberately dominate the pool. Positive events are rarer,
+  // and childhood cash gifts are especially rare.
+  add(16,0,120,"negative","🤒 Megbetegedtél",()=>{const n=rand(3,10);state.health=clamp(state.health-n);state.happiness=clamp(state.happiness-rand(1,5));return "Beteg lettél, ezért néhány napig rosszabbul érezted magad."});
+  add(11,3,17,"negative","📚 Iskolai nehézség",()=>{state.discipline=clamp(state.discipline-rand(2,6));state.happiness=clamp(state.happiness-rand(2,6));return "Nehezebben ment egy iskolai időszak, és ez megviselt."});
+  add(9,6,17,"negative","😔 Baráti konfliktus",()=>{state.happiness=clamp(state.happiness-rand(3,9));if(state.relationships.length)state.relationships[0].closeness=clamp(state.relationships[0].closeness-rand(3,10));return "Összekaptál valakivel, aki fontos volt neked."});
+  add(8,10,17,"negative","📱 Elveszett tárgy",()=>{state.happiness=clamp(state.happiness-rand(2,6));return "Elhagytál egy számodra fontos tárgyat."});
+  add(7,14,17,"negative","💔 Csalódás",()=>{state.happiness=clamp(state.happiness-rand(4,10));return "Egy fontos ismerkedés vagy barátság csalódást okozott."});
+  add(10,16,120,"negative","😵 Stresszes időszak",()=>{state.health=clamp(state.health-rand(1,5));state.happiness=clamp(state.happiness-rand(3,8));return "Stresszes időszakon mentél keresztül."});
+  add(9,18,120,"negative","💸 Váratlan kiadás",()=>{const n=rand(15000,90000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const s=n-state.money;state.stats.spent+=state.money;state.money=0;state.debt+=s}return "Egy váratlan kiadás terhelte a pénzügyeidet: "+fmt(n)+"."});
+  add(7,18,120,"negative","🏠 Háztartási probléma",()=>{const n=rand(10000,70000);if(state.money>=n){state.money-=n;state.stats.spent+=n}else{const s=n-state.money;state.money=0;state.debt+=s}return "Elromlott valami otthon, és javításra kellett költened."});
+  add(6,18,120,"negative","💼 Munkahelyi gond",()=>{if(state.job[0]!=="Munkanélküli"){state.happiness=clamp(state.happiness-rand(3,8));if(Math.random()<.12){state.job=jobs[0];return "Komoly gond alakult ki a munkahelyeden, és elvesztetted az állásod."}return "Nehéz helyzet alakult ki a munkahelyeden."}return "Álláskeresőként egy újabb nehéz időszakot éltél át."});
+  add(4,18,120,"negative","🚗 Közlekedési költség",()=>{if(state.assets.some(x=>x.name==="Autó")){const n=rand(20000,120000);state.money=Math.max(0,state.money-n);state.stats.spent+=n;return "Az autód javításra szorult."}return "A közlekedés a vártnál többe került."});
+
+  add(7,0,120,"neutral","👨‍👩‍👧 Családi nap",()=>{state.happiness=clamp(state.happiness+rand(1,5));return "Együtt töltöttél egy nyugodt napot a családoddal."});
+  add(6,6,17,"neutral","🎒 Új élmény az iskolában",()=>{state.smarts=clamp(state.smarts+rand(1,3));return "Egy iskolai projekt vagy program új élményt adott."});
+  add(5,8,17,"neutral","🎨 Új érdeklődés",()=>{state.happiness=clamp(state.happiness+rand(1,4));return "Találtál valamit, ami felkeltette az érdeklődésedet."});
+  add(5,14,120,"neutral","👥 Új ismeretség",()=>{if(state.relationships.length<12){const r={name:pick(names.female.concat(names.male).concat(names.neutral))+" "+pick(surnames),age:Math.max(14,state.age+rand(-2,3)),type:"Ismerős",closeness:rand(30,55)};state.relationships.push(r);state.stats.relationships++;return "Megismerkedtél "+r.name+"-nel."}return "Új emberekkel találkoztál, de egyik kapcsolat sem lett komoly."});
+  add(4,0,17,"positive","🎁 Családi ajándék",()=>{if(Math.random()>0.035)return "A családod kedveskedett neked valamivel, de pénzt nem kaptál.";const n=rand(1000,8000);state.money+=n;state.stats.earned+=n;return "Nagyon ritka alkalomként a családod "+fmt(n)+" Ft-tal megajándékozott."});
+  add(5,6,17,"positive","🏫 Jó eredmény",()=>{state.smarts=clamp(state.smarts+rand(2,5));state.happiness=clamp(state.happiness+rand(2,6));return "Egy fontos feladatban vagy dolgozatban jól teljesítettél."});
+  add(3,18,120,"positive","💰 Extra bevétel",()=>{if(state.job[0]==="Munkanélküli")return "Egy alkalmi lehetőség felmerült, de most nem tudtad kihasználni.";const n=rand(15000,70000);state.money+=n;state.stats.earned+=n;return "Egy kisebb extra munkából "+fmt(n)+" bevételed lett."});
+  add(3,18,120,"positive","❤️ Támogatás",()=>{if(!state.relationships.length)return "Valaki kedvesen melletted állt egy nehezebb időszakban.";state.relationships[0].closeness=clamp(state.relationships[0].closeness+rand(3,8));state.happiness=clamp(state.happiness+rand(2,5));return state.relationships[0].name+" támogatott egy nehezebb időszakban."});
+  return E;
+}
+function annualEvent(){
+  const settings=mlEventSettings();
+  const used=[];
+  for(let n=0;n<settings.randomEvents;n++){
+    const pool=mlEventPool().filter(x=>!used.includes(x.title));
+    if(!pool.length)break;
+    const e=mlWeightedPick(pool);used.push(e.title);
+    const result=e.run();
+    log(result,e.kind==="negative"?"Nehézség":e.kind==="positive"?"Szerencse":"Élet");
+  }
+  state.stats.annualEvents=settings.randomEvents;
+}
+function choiceEvent(){
+  const settings=mlEventSettings();
+  if(!state||state.age<8)return;
+  for(let n=0;n<settings.choiceEvents;n++){
+    const choices=[];
+    if(state.age>=8&&state.age<18)choices.push(
+      {title:"Iskolai döntés",text:"Egy fontos feladat és egy szabad délután közül kell választanod.",choices:[
+        ["📚 Tanulok",()=>{state.smarts=clamp(state.smarts+rand(2,5));state.discipline=clamp(state.discipline+rand(1,4));return "A tanulást választottad."}],
+        ["🎮 Pihenek",()=>{state.happiness=clamp(state.happiness+rand(3,7));return "A pihenést választottad."}]
+      ]},
+      {title:"Zsebpénzes kérdés",text:"Valami fontosra szeretnél pénzt. Megkéred a szüleidet?",choices:[
+        ["💬 Megkérem őket",()=>{const ok=Math.random()<.18;const n=mlPocketAmount();if(ok){const x=Math.round(n*(.7+Math.random()*.5));state.money+=x;state.stats.earned+=x;return "A szüleid most beleegyeztek és "+fmt(x)+" Ft-ot adtak."}state.happiness=clamp(state.happiness-1);return "Most nemet mondtak, mert nem tartották indokoltnak."}],
+        ["🙅 Nem kérek",()=>{state.discipline=clamp(state.discipline+1);return "Úgy döntöttél, hogy most nem kérsz pénzt."}]
+      ]}
+    );
+    if(state.age>=18)choices.push(
+      {title:"Munkahelyi döntés",text:"Több pénzért nagyobb felelősséget vállalnál.",choices:[
+        ["🚀 Vállalom",()=>{state.discipline=clamp(state.discipline+3);if(state.job[0]!=="Munkanélküli")state.job=[state.job[0],Math.round(state.job[1]*1.1),state.job[2]];return "Elvállaltad a nagyobb felelősséget."}],
+        ["🧘 Maradok",()=>{state.happiness=clamp(state.happiness+3);return "A stabilitást választottad."}]
+      ]},
+      {title:"Váratlan kiadás",text:"Egy szükséges kiadást most vagy később is rendezhetsz.",choices:[
+        ["💳 Kifizetem",()=>{const n=rand(20000,60000);if(state.money>=n){state.money-=n;state.stats.spent+=n;return "Most rendezted a kiadást."}state.debt+=n-state.money;state.money=0;return "Nem volt elég készpénzed, ezért tartozás keletkezett."}],
+        ["⏳ Halasztom",()=>{state.happiness=clamp(state.happiness-1);return "Elhalasztottad a kiadást."}]
+      ]}
+    );
+    if(!choices.length)break;
+    const c=pick(choices);
+    $("modalBody").innerHTML='<div class="eyebrow">DÖNTÉSI HELYZET</div><h2>'+c.title+'</h2><p class="muted">'+c.text+'</p>'+c.choices.map((x,i)=>'<button class="choice" onclick="mlResolveChoice('+i+')">'+x[0]+'</button>').join("");
+    window.__mlChoice=c;
+    $("modal").classList.remove("hidden");
+    return; // one modal at a time; remaining configured choices can appear next year
+  }
 }
