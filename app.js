@@ -12,7 +12,7 @@ function log(text,type="Élet"){state.events.unshift({age:state.age,year:state.y
 function wealth(){return state.money+state.bank-state.debt+state.assets.reduce((s,a)=>s+(a.value||0),0)}
 function fmt(n){return money(Math.round(n))}
 function normalize(){if(!state)return;state.first=String(state.first||"Alex");state.last=String(state.last||"Life");state.gender=state.gender||"neutral";state.country=state.country||"Magyarország";state.age=Math.max(0,Number(state.age)||0);state.year=Number(state.year)||new Date().getFullYear();state.money=Math.max(0,Math.round(Number(state.money)||0));state.bank=Math.max(0,Math.round(Number(state.bank)||0));state.debt=Math.max(0,Math.round(Number(state.debt)||0));for(const k of["health","happiness","smarts","looks","discipline","karma"])state[k]=clamp(Number(state[k])||0);state.relationships=Array.isArray(state.relationships)?state.relationships:[];state.children=Array.isArray(state.children)?state.children:[];state.assets=Array.isArray(state.assets)?state.assets:[];state.events=Array.isArray(state.events)?state.events:[];state.achievements=Array.isArray(state.achievements)?state.achievements:[];state.crimes=Array.isArray(state.crimes)?state.crimes:[];state.family=state.family||{parents:[],siblings:0};state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];state.social=state.social||{followers:0,posts:0,platforms:{}};state.social.platforms=state.social.platforms||{};state.stats=state.stats||{};for(const k of["years","earned","spent","days","actions","relationships","children","crimes","investProfit"])state.stats[k]=Number(state.stats[k])||0;state.flags=state.flags||{married:false,university:false};state.traits=Array.isArray(state.traits)?state.traits:[];state.jail=Math.max(0,Number(state.jail)||0);state.business=state.business||null;state.job=Array.isArray(state.job)&&state.job.length>=3?state.job:jobs[0];state.education=state.education||"Általános iskola";state.degree=state.degree||null;state.business=state.business||null;state.pet=state.pet||null;state.meta=state.meta||{};state.meta.version=VERSION;state.meta.slot=currentSlot||1;}
-function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("ageText").textContent=state.age+" éves";$("yearText").textContent=" • "+state.year;$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial()}
+function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("ageText").textContent=state.age+" éves";$("yearText").textContent=" • "+state.year;$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();renderSocial()}
 function renderStats(){const d=[["❤️ Egészség",state.health],["😊 Boldogság",state.happiness],["🧠 Intelligencia",state.smarts],["✨ Kinézet",state.looks],["🎯 Fegyelem",state.discipline]];$("statBars").innerHTML='<div class="stats">'+d.map(x=>'<div class="stat"><span>'+x[0]+'</span><div class="bar"><i style="width:'+x[1]+'%"></i></div><b>'+Math.round(x[1])+'</b></div>').join("")+"</div>"}
 function panel(t,b){return'<div class="card panel"><h3>'+t+"</h3>"+b+"</div>"}
 function renderLife(){const jail=state.jail>0?panel("⚖️ Jogi helyzet",`<div class="action"><b>Börtönben vagy</b><small>Még ${state.jail} év van hátra.</small></div>`):"";const traits=panel("Személyiséged",`<div class="row">${state.traits.map(t=>`<span class="pill">${t}</span>`).join("")}</div>`);const ev=state.events.slice(0,12).map(e=>`<div class="event"><span class="tag">${e.year} • ${e.type}</span>${e.text}</div>`).join("")||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>';const f=`<div class="grid"><div class="action"><b>👨‍👩‍👧 Szülők</b><small>${state.family.parents.map(p=>p.name).join(" • ")}</small></div><div class="action"><b>👶 Gyerekek</b><small>${state.children.length} gyermek</small></div><div class="action"><b>👥 Testvérek</b><small>${state.family.siblings} testvér</small></div><div class="action"><b>💼 Munka</b><small>${state.job[0]}</small></div></div>`;$("tab-life").innerHTML=jail+traits+panel("Életút",f)+panel("Legutóbbi események",ev)}
@@ -417,94 +417,12 @@ function renderStats(){
  $("statBars").innerHTML=data.map(x=>'<div class="hud-stat"><div class="hud-stat-top"><span>'+x[0]+' '+x[1]+'</span><b>'+Math.round(x[2])+'</b></div><div class="hud-bar"><i style="width:'+x[2]+'%"></i></div></div>').join("");
 }
 function renderLife(){
- const el=$("lifeLog");if(!el)return;
- const events=state.events.slice(0,22);
- el.innerHTML=events.length?events.map(e=>'<article class="log-entry"><div class="log-year">'+e.age+' ÉV<br>'+e.year+'</div><div class="log-body"><span class="log-type">'+(e.type||"Élet")+'</span>'+String(e.text||"")+'</div></article>').join(""):'<div class="muted" style="padding:25px 0">A történeted itt fog megjelenni.</div>';
- const cr=$("quickRelations"),cc=$("quickCareer"),cf=$("quickCash"),ca=$("quickAssets");
- if(cr)cr.textContent=state.relationships.length+" kapcsolat";
- if(cc)cc.textContent=state.job[0];
- if(cf)cf.textContent=fmt(state.money);
- if(ca)ca.textContent=state.assets.length+" tárgy";
-}
-function render(){
- if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");if($("versionText"))$("versionText").textContent="v"+VERSION;return}
- normalize();$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");
- $("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();
- $("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country+" • Élet "+(currentSlot||1);
- $("ageText").textContent=state.age+" éves";$("yearText").textContent=" • "+state.year;$("wealth").textContent=fmt(wealth());
- renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();
- if($("versionText"))$("versionText").textContent="v"+VERSION;
+ const jail=state.jail>0?panel("⚖️ Jogi helyzet",'<div class="action"><b>Börtönben vagy</b><small>Még '+state.jail+' év van hátra.</small></div>'):"";
+ const traits=panel("Személyiséged",'<div class="row">'+state.traits.map(t=>'<span class="pill">'+t+"</span>").join("")+"</div>");
+ const groups={};
+ [...state.events].sort((a,b)=>(Number(a.age)||0)-(Number(b.age)||0)||(Number(a.year)||0)-(Number(b.year)||0)).forEach(e=>{const key=(Number(e.age)||0)+"|"+(Number(e.year)||0);(groups[key]??=[]).push(e)});
+ const years=Object.entries(groups).map(([key,items])=>{const parts=key.split("|"),age=parts[0],year=parts[1];return '<section class="life-thread"><div class="thread-node"><span>'+age+'</span><small>'+year+'</small></div><div class="thread-content"><div class="thread-title">'+age+' éves <span>'+year+'</span></div><div class="thread-events">'+items.map(e=>'<article class="thread-event"><span class="tag">'+(e.type||"Élet")+"</span><div>"+String(e.text||"")+"</div></article>").join("")+"</div></div></section>"}).join("");
+ const f='<div class="grid"><div class="action"><b>👨‍👩‍👧 Szülők</b><small>'+state.family.parents.map(p=>p.name).join(" • ")+"</small></div><div class="action"><b>👶 Gyerekek</b><small>"+state.children.length+" gyermek</small></div><div class="action"><b>👥 Testvérek</b><small>"+state.family.siblings+" testvér</small></div><div class="action"><b>💼 Munka</b><small>"+state.job[0]+"</small></div></div>";
+ $("tab-life").innerHTML=jail+traits+panel("Életút",f)+panel("Életnapló",years||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>');
 }
 
-function nextYear(){
- if(!state||!state.alive)return;
- state.age++;state.year++;state.stats.years++;state.stats.days+=365;state.stats.actions++;
- state.relationships.forEach(r=>r.age=(Number(r.age)||state.age)+1);state.children.forEach(ch=>ch.age=(Number(ch.age)||0)+1);
- mlApplyDelayed();
- if(state.jail>0){state.jail--;state.health=clamp(state.health-rand(1,4));state.happiness=clamp(state.happiness-rand(3,8));log("Börtönben töltöttél egy évet. Még "+state.jail+" év van hátra.","Jog")}
- if(state.business){const profit=Math.round(state.business.value*(Math.random()*.12-.03));state.business.value=Math.max(0,state.business.value+profit);if(profit>=0){state.money+=profit;state.stats.earned+=profit}else{state.money=Math.max(0,state.money+profit);state.stats.spent+=Math.abs(profit)}log("A vállalkozásod éves eredménye: "+fmt(profit)+".","Üzlet")}
- state.assets.forEach(a=>{if(a.income){state.money+=a.income;state.stats.earned+=a.income}});
- if(state.age>=18&&state.jail===0){const income=state.job[1]||0;if(income){state.money+=income;state.stats.earned+=income;log("Megkaptad az éves fizetésed: "+fmt(income)+".","Pénz")}}
- state.bank=Math.round(state.bank*1.025);
- const expense=state.age<18?rand(18000,70000):rand(700000,Math.max(900000,Math.round((state.job[1]||180000)/2)));
- if(state.money>=expense){state.money-=expense;state.stats.spent+=expense}else{state.debt+=expense-state.money;state.money=0;log("Az éves kiadásaid meghaladták a készpénzedet. A hiányból "+fmt(expense-state.money)+" tartozás lett.","Pénz")}
- state.happiness=clamp(state.happiness-rand(0,4));state.health=clamp(state.health-(state.age>60?rand(1,5):rand(0,2)));
- if(state.age===6)log("Elkezdted az általános iskolát.","Oktatás");
- if(state.age===14)log("Középiskolás lettél.","Oktatás");
- if(state.age===18)log("Nagykorú lettél.","Mérföldkő");
- if(state.age===65)log("Nyugdíjas korba léptél.","Mérföldkő");
- mlAnnualEvent();
- if(state.age>=18&&state.job[0]!=="Munkanélküli"&&Math.random()<.15){state.job=[state.job[0],Math.round(state.job[1]*1.08),state.job[2]];log("Éves teljesítményértékelés után 8%-os béremelést kaptál.","Karrier")}
- choiceEvent();
- checkAchievements();
- if(state.health<=0)die("súlyos egészségromlás");else if(state.age>70&&Math.random()<Math.min(.06,(state.age-70)*.006))die(pick(["időskori természetes okok","szívprobléma","betegség"]));
- normalize();save();render();
-}
-
-function showTab(tab){
- const ids=["life","relations","career","finance","assets","activities","achievements","stats","social"];
- if(tab==="life"){closeTabs();render();return}
- const el=$("tab-"+tab);if(!el)return;
- ids.forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
- if(tab==="relations")renderRelations();
- if(tab==="career")renderCareer();
- if(tab==="finance")renderFinance();
- if(tab==="assets")renderAssets();
- if(tab==="activities")renderActivities();
- if(tab==="achievements")renderAchievements();
- if(tab==="stats")renderStatsTab();if(tab==="social")renderSocial();
- el.classList.remove("hidden");
- let close=el.querySelector(".tab-close");
- if(!close){
-   close=document.createElement("button");
-   close.className="tab-close";
-   close.type="button";
-   close.setAttribute("aria-label","Bezárás");
-   close.textContent="×";
-   close.onclick=closeTabs;
-   el.prepend(close);
- }
- document.querySelectorAll(".mobile-nav-item").forEach(b=>b.classList.remove("active"));
- const map={relations:1,career:2,finance:3,assets:4,activities:5};
- const nav=document.querySelectorAll(".mobile-nav-item")[map[tab]];
- if(nav)nav.classList.add("active");
-}
-function closeTabs(){
- ["life","relations","career","finance","assets","activities","achievements","stats","social"].forEach(x=>{const e=$("tab-"+x);if(e)e.classList.add("hidden")});
- document.querySelectorAll(".mobile-nav-item").forEach((b,i)=>b.classList.toggle("active",i===0));
-}
-
-function newLife(){
- try{localStorage.removeItem(slotKey(currentSlot))}catch(e){}
- state=null;$("modal").classList.add("hidden");$("gameScreen").classList.add("hidden");$("startScreen").classList.remove("hidden");$("saveNotice").textContent="Új élet indítására kész.";render();
-}
-
-window.addEventListener("DOMContentLoaded",()=>{
- const startBtn=$("startBtn"),ageBtn=$("ageBtn"),saveBtn=$("saveBtn"),newBtn=$("newBtn"),modalClose=$("modalClose");
- if(startBtn)startBtn.onclick=()=>start();
- if(ageBtn)ageBtn.onclick=()=>state&&state.alive?nextYear():showDeath();
- if(saveBtn)saveBtn.onclick=()=>save();
- if(newBtn)newBtn.onclick=e=>{e.preventDefault();if(confirm("Biztosan új életet kezdesz?"))newLife()};
- if(modalClose)modalClose.onclick=()=>{$("modal").classList.add("hidden");window.__mlChoice=null};
- if(load()){normalize();render();$("saveNotice").textContent="Mentett játék betöltve."}else render();
-});
