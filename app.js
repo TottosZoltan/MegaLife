@@ -955,7 +955,6 @@ nextYear=function(){
     const settings=mlEventSettings();
     if(settings.choiceEvents>0&&state.age>=8&&state.meta?.choiceYear!==state.year)choiceEvent();
     normalize();save();render();
-    if(state.age>=6&&state.age<=17&&state.flags.pocketMoneyYear!==state.year)setTimeout(mlChildSupportYear,140);
   }
 }
 const _mlRenderLifeRelease=renderLife;
