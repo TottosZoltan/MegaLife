@@ -1,4 +1,4 @@
-const VERSION="0.5.3";
+const VERSION="0.5.4";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -2457,4 +2457,53 @@ render=function(){
   render=function(){oldRender();if(!tabOpen)activate("life");else hud()};
   // Start/refresh must always begin on the life screen.
   exit();
+})();
+
+/* MegaLife v0.5.4 — navigation state hardening and relationship classes */
+(function(){
+  const ROOT_TABS=["relations","career","finance","assets","activities","achievements","stats","social"];
+  function mlHideAllTabs054(){document.querySelectorAll(".legacy-tab").forEach(el=>{el.classList.add("hidden");el.classList.remove("ml-page-open")});document.body.classList.remove("ml-tab-open");$("gameScreen")?.classList.remove("ml-tab-dim")}
+  function mlShow054(tab,fromMenu=false){
+    if(!state)return;
+    if(tab==="life"){mlHideAllTabs054();render();return}
+    const target=$("tab-"+tab);if(!target)return;
+    mlHideAllTabs054();target.classList.remove("hidden");target.classList.add("ml-page-open");document.body.classList.add("ml-tab-open");$("gameScreen")?.classList.add("ml-tab-dim");
+    ensureTabChrome015(target);
+    target.querySelector(".ml-tab-title")?.setAttribute("data-root",fromMenu?"menu":"sub");
+    target.scrollTop=0;
+  }
+  window.mlNavBack054=function(){
+    const cur=document.querySelector(".legacy-tab.ml-page-open");if(!cur){mlShow054("life");return}
+    const key=cur.id.replace("tab-","");
+    if(window.__mlCategoryParent?.[key]){const p=window.__mlCategoryParent[key];delete window.__mlCategoryParent[key];mlOpenCategory(p);return}
+    mlShow054("life");
+  };
+  const oldChrome=window.ensureTabChrome015;
+  ensureTabChrome015=function(tab){
+    if(!tab)return;
+    const old=tab.querySelector(".ml-tab-chrome");if(old)old.remove();
+    const title=ML_TAB_TITLES_015[tab.id.replace("tab-","")]||"MegaLife";
+    tab.insertAdjacentHTML("afterbegin",'<div class="ml-tab-chrome"><button type="button" class="ml-tab-back" onclick="mlNavBack054()" aria-label="Vissza">‹</button><div class="ml-tab-title">'+title+'</div><button type="button" class="ml-tab-close" onclick="mlShow054(\'life\')" aria-label="Bezárás">×</button></div>');
+  };
+  window.__mlCategoryParent={};
+  const prevOpen=window.mlOpenCategory;
+  window.mlOpenCategory=function(key){
+    const parent={daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",family:"relations",friends:"relations",acquaintances:"relations",romance:"relations"};
+    if(parent[key])window.__mlCategoryParent[key]=parent[key];
+    const box=$("tab-"+(ROOT_TABS.includes(key)?key:(parent[key]||"activities")));if(!box)return;
+    if(key==="activities"||key==="career"||key==="finance"||key==="assets"||key==="relations"){prevOpen(key);return}
+    const original=window.__mlCategoryRenderers?.[key];
+    if(original){box.innerHTML=original();mlShow054(box.id.replace("tab-",""));return}
+    prevOpen(key);
+  };
+  showTab=mlShow054;closeTabs=function(){mlShow054("life")};
+  // Plus must only open the categorized Activities hub.
+  window.mlOpenActivities054=function(){mlOpenCategory("activities")};
+  const plus=document.querySelector("#quickPlus,[data-plus],#plusButton");
+  if(plus)plus.onclick=function(e){e.preventDefault();e.stopPropagation();mlOpenActivities054()};
+  // Prevent stale menu state from reopening after refresh.
+  localStorage.removeItem("megalife-open-tab");
+  document.addEventListener("click",e=>{
+    const back=e.target.closest?.(".ml-tab-back");if(back){e.preventDefault();e.stopImmediatePropagation();mlNavBack054();return}
+  },true);
 })();
