@@ -1,4 +1,4 @@
-const VERSION="0.5.0";
+const VERSION="0.5.1";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -2054,4 +2054,123 @@ render=function(){
   const observer=new MutationObserver(()=>ensureHudMenu());observer.observe(document.body,{attributes:true,attributeFilter:["class"]});
   window.mlPromoteFriend=mlPromoteFriend;
   mlFamilyRepair();ensureHudMenu();
+})();
+
+/* MegaLife v0.5.1 — HUD-only navigation and strict character classes */
+(function(){
+  const PARENT={
+    family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",
+    jobs:"career",education:"career",business:"career",
+    bank:"finance",investments:"finance",loans:"finance",gambling:"finance",
+    property:"assets",vehicles:"assets",luxury:"assets",
+    daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"
+  };
+  let stack=[];
+  function rootFor(tab){return ["relations","career","finance","assets","activities"].includes(tab)}
+  function cleanChrome(){
+    document.querySelectorAll(".ml-tab-chrome").forEach(x=>x.remove());
+  }
+  function syncHudMenu(){
+    const top=document.querySelector(".top-actions");if(!top)return;
+    let b=document.getElementById("mlHudMenuBack");
+    if(!b){
+      b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";
+      b.setAttribute("aria-label","Menü / Vissza");top.insertBefore(b,top.firstChild);
+    }
+    b.textContent=stack.length?"‹":"☰";
+    b.title=stack.length?"Vissza":"Menü";
+    b.onclick=()=>{
+      if(stack.length){
+        const parent=stack.pop();
+        _open(parent,false);
+      }else closeTabs();
+    };
+    b.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
+  }
+  const _ensure=ensureTabChrome015;
+  ensureTabChrome015=function(tab){cleanChrome()};
+  const _show=showTab;
+  function _open(key,push=true){
+    if(!state)return;
+    if(push&&PARENT[key])stack.push(PARENT[key]);
+    _show(key);
+    cleanChrome();syncHudMenu();
+  }
+  showTab=function(tab){
+    if(tab==="life"){stack=[];_show("life");syncHudMenu();return}
+    if(rootFor(tab))stack=[];
+    _open(tab,false);
+  };
+  const _oldOpen=window.mlOpenCategory;
+  window.mlOpenCategory=function(key){
+    if(PARENT[key])stack=[PARENT[key]];
+    else if(rootFor(key))stack=[];
+    _oldOpen(key);
+    cleanChrome();syncHudMenu();
+  };
+  closeTabs=function(){stack=[];_show("life");cleanChrome();syncHudMenu()};
+  document.addEventListener("click",e=>{
+    const x=e.target.closest?.(".ml-tab-chrome");if(x){e.preventDefault();e.stopPropagation()}
+  },true);
+
+  function familyType(c){return String(c?.type||"").toLowerCase()}
+  function isFamily(c){return familyType(c).startsWith("család")}
+  function setSurname(c,last){
+    if(!c)return;
+    const parts=String(c.name||"").trim().split(/\s+/);
+    const first=parts[0]||"Ismeretlen";
+    c.name=first+" "+last;
+  }
+  function familyRepair051(){
+    if(!state)return;
+    state.family=state.family||{};
+    state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];
+    state.meta=state.meta||{};state.meta.characters=Array.isArray(state.meta.characters)?state.meta.characters:[];
+    const last=String(state.last||"Life").trim()||"Life";
+    let father=state.meta.characters.find(c=>familyType(c).includes("apa"));
+    let mother=state.meta.characters.find(c=>familyType(c).includes("anya"));
+    if(!father)father=state.meta.characters.find(c=>c===state.family.parents[0]);
+    if(!mother)mother=state.meta.characters.find(c=>c===state.family.parents[1]);
+    if(!father){
+      const p=state.family.parents.find(x=>/apa/i.test(String(x.type||"")));
+      if(p){father=npcCreate("Család • Apa",Math.max(18,state.age+rand(24,36)));father.name=mlSafeText(p.name,father.name);father.closeness=70;father.trust=75;state.meta.characters.push(father)}
+    }
+    if(!mother){
+      const p=state.family.parents.find(x=>/anya/i.test(String(x.type||"")));
+      if(p){mother=npcCreate("Család • Anya",Math.max(18,state.age+rand(22,34)));mother.name=mlSafeText(p.name,mother.name);mother.closeness=75;mother.trust=80;state.meta.characters.push(mother)}
+    }
+    if(father){father.type="Család • Apa";setSurname(father,last)}
+    if(mother){
+      mother.type="Család • Anya";
+      const first=String(mother.name||"Anya").trim().split(/\s+/)[0]||"Anya";
+      mother.maidenName=String(mother.maidenName||"").trim()||pick(surnames.filter(s=>s!==last));
+      mother.name=first+" "+mother.maidenName;
+    }
+    const siblingCount=Math.min(6,Number(state.family.siblings)||0);
+    let siblings=state.meta.characters.filter(c=>familyType(c).includes("testvér"));
+    while(siblings.length<siblingCount){
+      const s=npcCreate("Család • Testvér",Math.max(0,state.age+rand(-6,6)));
+      s.type="Család • Testvér";setSurname(s,last);s.closeness=rand(50,82);s.trust=rand(50,85);
+      state.meta.characters.push(s);siblings.push(s);
+    }
+    siblings.forEach(s=>{s.type="Család • Testvér";setSurname(s,last)});
+    state.meta.characters.filter(isFamily).forEach(c=>{
+      if(familyType(c).includes("anya")){c.type="Család • Anya";const first=String(c.name||"Anya").trim().split(/\s+/)[0]||"Anya";c.maidenName=c.maidenName||mother?.maidenName||pick(surnames.filter(s=>s!==last));c.name=first+" "+c.maidenName}
+      else if(familyType(c).includes("apa")||familyType(c).includes("testvér")||familyType(c).includes("gyermek")){if(familyType(c).includes("apa"))c.type="Család • Apa";if(familyType(c).includes("testvér"))c.type="Család • Testvér";if(familyType(c).includes("gyermek"))c.type="Család • Gyermek";setSurname(c,last)}
+    });
+  }
+  function classify051(){
+    if(!state?.meta?.characters)return;
+    state.meta.characters.forEach(c=>{
+      if(isFamily(c))return;
+      c.type=c.type==="Barát"?"Barát":"Ismerős";
+      if(c.type==="Ismerős"){c.closeness=clamp(Number(c.closeness)||20);c.trust=clamp(Number(c.trust)||50)}
+    });
+    familyRepair051();
+  }
+  const _norm=normalize;
+  normalize=function(){_norm();classify051()};
+  const _render=render;
+  render=function(){_render();classify051();syncHudMenu()};
+  syncHudMenu();classify051();
 })();
