@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.1.9**.
+**Jelenlegi stabil fejlesztési ág: v0.2.0**.
 
 ## Jelenlegi rendszerek
 
@@ -116,3 +116,25 @@ A játék további verzióiban bővíthető részletesebb családfával, vállal
 - több világállapot és társadalmi/gazdasági esemény
 - statisztikák, életút-összehasonlítás és részletesebb élettörténet
 - teljesítményoptimalizálás nagyobb mentésekhez és hosszú játékidőhöz
+
+
+### v0.2.0 — MegaLife Life Depth Update
+- az **aktuális év kijelzése teljesen kikerült a felhasználói felületből**; a játékos számára a karakter életkora a releváns időmutató
+- a napló vizuális idővonaláról is eltűnt az évszám, így az események életkor szerint olvashatók
+- bevezetésre került egy tartós **világállapot**: infláció, megélhetési költség, életstílus és környezeti hangulat
+- életkorfüggő megélhetési költségek és életstílus-költségek
+- dinamikusabb karrier: előléptetés, nehezebb munkahelyi időszakok és esetleges állásvesztés
+- bővített gazdasági/világesemények
+- családi mérföldkövek a gyermekek fejlődéséhez
+- baráti kör külön rendszerrel, új barátokkal és közös programokkal
+- új fejleszthető készségek: kommunikáció, pénzügy, kreativitás, fittség, vezetés
+- hosszú távú célrendszer és céljutalmak
+- életstílus-rendszer: spórolós, átlagos, kényelmes, luxus
+- többéves életút-szálak alapjai 18, 30 és 40 éves mérföldkövekkel
+- a korábbi döntési és következményrendszerre ráépítve több, egymásra épülő élethelyzet
+- a meglévő reklámhely megmaradt későbbi reklámszolgáltató-integrációhoz
+- a fejlesztés során a meglévő mentéseket kompatibilisen migráló metaadatok használata
+- a roadmap fő területei közül az életmélység, gazdaság, karrier, család, újrajátszhatóság és bevételi infrastruktúra alapjai bekerültek; a további bővítés ezekre épül
+
+### v0.2.0 dokumentációs megjegyzés
+A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az új rendszerek kompatibilitási rétegen keresztül kapcsolódnak a meglévő játékmenethez. A következő karbantartási kör célja a régi/duplikált függvények fokozatos összevonása, hogy az új élet-szimulációs rendszerek hosszú távon is könnyebben bővíthetők legyenek.
