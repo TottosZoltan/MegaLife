@@ -1,4 +1,4 @@
-const VERSION="0.3.1";
+const VERSION="0.4.0";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -1872,4 +1872,87 @@ render=function(){
     });
   };
   window.mlAdvanceNpcWorld=advanceNpcWorld;advanceNpcWorld();
+})();
+
+/* MegaLife v0.4.0 — categorized interaction navigation */
+(function(){
+  const cats={
+    activities:[
+      ["🏃 Mindennapi tevékenységek","exercise","Edzés, meditáció, buli és orvosi ellátás."],
+      ["🎯 Hobbik","hobbies","Válassz hobbit, kezdd el, majd fejleszd."],
+      ["✈️ Utazás","travel","Utazások és új helyek felfedezése."],
+      ["📱 Közösségi élet","social","Közösségi platformok, posztok és trendek."],
+      ["🐾 Háziállatok","pets","Háziállat választása és gondozása."],
+      ["🕶️ Bűnözés","crime","Kockázatos döntések és következmények."]
+    ],
+    career:[
+      ["💼 Munka","jobs","Álláskeresés és karrierváltás."],
+      ["🎓 Tanulás","education","Tanulás, egyetem és végzettség."],
+      ["🏢 Vállalkozás","business","Saját vállalkozás indítása és kezelése."]
+    ],
+    finance:[
+      ["🏦 Bank","bank","Készpénz, bankbetét és pénzmozgások."],
+      ["📈 Befektetések","investments","Befektetés és kockázatos hozam."],
+      ["💸 Hitelek","loans","Hitel felvétele és tartozás kezelése."],
+      ["🎰 Szerencsejáték","gambling","Kockázatos pénzügyi játékok."]
+    ],
+    assets:[
+      ["🏠 Ingatlan","property","Lakás és ingatlanvagyon."],
+      ["🚗 Járművek","vehicles","Autók és közlekedési eszközök."],
+      ["💎 Luxus","luxury","Luxuscikkek és értéktárgyak."]
+    ],
+    relations:[
+      ["👨‍👩‍👧 Család","family","Szülők, testvérek, gyerekek és családi interakciók."],
+      ["🤝 Barátok","friends","Közeli barátok és közös programok."],
+      ["🧑 Ismerősök","acquaintances","Új emberek megismerése és kapcsolatok építése."],
+      ["❤️ Romantika","romance","Randi, kapcsolat, eljegyzés és házasság."]
+    ]
+  };
+  function page(title,subtitle,body,back){
+    return '<div class="category-page"><button class="category-back" onclick="mlOpenCategory(\''+(back||"")+'\')">‹ <span>'+(back?"Vissza":"Menü")+'</span></button><div class="category-title"><h2>'+title+'</h2><p>'+subtitle+'</p></div>'+body+'</div>';
+  }
+  function hub(key,title,subtitle){
+    const list=cats[key].map(x=>'<button class="category-card" onclick="mlOpenCategory(\''+x[1]+'\')"><span class="category-icon">'+x[0].split(" ")[0]+'</span><span><b>'+x[0].slice(x[0].indexOf(" ")+1)+'</b><small>'+x[2]+'</small></span><strong>›</strong></button>').join("");
+    return page(title,subtitle,'<div class="category-list">'+list+'</div>','');
+  }
+  function daily(){return page("🏃 Mindennapi tevékenységek","A hétköznapi döntéseid egy helyen.",'<div class="grid"><button class="action" onclick="activity(\'exercise\')"><b>🏋️ Edzés</b><small>Egészség és boldogság.</small></button><button class="action" onclick="activity(\'meditate\')"><b>🧘 Meditáció</b><small>Stresszcsökkentés.</small></button><button class="action" onclick="activity(\'party\')"><b>🎉 Buli</b><small>Szórakozás társaságban.</small></button><button class="action" onclick="activity(\'doctor\')"><b>🏥 Orvos</b><small>Egészségügyi ellátás.</small></button></div>','activities')}
+  function hobbies(){const owned=state.hobbies.map(x=>{const h=hobbyById(x.id)||{name:x.name,desc:""};return '<div class="hobby-card"><div class="hobby-head"><b>'+h.name+'</b><span>Lv. '+x.level+'</span></div><small>'+h.desc+'</small><div class="hobby-bar"><i style="width:'+x.level+'%"></i></div><button class="action" onclick="practiceHobby(\''+x.id+'\')"><b>🎯 Gyakorlás</b><small>Fejlődj a hobbidban.</small></button></div>'}).join("")||'<p class="muted">Még nincs hobbid.</p>';const avail=HOBBIES.filter(h=>!state.hobbies.some(x=>x.id===h.id)).map(h=>'<button class="action" onclick="startHobby(\''+h.id+'\')"><b>'+h.name+'</b><small>'+fmt(h.cost)+' indulás • '+h.desc+'</small></button>').join("");return page("🎯 Hobbik","Válaszd ki, mivel szeretnéd tölteni a szabadidődet.",panel("Saját hobbik",owned)+panel("Új hobbi",'<div class="grid">'+avail+'</div>'),"activities")}
+  function social(){renderSocial();return $("tab-social").innerHTML+'<button class="category-back" onclick="mlOpenCategory(\'activities\')">‹ <span>Vissza</span></button>'}
+  function travelPage(){return page("✈️ Utazás","Fedezz fel új helyeket.",'<button class="action" onclick="travel()"><b>🌍 Utazás indítása</b><small>250 000 Ft • új élmény és esemény.</small></button>',"activities")}
+  function pets(){return page("🐾 Háziállatok","Új társ az életedben.",'<button class="action" onclick="pet()"><b>🐕 Háziállat választása</b><small>Válassz magad mellé egy új családtagot.</small></button>',"activities")}
+  function crimePage(){return page("🕶️ Bűnözés","Kockázatos döntés, valódi következményekkel.",'<button class="action" onclick="crime()"><b>🎲 Bűncselekmény</b><small>Csak megfelelő életkorban és helyzetben.</small></button>',"activities")}
+  function jobs(){const current='<div class="grid"><div class="action"><b>'+state.job[0]+'</b><small>Éves fizetés: '+fmt(state.job[1])+'</small></div></div>';const j=jobs.map((x,i)=>'<button class="action" onclick="getJob('+i+')"><b>'+x[0]+'</b><small>'+fmt(x[1])+' / év • IQ '+x[2]+'+</small></button>').join("");return page("💼 Munka","Válassz munkát vagy építs karriert.",panel("Jelenlegi munka",current)+panel("Elérhető állások",'<div class="grid">'+j+'</div>'),"career")}
+  function education(){return page("🎓 Tanulás","Fejleszd a tudásod és a lehetőségeidet.",'<div class="grid"><button class="action" onclick="study()"><b>📚 Tanulás</b><small>Intelligencia és fegyelem.</small></button><button class="action" onclick="university()"><b>🎓 Egyetem</b><small>Diploma és jobb állások.</small></button></div>',"career")}
+  function business(){return page("🏢 Vállalkozás","Építs saját üzletet.",state.business?'<div class="grid"><div class="action"><b>'+state.business.name+'</b><small>Érték: '+fmt(state.business.value)+'</small></div><button class="action" onclick="sellBusiness()"><b>💼 Vállalkozás eladása</b><small>Értékesítsd a céged.</small></button></div>':'<button class="action" onclick="startBusiness()"><b>🚀 Vállalkozás indítása</b><small>1 000 000 Ft indulótőke.</small></button>',"career")}
+  function bank(){return page("🏦 Bank","Kezeld a készpénzed és banki pénzed.",panel("Egyenleg",'<div class="grid"><div class="action"><b>Készpénz</b><small>'+fmt(state.money)+'</small></div><div class="action"><b>Bank</b><small>'+fmt(state.bank)+'</small></div></div>')+'<div class="grid"><button class="action" onclick="bank(50000)"><b>💰 Betét</b><small>+50 000 Ft</small></button><button class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>-50 000 Ft bankból</small></button></div>',"finance")}
+  function investments(){return page("📈 Befektetések","Kockázat és lehetséges hozam.",'<button class="action" onclick="invest()"><b>📊 Befektetés</b><small>Fektess be a rendelkezésre álló pénzedből.</small></button>',"finance")}
+  function loans(){return page("💸 Hitelek","Kölcsön és tartozás kezelése.",panel("Jelenlegi tartozás",'<div class="action"><b>'+fmt(state.debt)+'</b><small>Fennálló tartozás</small></div>')+'<button class="action" onclick="loan()"><b>💸 Hitel felvétele</b><small>Új hitel felvétele.</small></button>',"finance")}
+  function gambling(){return page("🎰 Szerencsejáték","Magas kockázatú pénzügyi játék.",'<button class="action" onclick="gamble()"><b>🎰 Játék</b><small>Nyerhetsz vagy veszíthetsz.</small></button>',"finance")}
+  function property(){return page("🏠 Ingatlan","Lakhatás és ingatlanvagyon.",'<button class="action" onclick="buyHouse()"><b>🏠 Lakás vásárlása</b><small>6 000 000 Ft</small></button>',"assets")}
+  function vehicles(){return page("🚗 Járművek","Közlekedés és autók.",'<button class="action" onclick="buyCar()"><b>🚗 Autó vásárlása</b><small>3 000 000 Ft</small></button>',"assets")}
+  function luxury(){return page("💎 Luxus","Értéktárgyak és luxuscikkek.",'<button class="action" onclick="buyLuxury()"><b>💎 Luxusóra vásárlása</b><small>1 200 000 Ft</small></button>',"assets")}
+  function relationsCategory(type){
+    const chars=state.meta.characters||[];
+    let arr=type==="family"?chars.filter(npcIsFamily):type==="friends"?chars.filter(c=>!npcIsFamily(c)&&c.closeness>=35):type==="acquaintances"?chars.filter(c=>!npcIsFamily(c)&&c.closeness<35):[];
+    if(type==="romance")return page("❤️ Romantika","A romantikus kapcsolataid.",panel("Kapcsolatok",state.relationships.map((x,i)=>'<div class="list-item"><div><b>'+mlSafeText(x.name,"Ismeretlen")+'</b><br><small class="muted">'+x.age+' éves • '+x.type+' • '+Math.round(x.closeness)+'%</small></div><button class="ghost" onclick="interact('+i+')">Interakció</button></div>').join("")||'<p class="muted">Még nincs romantikus kapcsolatod.</p>')+'<div class="grid"><button class="action" onclick="dateAction()"><b>❤️ Randi</b><small>Új romantikus kapcsolat.</small></button><button class="action" onclick="proposal()"><b>💎 Eljegyzés</b><small>Magas kapcsolat esetén.</small></button><button class="action" onclick="marryAction()"><b>💍 Házasság</b><small>Megfelelő kapcsolat esetén.</small></button><button class="action" onclick="childAction()"><b>👶 Gyermek</b><small>Gyermekvállalás.</small></button></div>',"relations");
+    const cards=arr.map(c=>'<div class="list-item npc-card"><div class="npc-main"><div class="npc-avatar">'+mlSafeText(c.name,"?").charAt(0).toUpperCase()+'</div><div><b>'+mlSafeText(c.name,"Ismeretlen")+'</b><br><small class="muted">'+c.age+' éves • '+Math.round(c.closeness)+'% • '+(c.status||"saját életút")+'</small></div></div><div class="npc-actions">'+NPC_ACTIONS.map(a=>'<button class="ghost npc-action" onclick="mlNpcInteract(\''+c.id+'\',\''+a[1]+'\')">'+a[0]+'</button>').join("")+'</div></div>').join("")||'<p class="muted">Nincs itt megjeleníthető karakter.</p>';
+    const add=type==="friends"||type==="acquaintances"?'<button class="action" onclick="mlNpcNew(\''+(type==="friends"?"Barát":"Ismerős")+'\')"><b>➕ Új karakter</b><small>Random név, háttér, statok és kinézet.</small></button>':"";
+    return page(cats.relations.find(x=>x[1]===type)[0],cats.relations.find(x=>x[1]===type)[2],cards+add,"relations");
+  }
+  const renderMap={activities:()=>hub("activities","☰ Egyebek","Válaszd ki, mit szeretnél csinálni."),career:()=>hub("career","💼 Karrier","A munkával, tanulással és vállalkozással kapcsolatos dolgok."),finance:()=>hub("finance","💰 Pénzügyek","A pénzügyi döntéseidet külön kategóriákban kezelheted."),assets:()=>hub("assets","🏠 Vagyon","Ingatlan, járművek és luxuscikkek."),relations:()=>hub("relations","❤️ Kapcsolatok","Család, barátok, ismerősök és romantikus kapcsolatok.")};
+  const renderers={daily, hobbies, travel:travelPage, social, pets, crime:crimePage, jobs, education, business, bank, investments, loans, gambling, property, vehicles, luxury, family:()=>relationsCategory("family"),friends:()=>relationsCategory("friends"),acquaintances:()=>relationsCategory("acquaintances"),romance:()=>relationsCategory("romance")};
+  window.mlOpenCategory=function(key){
+    const box=$("tab-"+(cats[key]?key:key==="family"||key==="friends"||key==="acquaintances"||key==="romance"?"relations":key==="jobs"||key==="education"||key==="business"?"career":key==="bank"||key==="investments"||key==="loans"||key==="gambling"?"finance":key==="property"||key==="vehicles"||key==="luxury"?"assets":"activities"));
+    if(!box)return;
+    if(renderers[key])box.innerHTML=renderers[key]();else if(renderMap[key])box.innerHTML=renderMap[key]();
+    if(key==="social")showTab("social");else showTab(box.id.replace("tab-",""));
+  };
+  renderActivities=function(){mlOpenCategory("activities")};
+  renderCareer=function(){mlOpenCategory("career")};
+  renderFinance=function(){mlOpenCategory("finance")};
+  renderAssets=function(){mlOpenCategory("assets")};
+  renderRelations=function(){mlOpenCategory("relations")};
+  document.addEventListener("click",e=>{
+    const b=e.target.closest?.(".category-card");if(b)e.preventDefault();
+  },true);
 })();
