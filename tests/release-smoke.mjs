@@ -7,9 +7,9 @@ const sw=fs.readFileSync("sw.js","utf8");
 const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
-assert.equal(VERSION,"0.1.7","app.js version");
-assert.equal((html.match(/v0\.1\.7/g)||[]).length,2,"index version badge/footer");
-assert.match(sw,/const VERSION="0.1.7";/,"service worker version");
+assert.equal(VERSION,"0.1.8","app.js version");
+assert.equal((html.match(/v0\.1\.8/g)||[]).length,2,"index version badge/footer");
+assert.match(sw,/const VERSION="0.1.8";/,"service worker version");
 
 assert.doesNotThrow(()=>new Function(app),"app.js syntax");
 
@@ -47,4 +47,4 @@ assert.equal(manifest.lang,"hu");
 assert.equal(manifest.display,"standalone");
 assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>0,"PWA icon missing");
 
-console.log("MegaLife v0.1.7 release smoke tests: PASS");
+console.log("MegaLife v0.1.8 release smoke tests: PASS");
