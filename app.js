@@ -1,4 +1,4 @@
-const VERSION="0.5.5";
+const VERSION="0.5.6";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -2701,4 +2701,75 @@ render=function(){
   const norm055=normalize;
   normalize=function(){norm055();familyIdentity055()};
   familyIdentity055();
+})();
+
+/* MegaLife v0.5.6 — final mobile navigation and refresh hardening */
+(function(){
+  const ROOTS056=["relations","career","finance","assets","activities"];
+  const PARENT056={family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"};
+  let route056=["life"];
+  const tab056=k=>$("tab-"+k);
+  function hide056(){document.querySelectorAll(".tab,.legacy-tab").forEach(x=>x.classList.add("hidden"));document.body.classList.remove("ml-tab-open","ml-tab-dim");document.querySelectorAll(".ml-tab-chrome,.category-back,.tab-back").forEach(x=>x.remove())}
+  function hud056(){
+    const top=document.querySelector(".top-actions");if(!top)return;
+    let b=$("mlHudMenuBack");
+    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
+    b.textContent="‹";
+    b.setAttribute("aria-label","Vissza");
+    b.title="Vissza";
+    b.classList.toggle("hidden",route056[0]==="life");
+    b.onclick=()=>{if(route056.length>1){route056.pop();renderRoute056()}else exit056()};
+  }
+  function activate056(k){hide056();tab056(k)?.classList.remove("hidden");document.body.classList.add("ml-tab-open");hud056()}
+  function renderRoot056(k){
+    if(k==="relations")rootRelations?.();
+    else if(k==="career")rootCareer?.();
+    else if(k==="finance")rootFinance?.();
+    else if(k==="assets")rootAssets?.();
+    else if(k==="activities")rootActivities?.();
+  }
+  function renderRoute056(){
+    const k=route056[route056.length-1];
+    if(k==="life"){exit056();return}
+    const p=PARENT056[k];
+    if(ROOTS056.includes(k)){renderRoot056(k);activate056(k);return}
+    if(k==="family"||k==="friends"||k==="acquaintances"||k==="romance"){people(k==="family"?"family":k);activate056("relations");hud056();return}
+    if(k.startsWith("person:")){person(k.slice(7));activate056("relations");hud056();return}
+    if(p==="activities")genericChild(k);
+    else genericRootChild(k);
+    activate056(p||"activities");hud056();
+  }
+  function open056(k){
+    if(k==="life"){exit056();return}
+    route056.push(k);renderRoute056();
+  }
+  function exit056(){
+    route056=["life"];hide056();tab056("life")?.classList.remove("hidden");hud056();
+    if(typeof renderMainLifeLog==="function")renderMainLifeLog();else if(typeof renderLife==="function")renderLife();
+  }
+  window.mlRoute=open056;
+  window.mlPerson=function(id){route056.push("person:"+id);renderRoute056()};
+  window.mlOpenCategory=open056;
+  window.showTab=function(k){open056(k)};
+  window.closeTabs=exit056;
+  // Replace every old "Több/Egyebek" inline handler with the single route.
+  document.querySelectorAll("[onclick]").forEach(el=>{
+    const raw=el.getAttribute("onclick")||"";
+    if(/showTab\(\s*['\"]activities['\"]\s*\)/.test(raw))el.setAttribute("onclick","mlRoute('activities');return false;");
+  });
+  // The quick + button is the only intentional entry into Egyebek.
+  const plus=document.querySelector("#quickPlus,[data-plus],#plusButton,.quick-plus");
+  if(plus){plus.onclick=e=>{e.preventDefault();e.stopPropagation();open056("activities")}}
+  // Never restore an old tab from storage or a stale navigation wrapper.
+  localStorage.removeItem("megalife-open-tab");
+  let booted=false;
+  function forceHome056(){
+    if(!state)return;
+    if(!booted){booted=true;exit056();return}
+    if(route056[0]!=="life" && !document.body.classList.contains("ml-tab-open"))exit056();
+  }
+  window.addEventListener("pageshow",forceHome056);
+  window.addEventListener("load",()=>{setTimeout(forceHome056,0)});
+  document.addEventListener("DOMContentLoaded",()=>{setTimeout(forceHome056,0)},{once:true});
+  forceHome056();
 })();
