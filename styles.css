@@ -724,3 +724,104 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
     padding-top:calc(68px + env(safe-area-inset-top))!important;
   }
 }
+
+
+/* MegaLife v0.1.8 — stretched mobile journal layout and redesigned year strip */
+@media(max-width:650px){
+  .life-hud{
+    grid-template-rows:54px minmax(0,1fr) 78px 68px;
+    gap:6px;
+  }
+  .story{
+    min-height:0;
+    height:100%;
+  }
+  .story-head{
+    height:64px;
+    min-height:64px;
+    padding:8px 13px;
+    background:linear-gradient(135deg,#171e2b,#121923);
+  }
+  .story-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .story-title .eyebrow{
+    font-size:9px;
+    letter-spacing:1.3px;
+    padding:7px 9px;
+    border-radius:9px;
+    background:#202b3d;
+    color:#b9c4d8;
+  }
+  .story-head h1{
+    margin:0!important;
+    font-size:25px!important;
+    font-weight:900;
+  }
+  .story-year{
+    margin-left:auto;
+    min-width:86px;
+    padding:7px 9px;
+    border:1px solid #2d394c;
+    border-radius:10px;
+    background:#0d141f;
+    text-align:right;
+  }
+  .story-year span{
+    display:block;
+    font-size:7px;
+    line-height:1;
+    letter-spacing:1px;
+    color:#7f8a9d;
+    font-weight:900;
+  }
+  .story-year b{
+    display:block;
+    margin-top:3px;
+    font-size:13px;
+    color:#e9eef8;
+  }
+  .life-log{
+    padding:0 12px 8px!important;
+  }
+  .return-shortcut-wrap{
+    display:flex;
+    justify-content:flex-end;
+    padding:6px 10px 9px!important;
+    border-top:1px solid #ffffff08;
+    background:#111824;
+  }
+  .return-shortcut{
+    width:auto!important;
+    max-width:82%;
+    min-height:40px!important;
+    padding:8px 12px!important;
+    border-radius:10px!important;
+    font-size:12px!important;
+    text-align:center!important;
+    background:#1d2940!important;
+  }
+}
+@media(min-width:651px){
+  .story-head{
+    min-height:72px;
+  }
+  .story-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .story-year{
+    margin-left:auto;
+    min-width:100px;
+    padding:8px 11px;
+    border:1px solid #29364b;
+    border-radius:11px;
+    background:#0d141f;
+    text-align:right;
+  }
+  .story-year span{display:block;font-size:8px;letter-spacing:1px;color:var(--muted);font-weight:900}
+  .story-year b{font-size:14px}
+}
