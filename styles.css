@@ -947,3 +947,8 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 
 /* MegaLife v0.5.3 — definitive HUD exit control */
 .ml-hud-menu{font-weight:900;font-size:22px;line-height:1}
+
+/* MegaLife v0.5.3 — HUD-only navigation */
+.ml-hud-menu{order:-1;z-index:20}
+.ml-hud-menu.hidden{display:none!important}
+.category-page>.category-back{display:none!important}
