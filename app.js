@@ -1,4 +1,4 @@
-const VERSION="0.2.1";
+const VERSION="0.2.2";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -1659,4 +1659,88 @@ render=function(){
   };
 
   ml20Init();
+})();
+
+/* MegaLife v0.2.2 — NPC character system + modal decisions + relationship hub */
+(function(){
+  const BG=[
+    "Átlagos családban nőtt fel, ahol a tanulást fontosnak tartották.",
+    "Sokat költözött gyerekkorában, ezért könnyen alkalmazkodik.",
+    "Nagy, összetartó családból érkezett, erős családi kötődésekkel.",
+    "Csendes környezetben nőtt fel, és korán önállósodott.",
+    "Sportos közegben nőtt fel, ahol a kitartást tanulta meg.",
+    "Kreatív családból jött, gyerekként sokat alkotott.",
+    "Anyagi nehézségeket is megélt, ezért óvatos a pénzzel.",
+    "Jómódú háttérből indult, de szeretne saját lábára állni."
+  ];
+  const NPC_FIRST=["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia","Dóra","Réka","Eszter","Jázmin","Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter","Márk","Bálint","Gergő","Noel"];
+  const NPC_ACTIONS=[["💬 Beszélgetés","talk"],["☕ Találkozás","hangout"],["🎁 Ajándék","gift"],["✨ Dicséret","compliment"],["⚡ Vita","argue"]];
+  function npcName(){return pick(NPC_FIRST)+" "+pick(surnames)}
+  function npcStats(){return{health:rand(35,95),happiness:rand(30,90),smarts:rand(25,95),looks:rand(25,95),discipline:rand(20,90),karma:rand(25,85),communication:rand(20,95),finance:rand(15,90),creativity:rand(20,95),fitness:rand(20,95),leadership:rand(15,90)}}
+  function npcCreate(type="Ismerős",age=state.age){
+    const a=Math.max(8,Math.min(100,Math.round(Number(age)||state.age)+rand(-3,3)));
+    return{id:"npc-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7),name:npcName(),gender:pick(["female","male","neutral"]),age:a,type,closeness:type==="Barát"?rand(45,70):rand(15,48),trust:rand(25,75),status:pick(["tanuló","dolgozó","szabadúszó","pályakezdő","vállalkozó","álláskereső"]),background:pick(BG),stats:npcStats(),knownAge:state.age,lastSeenAge:state.age,alive:true}
+  }
+  function npcNormalize(){
+    state.meta=state.meta||{};state.meta.characters=Array.isArray(state.meta.characters)?state.meta.characters:[];
+    state.meta.characters=state.meta.characters.filter(Boolean).slice(-60);
+    state.meta.characters.forEach(c=>{c.id=String(c.id||("npc-"+Math.random().toString(36).slice(2)));c.name=mlSafeText(c.name,"Ismeretlen");c.type=String(c.type||"Ismerős");c.age=Math.max(0,Math.round(Number(c.age)||state.age));c.closeness=clamp(Number(c.closeness)||20);c.trust=clamp(Number(c.trust)||50);c.background=mlSafeText(c.background,"Átlagos háttérből érkezett.");c.stats=c.stats&&typeof c.stats==="object"?c.stats:npcStats();c.alive=c.alive!==false});
+    if(!state.meta.characters.length){
+      const parents=(state.family?.parents||[]);parents.forEach((p,i)=>{const c=npcCreate(i===0?"Család • Apa":"Család • Anya",Math.max(18,state.age+rand(24,36)));c.name=mlSafeText(p.name,c.name);c.closeness=rand(55,80);c.trust=rand(55,90);state.meta.characters.push(c)});
+      const count=Math.min(3,Number(state.family?.siblings)||0);for(let i=0;i<count;i++)state.meta.characters.push(npcCreate("Család • Testvér",Math.max(6,state.age+rand(-4,4))));
+    }
+    if(state.age>=8&&state.meta.characters.length<4&&Math.random()<.75)state.meta.characters.push(npcCreate("Ismerős",state.age));
+  }
+  const _norm22=normalize;
+  normalize=function(){_norm22();if(state)npcNormalize()};
+  function npcFind(id){return state?.meta?.characters?.find(c=>c.id===id)}
+  function npcIsFamily(c){return String(c?.type||"").startsWith("Család")}
+  function npcInteract(id,action){
+    const c=npcFind(id);if(!c||!c.alive)return toast("Ez a karakter már nem érhető el.");
+    const cost=action==="hangout"?rand(0,6000):action==="gift"?rand(1000,12000):0;
+    if(cost>state.money)return toast("Ehhez nincs elég pénzed.");
+    if(cost){state.money-=cost;state.stats.spent+=cost}
+    let delta=0,msg="";
+    if(action==="talk"){delta=rand(3,9);c.trust=clamp(c.trust+rand(2,6));msg="Beszélgettél vele."}
+    if(action==="hangout"){delta=rand(6,14);state.happiness=clamp(state.happiness+rand(2,6));msg="Találkoztatok és együtt töltöttétek az időt."}
+    if(action==="gift"){delta=rand(5,12);c.trust=clamp(c.trust+rand(3,8));msg="Meglepted egy ajándékkal."}
+    if(action==="compliment"){delta=rand(2,8);c.happiness=clamp(Number(c.happiness||50)+rand(1,5));msg="Meglepően jól fogadta a dicséretedet."}
+    if(action==="argue"){delta=-rand(5,15);c.trust=clamp(c.trust-rand(3,10));state.happiness=clamp(state.happiness-2);msg="Összevesztetek."}
+    c.closeness=clamp(c.closeness+delta);c.lastSeenAge=state.age;log(msg+" "+c.name+" kapcsolat: "+Math.round(c.closeness)+"%.","Kapcsolat");save();render();mlCloseTabsAfterAction();
+  }
+  function npcNew(type="Ismerős"){
+    if(state.age<8)return toast("8 éves kortól kezdesz önállóan új ismeretségeket kialakítani.");
+    if(state.meta.characters.length>=60)return toast("Már nagyon sok ismert karaktered van.");
+    const c=npcCreate(type,state.age);state.meta.characters.push(c);state.stats.relationships++;state.happiness=clamp(state.happiness+2);log("Megismerted "+c.name+" karakterét. "+c.background,"Kapcsolat");save();render();mlCloseTabsAfterAction();
+  }
+  function npcDecision(){
+    if(!state||state.age<8)return false;
+    const pool=state.meta.characters.filter(c=>c.alive&&c.closeness>=35);if(!pool.length)return false;
+    const c=pick(pool);
+    const situations=[
+      {title:"🤝 Egy ismerős megkeresett",text:c.name+" segítséget kér tőled egy fontos ügyben.",a:[["💬 Segítek neki",()=>{c.closeness=clamp(c.closeness+9);c.trust=clamp(c.trust+8);state.happiness=clamp(state.happiness+3);return"Segítettél "+c.name+"-nek."}],["🙅 Most nem vállalom",()=>{c.closeness=clamp(c.closeness-3);return"Most nem tudtál segíteni neki."}]]},
+      {title:"☕ Találkozóra hívott",text:c.name+" szeretne találkozni veled. Mit teszel?",a:[["❤️ Találkozom vele",()=>{c.closeness=clamp(c.closeness+10);state.happiness=clamp(state.happiness+5);return"Találkoztál "+c.name+"-nel."}],["📅 Későbbre halasztom",()=>{c.closeness=clamp(c.closeness-2);return"Most elhalasztottad a találkozót."}]]},
+      {title:"💬 Fontos beszélgetés",text:c.name+" őszintén megoszt veled valamit a múltjáról.",a:[["👂 Meghallgatom",()=>{c.trust=clamp(c.trust+12);c.closeness=clamp(c.closeness+7);return"Meghallgattad "+c.name+" történetét."}],["➡️ Témát váltok",()=>{c.trust=clamp(c.trust-5);return"Nem szerettél volna belemenni a témába."}]]}
+    ];
+    const s=pick(situations);
+    $("modalBody").innerHTML='<div class="eyebrow">KARAKTER • DÖNTÉS</div><h2>'+s.title+'</h2><p class="muted">'+mlSafeText(c.name,"Ismerős")+": "+mlSafeText(s.text,"Mit teszel?")+'</p>'+s.a.map((x,i)=>'<button class="choice" onclick="mlNpcDecisionResolve('+i+')">'+x[0]+'</button>').join("");
+    window.__mlNpcDecision={c,s};$("modal").classList.remove("hidden");return true;
+  }
+  function mlNpcDecisionResolve(i){const x=window.__mlNpcDecision;if(!x?.s?.a?.[i])return;const msg=x.s.a[i][1]();log(msg,"Döntés • "+x.c.name);window.__mlNpcDecision=null;$("modal").classList.add("hidden");normalize();save();render();mlCloseTabsAfterAction()}
+  function renderRelationshipHub(){
+    const box=$("tab-relations");if(!box||!state)return;npcNormalize();
+    const family=state.meta.characters.filter(npcIsFamily),friends=state.meta.characters.filter(c=>!npcIsFamily(c)&&c.closeness>=35),known=state.meta.characters.filter(c=>!npcIsFamily(c)&&c.closeness<35);
+    const card=c=>{const acts=NPC_ACTIONS.map(a=>'<button class="ghost npc-action" onclick="mlNpcInteract(&quot;'+c.id+'&quot;,&quot;'+a[1]+'&quot;)">'+a[0]+'</button>').join("");return'<div class="list-item npc-card"><div class="npc-main"><div class="npc-avatar">'+mlSafeText(c.name,"?").charAt(0).toUpperCase()+'</div><div><b>'+mlSafeText(c.name,"Ismeretlen")+'</b> <span class="pill">'+mlSafeText(c.type,"Ismerős")+'</span><br><small class="muted">'+c.age+' éves • kapcsolat '+Math.round(c.closeness)+'% • bizalom '+Math.round(c.trust)+'%</small><small class="npc-bg">'+mlSafeText(c.background,"Átlagos háttér.")+'</small></div></div><div class="npc-actions">'+acts+'</div></div>'};
+    const familyCards=family.map(card).join("")||'<p class="muted">A családtagjaid még nincsenek részletesen felvéve.</p>';
+    const friendCards=friends.map(card).join("")||'<p class="muted">Még nincs közeli barátod. Ismerkedj meg valakivel.</p>';
+    const knownCards=known.map(card).join("")||'<p class="muted">Nincs új ismerősöd.</p>';
+    const romantic=state.relationships.map((x,i)=>'<div class="list-item"><div><b>'+mlSafeText(x.name,"Ismeretlen")+'</b> <span class="pill">'+mlSafeText(x.type,"Kapcsolat")+'</span><br><small class="muted">'+x.age+' éves • kapcsolat '+Math.round(x.closeness)+'%</small></div><button class="ghost" onclick="interact('+i+')">Interakció</button></div>').join("")||'<p class="muted">Még nincs romantikus kapcsolatod.</p>';
+    const familyActions='<div class="grid"><button class="action" onclick="dateAction()"><b>❤️ Randi</b><small>Új romantikus kapcsolat.</small></button><button class="action" onclick="proposal()"><b>💎 Eljegyzés</b><small>Magas kapcsolat esetén.</small></button><button class="action" onclick="marryAction()"><b>💍 Házasság</b><small>Megfelelő kapcsolat esetén.</small></button><button class="action" onclick="childAction()"><b>👶 Gyermek</b><small>Gyermekvállalás.</small></button></div>';
+    const ask=state.age>=6&&state.age<=17?'<button class="action" onclick="requestPocketMoney()"><b>💰 Zsebpénz</b><small>Kérdezd meg a szüleidet, mint egy valódi döntési helyzetben.</small></button>':"";
+    box.innerHTML=panel("👨‍👩‍👧 Család",familyCards+ask)+panel("🤝 Barátok",friendCards+'<button class="action" onclick="mlNpcNew(&quot;Barát&quot;)"><b>➕ Új barát</b><small>Random karakter, random háttérrel és statokkal.</small></button>')+panel("🧑 Ismerősök",knownCards+'<button class="action" onclick="mlNpcNew(&quot;Ismerős&quot;)"><b>➕ Új ismerős</b><small>Találkozz egy új, generált karakterrel.</small></button>')+panel("❤️ Romantikus kapcsolatok",romantic)+panel("💍 Családi élet",familyActions);
+  }
+  const _renderRelations22=renderRelations;renderRelations=function(){_renderRelations22();renderRelationshipHub()};
+  const _annual22=annualEvent;annualEvent=function(){_annual22();if(state&&state.age>=8&&Math.random()<.45){if(state.meta.characters.length<60)state.meta.characters.push(npcCreate("Ismerős",state.age));const pool=state.meta.characters.filter(x=>x.alive&&!npcIsFamily(x));if(pool.length){const c=pick(pool);c.lastSeenAge=state.age;log("Véletlen találkozás: "+c.name+" felbukkant az életedben.","Karakter");c.closeness=clamp(c.closeness+rand(1,5))}}};
+  const _next22=nextYear;nextYear=function(){if(!state||!state.alive)return _next22();if(state.meta?.activeDecision||$("modal")&&!$("modal").classList.contains("hidden"))return toast("Előbb válaszd ki, mit teszel.");const saved=localStorage.getItem("megalife-event-settings");try{const cfg=mlEventSettings();localStorage.setItem("megalife-event-settings",JSON.stringify({...cfg,choiceEvents:0}));const result=_next22();if(saved===null)localStorage.removeItem("megalife-event-settings");else localStorage.setItem("megalife-event-settings",saved);if(state&&state.alive){if(Math.random()<.5)npcDecision();normalize();save();render()}return result}catch(e){if(saved===null)localStorage.removeItem("megalife-event-settings");else localStorage.setItem("megalife-event-settings",saved);throw e}};
+  window.mlNpcInteract=npcInteract;window.mlNpcNew=npcNew;window.mlNpcDecisionResolve=mlNpcDecisionResolve;window.mlNpcDecision=npcDecision;npcNormalize();
 })();
