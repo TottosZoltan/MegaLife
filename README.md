@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.2.0**.
+**Jelenlegi stabil fejlesztési ág: v0.2.1**.
 
 ## Jelenlegi rendszerek
 
@@ -138,3 +138,12 @@ A játék további verzióiban bővíthető részletesebb családfával, vállal
 
 ### v0.2.0 dokumentációs megjegyzés
 A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az új rendszerek kompatibilitási rétegen keresztül kapcsolódnak a meglévő játékmenethez. A következő karbantartási kör célja a régi/duplikált függvények fokozatos összevonása, hogy az új élet-szimulációs rendszerek hosszú távon is könnyebben bővíthetők legyenek.
+
+
+### v0.2.1 — kritikus renderelési hibajavítás
+- javítva a főképernyő teljes renderelését blokkoló, már nem létező `yearText` DOM-elem hivatkozás
+- az állapotjelző ismét megjelenik és frissül
+- az életnapló és az események ismét kirajzolódnak
+- a kapcsolatok/karrier/pénz/több fülek tartalma ismét renderelődik
+- a feleslegessé vált aktuális év UI-hivatkozások az összes render-útvonalból eltávolítva
+- a release smoke teszt verzióellenőrzése javítva v0.2.1-re
