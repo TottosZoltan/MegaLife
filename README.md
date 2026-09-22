@@ -233,3 +233,12 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a Kapcsolatok → Család/Barátok/Ismerősök/Romantika és a többi alkategória visszalépése szülő kategóriába vezet
 - frissítés után a játék mindig a fő életképernyőn marad, az Egyebek nem nyílik meg automatikusan
 - a régi, oldalon belüli vissza/menü chrome eltávolításra került
+
+
+### v0.5.3 — Navigáció javítás
+- frissítéskor és mentés betöltésekor mindig a fő életképernyő marad látható
+- az Egyebek csak a HUD ☰ gombjának explicit megnyomására nyílik meg
+- a kategóriaoldalak felső visszanyila megszűnt
+- a HUD bal felső gombja kezeli a visszalépést: kategória → fő kategória → főképernyő
+- a fő kategóriákból a visszalépés közvetlenül a főképernyőre visz
+- a korábbi render-átirányítások felül lettek írva, hogy ne nyissanak meg menüt frissítéskor
