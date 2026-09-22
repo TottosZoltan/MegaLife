@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.3.1**.
+**Jelenlegi stabil fejlesztési ág: v0.4.0**.
 
 ## Jelenlegi rendszerek
 
@@ -159,7 +159,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a régi mentések automatikusan kapnak karakter-adatokat a családtagokból és új ismerősökből
 - ez a réteg későbbi NPC-karrier, saját család, konfliktus, barátság és romantikus életutak alapja
 
-### v0.3.1 — Living Characters
+### v0.4.0 — Living Characters
 - a fő karakter és az NPC-k most ténylegesen látható, eredeti SVG karakterként jelennek meg
 - moduláris kinézet: bőrtónus, arcforma, hajforma, hajszín, szemszín, szemüveg, szakáll, testalkat, ruha és kiegészítő
 - minden karakter saját, mentett megjelenést kap, ezért ugyanaz az NPC később is felismerhető
@@ -171,8 +171,20 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a vizuális rendszer alapot ad későbbi ruhákhoz, életkor-változásokhoz, családi hasonlósághoz és részletesebb karaktercsomagokhoz
 
 
-### v0.3.1 — NPC életutak
+### v0.4.0 — NPC életutak
 - az ismert NPC-k évente saját életutat is követnek: öregedés, tanulás, munka és státuszváltozás
 - bizonyos karaktereknél párkapcsolat, házasság és saját gyermekek is kialakulhatnak
 - a karakterek életútja nem csak a játékos körül történik, hanem a háttérben is továbbhalad
 - a családba később bekerülő gyermekek automatikusan kapnak saját karakterprofilt és vizuális megjelenést
+
+
+### v0.4.0 — Kategorizált interakciós rendszer
+- az Egyebek lap most kategóriahubként működik
+- a hobbi külön aloldal lett: Egyebek → Hobbik → saját/új hobbi
+- a legtöbb interakció kategóriákba és alkategóriákba került
+- Karrier: Munka / Tanulás / Vállalkozás
+- Pénzügyek: Bank / Befektetések / Hitelek / Szerencsejáték
+- Vagyon: Ingatlan / Járművek / Luxus
+- Kapcsolatok: Család / Barátok / Ismerősök / Romantika
+- Egyebek: Mindennapok / Hobbik / Utazás / Közösségi élet / Háziállatok / Bűnözés
+- az aloldalakon belül marad a játékos, nem dob vissza automatikusan a főképernyőre
