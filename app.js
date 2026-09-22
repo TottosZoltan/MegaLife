@@ -2394,3 +2394,67 @@ render=function(){
   moreBtns.forEach(b=>b.setAttribute("aria-label","Egyebek"));
   hud();
 })();
+
+/* MegaLife v0.5.3 — definitive HUD navigation, refresh-safe */
+(function(){
+  const ROOTS=["relations","career","finance","assets","activities"];
+  const PARENT={family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"};
+  let stack=[];
+  let tabOpen=false;
+  function life(){return $("tab-life")}
+  function hideTabs(){document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"))}
+  function hud(){
+    const top=document.querySelector(".top-actions");if(!top)return;
+    let b=$("mlHudMenuBack");
+    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
+    b.textContent=stack.length?"‹":"☰";
+    b.setAttribute("aria-label",stack.length?"Vissza":"Menü");
+    b.title=stack.length?"Vissza":"Menü";
+    b.onclick=()=>stack.length?back():openRoot("activities");
+    b.classList.toggle("hidden",!tabOpen);
+  }
+  function activate(tab){
+    hideTabs();
+    if(tab==="life"){tabOpen=false;life()?.classList.remove("hidden");document.body.classList.remove("ml-tab-open")}
+    else{tabOpen=true;$( "tab-"+tab)?.classList.remove("hidden");document.body.classList.add("ml-tab-open")}
+    hud();
+  }
+  function openRoot(key){
+    if(!ROOTS.includes(key))return;
+    stack=[];tabOpen=true;
+    if(key==="activities")renderActivities();else if(key==="relations")renderRelations();else if(key==="career")renderCareer();else if(key==="finance")renderFinance();else if(key==="assets")renderAssets();
+    activate(key);
+  }
+  function openChild(key){
+    const p=PARENT[key];if(!p)return;
+    stack=[p];tabOpen=true;
+    // Call the category renderer once, then activate its parent tab without allowing old wrappers to navigate.
+    const fn=window._mlOriginalCategoryOpen;
+    if(typeof fn==="function"){try{fn(key)}catch(e){}}
+    activate(p);
+  }
+  function back(){
+    if(!stack.length)return openRoot("activities");
+    const p=stack.pop();
+    if(ROOTS.includes(p)){openRoot(p);return}
+    openChild(p);
+  }
+  function exit(){
+    stack=[];tabOpen=false;hideTabs();life()?.classList.remove("hidden");document.body.classList.remove("ml-tab-open");hud();
+  }
+  window.mlOpenCategory=function(key){ROOTS.includes(key)?openRoot(key):openChild(key)};
+  window.showTab=function(key){
+    if(key==="life"){exit();return}
+    ROOTS.includes(key)?openRoot(key):openChild(key);
+  };
+  window.closeTabs=exit;
+  // Snapshot the category renderer before this navigation layer overrides anything.
+  if(!window._mlOriginalCategoryOpen)window._mlOriginalCategoryOpen=window.mlOpenCategory;
+  // Explicitly restore pure rendering wrappers so refresh/load cannot open a category.
+  const pureA=renderActivities,pureC=renderCareer,pureF=renderFinance,pureS=renderAssets,pureR=renderRelations;
+  renderActivities=function(){try{pureA()}catch(e){}};renderCareer=function(){try{pureC()}catch(e){}};renderFinance=function(){try{pureF()}catch(e){}};renderAssets=function(){try{pureS()}catch(e){}};renderRelations=function(){try{pureR()}catch(e){}};
+  const oldRender=render;
+  render=function(){oldRender();if(!tabOpen)activate("life");else hud()};
+  // Start/refresh must always begin on the life screen.
+  exit();
+})();
