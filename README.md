@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.2.1**.
+**Jelenlegi stabil fejlesztési ág: v0.2.2**.
 
 ## Jelenlegi rendszerek
 
@@ -147,3 +147,14 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a kapcsolatok/karrier/pénz/több fülek tartalma ismét renderelődik
 - a feleslegessé vált aktuális év UI-hivatkozások az összes render-útvonalból eltávolítva
 - a release smoke teszt verzióellenőrzése javítva v0.2.1-re
+
+
+### v0.2.2 — generált karakterek, kapcsolati hub és döntési helyzetek
+- a döntési helyzetek a zsebpénzkéréshez hasonló modális kérdésként jelennek meg, és a játékos választása nélkül nem halad tovább az év
+- a Kapcsolatok oldal központi kapcsolati hub lett: család, barátok, ismerősök és romantikus kapcsolatok külön blokkokban
+- a családtagokkal és ismert karakterekkel beszélgetés, találkozás, ajándék, dicséret és vita is indítható
+- bekerült a generált NPC-rendszer: random név, életkor, háttértörténet, státusz és statok
+- a karakterek kapcsolat-, bizalom- és háttéradatai mentődnek
+- random éves eseményként karakterek bukkanhatnak fel újra
+- a régi mentések automatikusan kapnak karakter-adatokat a családtagokból és új ismerősökből
+- ez a réteg későbbi NPC-karrier, saját család, konfliktus, barátság és romantikus életutak alapja
