@@ -7,9 +7,9 @@ const sw=fs.readFileSync("sw.js","utf8");
 const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
-assert.equal(VERSION,"0.2.0","app.js version");
-assert.equal((html.match(/v0\.1\.8/g)||[]).length,2,"index version badge/footer");
-assert.match(sw,/const VERSION="0.2.0";/,"service worker version");
+assert.equal(VERSION,"0.2.1","app.js version");
+assert.equal((html.match(/v0\.2\.1/g)||[]).length,2,"index version badge/footer");
+assert.match(sw,/const VERSION="0.2.1";/,"service worker version");
 
 assert.doesNotThrow(()=>new Function(app),"app.js syntax");
 
@@ -47,12 +47,13 @@ assert.equal(manifest.lang,"hu");
 assert.equal(manifest.display,"standalone");
 assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>0,"PWA icon missing");
 
-console.log("MegaLife v0.2.0 release smoke tests: PASS");
+console.log("MegaLife v0.2.1 release smoke tests: PASS");
 
 
 assert.ok(!html.includes("AKTUÁLIS ÉV"),"current year must not be visible");
 assert.ok(!html.includes('id="yearText"'),"year display must be removed");
-assert.match(app,/MegaLife v0\.2\.0 — life-depth, economy, family, careers, world systems/,"v0.2.0 life-depth layer missing");
+assert.ok(!app.includes('$("yearText")'),"removed yearText must not be referenced by render code");
+assert.match(app,/MegaLife v0\.2\.0 — life-depth, economy, family, careers, world systems/,"v0.2.1 life-depth layer missing");
 assert.match(app,/state\.meta\.world\.inflation/,"world economy missing");
 assert.match(app,/state\.meta\.skills/,"skill system missing");
 assert.match(app,/state\.meta\.friends/,"friend system missing");
