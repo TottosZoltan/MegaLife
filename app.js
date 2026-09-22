@@ -458,10 +458,8 @@ const ML_CHOICES=[
   function syncNpc(){(state?.meta?.characters||[]).forEach((c,i)=>{if(!c.appearance)c.appearance=appearance(c.id||c.name||("npc"+i))})}
   const _render30=render;
   render=function(){_render30();if(!state)return;ensurePlayer();syncNpc();const p=$("avatar");if(p){p.classList.add("ml-character-avatar");p.innerHTML=svg(state,"118")}};
-  const _renderRel30=renderRelationshipHub;
-  if(typeof _renderRel30==="function"){
-    renderRelationshipHub=function(){_renderRel30();syncNpc();document.querySelectorAll("#tab-relations .npc-card").forEach(card=>{const name=card.querySelector(".npc-main b")?.textContent;const c=(state.meta.characters||[]).find(x=>x.name===name);const av=card.querySelector(".npc-avatar");if(c&&av)av.innerHTML=svg(c,"54")})};
-  }
+  const _renderRelations30=renderRelations;
+  renderRelations=function(){_renderRelations30();syncNpc();document.querySelectorAll("#tab-relations .npc-card").forEach(card=>{const name=card.querySelector(".npc-main b")?.textContent;const c=(state.meta.characters||[]).find(x=>x.name===name);const av=card.querySelector(".npc-avatar");if(c&&av)av.innerHTML=svg(c,"54")})};
   window.mlAvatarSvg=svg;window.mlAvatarAppearance=appearance;
   normalize();
 })();
