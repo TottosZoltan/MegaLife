@@ -1682,12 +1682,14 @@ render=function(){
     return{id:"npc-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7),name:npcName(),gender:pick(["female","male","neutral"]),age:a,type,closeness:type==="Barát"?rand(45,70):rand(15,48),trust:rand(25,75),status:pick(["tanuló","dolgozó","szabadúszó","pályakezdő","vállalkozó","álláskereső"]),background:pick(BG),stats:npcStats(),knownAge:state.age,lastSeenAge:state.age,alive:true}
   }
   function npcNormalize(){
+    if(!state)return;
     state.meta=state.meta||{};state.meta.characters=Array.isArray(state.meta.characters)?state.meta.characters:[];
     state.meta.characters=state.meta.characters.filter(Boolean).slice(-60);
     state.meta.characters.forEach(c=>{c.id=String(c.id||("npc-"+Math.random().toString(36).slice(2)));c.name=mlSafeText(c.name,"Ismeretlen");c.type=String(c.type||"Ismerős");c.age=Math.max(0,Math.round(Number(c.age)||state.age));c.closeness=clamp(Number(c.closeness)||20);c.trust=clamp(Number(c.trust)||50);c.background=mlSafeText(c.background,"Átlagos háttérből érkezett.");c.stats=c.stats&&typeof c.stats==="object"?c.stats:npcStats();c.alive=c.alive!==false});
     if(!state.meta.characters.length){
       const parents=(state.family?.parents||[]);parents.forEach((p,i)=>{const c=npcCreate(i===0?"Család • Apa":"Család • Anya",Math.max(18,state.age+rand(24,36)));c.name=mlSafeText(p.name,c.name);c.closeness=rand(55,80);c.trust=rand(55,90);state.meta.characters.push(c)});
       const count=Math.min(3,Number(state.family?.siblings)||0);for(let i=0;i<count;i++)state.meta.characters.push(npcCreate("Család • Testvér",Math.max(6,state.age+rand(-4,4))));
+      (state.children||[]).slice(0,6).forEach(ch=>{const c=npcCreate("Család • Gyermek",Number(ch.age)||0);c.name=mlSafeText(ch.name,c.name);c.closeness=rand(55,85);state.meta.characters.push(c)});
     }
     if(state.age>=8&&state.meta.characters.length<4&&Math.random()<.75)state.meta.characters.push(npcCreate("Ismerős",state.age));
   }
