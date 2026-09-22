@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.1.8**.
+**Jelenlegi stabil fejlesztési ág: v0.1.9**.
 
 ## Jelenlegi rendszerek
 
@@ -70,3 +70,49 @@ A játék további verzióiban bővíthető részletesebb családfával, vállal
 - az ÉLETNAPLÓ fejléc új, modernebb vizuális sávot kapott
 - a „vissza az előző oldalra” gyorsgomb a napló jobb alsó részébe került
 - mobilon a fő életképernyő a rendelkezésre álló magasságot jobban kihasználja
+
+
+### v0.1.9
+- mobilon bekerült egy dedikált, későbbi hirdetésekhez fenntartott bannerhely az állapotjelző alatt
+- a hirdetési hely jelenleg csak vizuális placeholder, nincs benne külső hirdetési szolgáltatás
+- a hely mérete és pozíciója elő van készítve későbbi reklámrendszer-integrációhoz
+
+## Roadmap
+
+### 1. Következő kör — alap játékmenet stabilizálása
+- mobil UI további finomhangolása és valódi készülékeken történő ellenőrzése
+- akciók és életkorfüggő korlátozások teljes körű auditja
+- éves események és döntési események bővítése, jobb előfeltételekkel
+- mentések és élet-slotok megbízhatóságának további javítása
+- duplikált/legacy JavaScript részek fokozatos összevonása
+
+### 2. Életmélység
+- részletesebb családfa és családtagok saját életútja
+- barátságok, konfliktusok és kapcsolati mérföldkövek
+- részletesebb iskola- és karrierrendszer
+- több szakma, előléptetés, kirúgás és munkahelyi esemény
+- egészségügyi és élethelyzeti események nagyobb változatossága
+
+### 3. Gazdaság és világ
+- részletesebb lakhatás és ingatlanrendszer
+- vállalkozások fejlesztése és több passzív jövedelemforrás
+- infláció, megélhetési költségek és életstílus-költségek
+- több ország, utazási következmény és kulturális esemény
+
+### 4. Tartalom és újrajátszhatóság
+- jelentősen nagyobb esemény-adatbázis
+- ritka, többéves történetszálak
+- több minijáték és választható tevékenység
+- achievementek és hosszú távú célok bővítése
+
+### 5. PWA és bevételi infrastruktúra
+- mobil ikon és PWA assetek továbbfejlesztése
+- a most létrehozott reklámhely technikai előkészítése és később hirdetési szolgáltató bekötése
+- reklámok csak kontrollált helyeken, a játékmenet és az olvashatóság megőrzésével
+- opcionális prémium/ads-free irány későbbi mérlegelése
+
+### 6. Nagyobb hosszú távú fejlesztések
+- karakterek és családtagok részletesebb vizuális profiljai
+- több világállapot és társadalmi/gazdasági esemény
+- statisztikák, életút-összehasonlítás és részletesebb élettörténet
+- teljesítményoptimalizálás nagyobb mentésekhez és hosszú játékidőhöz
