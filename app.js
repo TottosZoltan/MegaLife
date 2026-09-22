@@ -1,4 +1,4 @@
-const VERSION="0.5.2";
+const VERSION="0.5.3";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -2304,4 +2304,93 @@ render=function(){
   const baseRender=render;
   render=function(){baseRender();classify052();setHud()};
   classify052();setHud();
+})();
+
+/* MegaLife v0.5.3 — definitive HUD navigation */
+(function(){
+  const ROOTS=["relations","career","finance","assets","activities"];
+  const PARENT={family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"};
+  let stack=[];
+  const all=["life","relations","career","finance","assets","activities","achievements","stats","social"];
+  function hideAll(){all.forEach(k=>{$("tab-"+k)?.classList.add("hidden");$("tab-"+k)?.classList.remove("ml-page-open")})}
+  function clean(){document.querySelectorAll(".ml-tab-chrome,.category-back").forEach(x=>x.remove())}
+  function hud(){
+    const top=document.querySelector(".top-actions");if(!top)return;
+    let b=$("mlHudMenuBack");
+    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
+    const inside=stack.length>0;
+    b.textContent=inside?"‹":"×";
+    b.setAttribute("aria-label",inside?"Vissza":"Kilépés");
+    b.title=inside?"Vissza":"Kilépés";
+    b.onclick=inside?()=>{const p=stack.pop();open(p,false)}:()=>exitToLife();
+    b.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
+  }
+  function showRoot(key){
+    const el=$("tab-"+key);if(!el)return;
+    hideAll();
+    if(key!=="life"){
+      document.body.classList.add("ml-tab-open");
+      el.classList.remove("hidden");el.classList.add("ml-page-open");
+    }else document.body.classList.remove("ml-tab-open");
+    hud();
+  }
+  function renderRoot(key){
+    if(key==="activities")renderActivities();
+    else if(key==="relations")renderRelations();
+    else if(key==="career")renderCareer();
+    else if(key==="finance")renderFinance();
+    else if(key==="assets")renderAssets();
+  }
+  function open(key,push){
+    if(!state)return;
+    const parent=PARENT[key];
+    if(push&&parent)stack=[parent];
+    if(ROOTS.includes(key)){stack=[];renderRoot(key);showRoot(key);return}
+    if(parent&&!stack.length)stack=[parent];
+    const old=window.mlOpenCategory;
+    try{
+      // Use the already-built action page, but prevent older navigation wrappers from changing the stack.
+      if(typeof old==="function")old(key);
+    }catch(e){}
+    showRoot(parent||"activities");
+    const target=$("tab-"+(parent||"activities"));
+    if(target)target.querySelectorAll(".category-back").forEach(x=>x.remove());
+    hud();
+  }
+  function exitToLife(){
+    stack=[];
+    hideAll();
+    document.body.classList.remove("ml-tab-open","ml-tab-dim");
+    $("tab-life")?.classList.remove("hidden");
+    renderLife();
+    clean();
+    hud();
+    scrollLifeLogToLatest?.();
+  }
+  window.mlOpenCategory=function(key){
+    if(ROOTS.includes(key)){stack=[];renderRoot(key);showRoot(key);return}
+    stack=PARENT[key]?[PARENT[key]]:[];
+    open(key,false);
+  };
+  window.showTab=function(tab){
+    if(tab==="life"){exitToLife();return}
+    if(ROOTS.includes(tab)){stack=[];renderRoot(tab);showRoot(tab);return}
+    open(tab,true);
+  };
+  window.closeTabs=exitToLife;
+  // Render functions are now pure: refresh/render never opens Egyebek.
+  const pureActivities=renderActivities,pureRelations=renderRelations,pureCareer=renderCareer,pureFinance=renderFinance,pureAssets=renderAssets;
+  renderActivities=function(){pureActivities();};
+  renderRelations=function(){pureRelations();};
+  renderCareer=function(){pureCareer();};
+  renderFinance=function(){pureFinance();};
+  renderAssets=function(){pureAssets();};
+  // Never let a normal render put the player into a tab.
+  const oldRender=render;
+  render=function(){oldRender();if(!document.body.classList.contains("ml-tab-open"))exitToLife();else hud()};
+  document.querySelectorAll(".category-back").forEach(x=>x.remove());
+  // The +/more entry remains a single explicit route into Egyebek.
+  const moreBtns=[...document.querySelectorAll('[onclick*="showTab(\'activities\')"],[onclick*="showTab(\"activities\")"]')];
+  moreBtns.forEach(b=>b.setAttribute("aria-label","Egyebek"));
+  hud();
 })();
