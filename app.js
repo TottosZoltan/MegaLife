@@ -1,4 +1,4 @@
-const VERSION="0.3.0";
+const VERSION="0.3.1";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -1811,3 +1811,65 @@ render=function(){
   normalize();
 })();
 /* end v0.3.0 character engine */
+/* MegaLife v0.3.1 — NPC life trajectories and persistent world characters */
+(function(){
+  function npcLifeJob(c){
+    if(c.age<14)return "tanuló";
+    if(c.age<18)return Math.random()<.45?"tanuló":"pályakezdő";
+    const pool=[],s=c.stats||{};
+    if((s.finance||0)>65)pool.push("vállalkozó","irodai dolgozó");
+    if((s.communication||0)>65)pool.push("tanár","értékesítő","menedzser");
+    if((s.creativity||0)>65)pool.push("művész","tartalomkészítő");
+    if((s.fitness||0)>65)pool.push("sporttal foglalkozó");
+    pool.push("irodai dolgozó","szakmunkás","kereskedő","szabadúszó");
+    return pick(pool);
+  }
+  function advanceNpc(c){
+    if(!c||c.alive===false)return null;
+    c.age=Math.min(110,Number(c.age||0)+1);c.stats=c.stats||{};
+    c.stats.health=clamp(Number(c.stats.health)||60);
+    if(c.age>=75)c.stats.health=clamp(c.stats.health-rand(0,4));
+    if(c.age>=18&&(!c.status||c.status==="tanuló"||Math.random()<.08))c.status=npcLifeJob(c);
+    if(c.age>=18&&c.closeness>=35&&Math.random()<.035&&!/házas/i.test(c.status||""))c.status="házas • "+npcLifeJob(c);
+    if(c.age>=22&&c.age<=42&&/házas/i.test(c.status||"")&&Math.random()<.08){
+      c.children=Array.isArray(c.children)?c.children:[];if(c.children.length<3)c.children.push({age:0,name:pick(["Léna","Mira","Dani","Áron","Nóri","Milán"])});
+    }
+    if(c.age>=82&&Math.random()<.045){c.alive=false;return c.name+" meghalt "+c.age+" éves korában."}
+    return null;
+  }
+  function syncFamilyCharacters(){
+    if(!state?.meta?.characters)return;
+    (state.children||[]).forEach(ch=>{
+      let c=state.meta.characters.find(x=>x.type==="Család • Gyermek"&&x.name===ch.name);
+      if(!c){c={id:"npc-child-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,6),name:ch.name,gender:pick(["female","male","neutral"]),age:Number(ch.age)||0,type:"Család • Gyermek",closeness:70,trust:80,status:"gyermek",background:"A te gyermeked, saját történettel és fejlődő személyiséggel.",stats:{health:rand(55,95),happiness:rand(55,95),smarts:rand(30,85),looks:rand(30,90),discipline:rand(25,80),karma:rand(35,90),communication:rand(25,85),finance:rand(10,60),creativity:rand(25,90),fitness:rand(30,90),leadership:rand(15,70)},knownAge:state.age,lastSeenAge:state.age,alive:true};state.meta.characters.push(c)}
+      c.age=Number(ch.age)||c.age;c.alive=ch.alive!==false;
+    });
+  }
+  function advanceNpcWorld(){
+    if(!state||!state.meta?.characters)return;
+    syncFamilyCharacters();const notes=[];
+    state.meta.characters.forEach(c=>{
+      const oldAge=c.age,note=advanceNpc(c);if(note)notes.push(note);
+      if(c.alive!==false&&oldAge<18&&c.age===18)notes.push(c.name+" felnőtt lett.");
+      if(c.alive!==false&&oldAge<25&&c.age===25)notes.push(c.name+" új életpályát kezdett.");
+    });
+    state.meta.characters=state.meta.characters.filter(c=>c.alive!==false||c.type?.startsWith("Család"));
+    notes.slice(0,2).forEach(n=>log(n,"Karakter"));
+  }
+  const _next31=nextYear;
+  nextYear=function(){
+    const before=state?.age,result=_next31();
+    if(state&&state.alive&&Number(state.age)!==Number(before)){advanceNpcWorld();normalize();save();render()}
+    return result;
+  };
+  const _renderRel31=renderRelations;
+  renderRelations=function(){
+    _renderRel31();
+    document.querySelectorAll("#tab-relations .npc-card").forEach(card=>{
+      const b=card.querySelector(".npc-main b");if(!b)return;
+      const c=(state.meta.characters||[]).find(x=>x.name===b.textContent);
+      if(c){const meta=card.querySelector(".npc-main .muted");if(meta)meta.textContent=c.age+" éves • "+(c.alive===false?"elhunyt":"kapcsolat "+Math.round(c.closeness)+"% • bizalom "+Math.round(c.trust)+"%")+" • "+(c.status||"saját életút")}
+    });
+  };
+  window.mlAdvanceNpcWorld=advanceNpcWorld;advanceNpcWorld();
+})();
