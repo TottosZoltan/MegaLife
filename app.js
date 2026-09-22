@@ -2675,3 +2675,30 @@ render=function(){
   document.addEventListener("DOMContentLoaded",resetOnLoad,{once:true});
   window.addEventListener("pageshow",()=>{if(!state)return;resetOnLoad()});
 })();
+
+/* MegaLife v0.5.5 — family identity repair */
+(function(){
+  function familyIdentity055(){
+    if(!state)return;
+    state.family=state.family||{parents:[],siblings:0};
+    state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];
+    const last=String(state.last||"Life").trim()||"Life";
+    let father=state.family.parents.find(p=>/apa/i.test(String(p.type||"")));
+    let mother=state.family.parents.find(p=>/anya/i.test(String(p.type||"")));
+    if(!father){father={name:"Apa "+last,type:"Apa",alive:true};state.family.parents.unshift(father)}
+    if(!mother){let ml=pick(surnames.filter(s=>s!==last));mother={name:"Anya "+ml,type:"Anya",maidenName:ml,alive:true};state.family.parents.push(mother)}
+    const firstName=x=>String(x?.name||"Ismeretlen").trim().split(/\s+/)[0]||"Ismeretlen";
+    father.name=firstName(father)+" "+last;father.type="Apa";
+    mother.maidenName=String(mother.maidenName||"").trim()||pick(surnames.filter(s=>s!==last));
+    mother.name=firstName(mother)+" "+mother.maidenName;mother.type="Anya";
+    (state.meta?.characters||[]).forEach(c=>{
+      const t=String(c.type||"");
+      if(/Apa|Testvér/i.test(t)){c.type=/Apa/i.test(t)?"Család • Apa":"Család • Testvér";c.name=firstName(c)+" "+last}
+      else if(/Anya/i.test(t)){c.type="Család • Anya";c.name=firstName(c)+" "+mother.maidenName}
+      else if(/Gyermek/i.test(t)){c.type="Család • Gyermek";c.name=firstName(c)+" "+last}
+    });
+  }
+  const norm055=normalize;
+  normalize=function(){norm055();familyIdentity055()};
+  familyIdentity055();
+})();
