@@ -7,9 +7,9 @@ const sw=fs.readFileSync("sw.js","utf8");
 const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
-assert.equal(VERSION,"0.5.2","app.js version");
+assert.equal(VERSION,"0.5.3","app.js version");
 assert.equal((html.match(/v0\.3\.0/g)||[]).length,2,"index version badge/footer");
-assert.match(sw,/const VERSION="0.5.2";/,"service worker version");
+assert.match(sw,/const VERSION="0.5.3";/,"service worker version");
 
 assert.doesNotThrow(()=>new Function(app),"app.js syntax");
 
@@ -47,7 +47,7 @@ assert.equal(manifest.lang,"hu");
 assert.equal(manifest.display,"standalone");
 assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>0,"PWA icon missing");
 
-console.log("MegaLife v0.5.2 release smoke tests: PASS");
+console.log("MegaLife v0.5.3 release smoke tests: PASS");
 
 
 assert.ok(!html.includes("AKTUÁLIS ÉV"),"current year must not be visible");
@@ -93,6 +93,10 @@ assert.match(app,/const PARENT=\{/,"nested navigation map missing");
 assert.match(app,/function familyRepair051\(\)/,"family surname repair missing");
 assert.match(app,/c\.type==="Barát"\?"Barát":"Ismerős"/,"character classification missing");
 
-assert.match(app,/MegaLife v0\.5\.2 — navigation reset, pure renders and family\/relationship classification/,"v0.5.2 navigation/family fix missing");
+assert.match(app,/MegaLife v0\.5\.2 — navigation reset, pure renders and family\/relationship classification/,"v0.5.3 navigation/family fix missing");
 assert.match(app,/renderActivities=function\(\)\{renderRoot\("activities"\)\}/,"render must not navigate to activities");
 assert.match(app,/const ROOTS=\["relations","career","finance","assets","activities"\]/,"navigation roots missing");
+
+assert.match(app,/MegaLife v0\.5\.3 — definitive HUD navigation/,"HUD navigation fix missing");
+assert.match(app,/aria-label",inside\?"Vissza":"Kilépés"/,"HUD exit label missing");
+assert.match(app,/function exitToLife\(/,"life exit navigation missing");
