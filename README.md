@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.3.0**.
+**Jelenlegi stabil fejlesztési ág: v0.3.1**.
 
 ## Jelenlegi rendszerek
 
@@ -159,7 +159,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a régi mentések automatikusan kapnak karakter-adatokat a családtagokból és új ismerősökből
 - ez a réteg későbbi NPC-karrier, saját család, konfliktus, barátság és romantikus életutak alapja
 
-### v0.3.0 — Living Characters
+### v0.3.1 — Living Characters
 - a fő karakter és az NPC-k most ténylegesen látható, eredeti SVG karakterként jelennek meg
 - moduláris kinézet: bőrtónus, arcforma, hajforma, hajszín, szemszín, szemüveg, szakáll, testalkat, ruha és kiegészítő
 - minden karakter saját, mentett megjelenést kap, ezért ugyanaz az NPC később is felismerhető
@@ -169,3 +169,10 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a fő napló fejlécéből kikerült az „ÉLETNAPLÓ” felirat és az életkor melletti címke; maga a napló vizuális lapként megmarad
 - az „ÁLLAPOT” felirat eltűnt, az állapotértékek megmaradtak
 - a vizuális rendszer alapot ad későbbi ruhákhoz, életkor-változásokhoz, családi hasonlósághoz és részletesebb karaktercsomagokhoz
+
+
+### v0.3.1 — NPC életutak
+- az ismert NPC-k évente saját életutat is követnek: öregedés, tanulás, munka és státuszváltozás
+- bizonyos karaktereknél párkapcsolat, házasság és saját gyermekek is kialakulhatnak
+- a karakterek életútja nem csak a játékos körül történik, hanem a háttérben is továbbhalad
+- a családba később bekerülő gyermekek automatikusan kapnak saját karakterprofilt és vizuális megjelenést
