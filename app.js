@@ -1,4 +1,4 @@
-const VERSION="0.4.0";
+const VERSION="0.5.0";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -1955,4 +1955,103 @@ render=function(){
   document.addEventListener("click",e=>{
     const b=e.target.closest?.(".category-card");if(b)e.preventDefault();
   },true);
+})();
+
+/* MegaLife v0.5.0 — clear social classes, family surnames, HUD menu */
+(function(){
+  function mlSetFamilyName(c,last){
+    if(!c)return;
+    const raw=String(c.name||"").trim(), first=raw.split(/\s+/)[0]||"Ismeretlen";
+    c.name=first+" "+last;
+  }
+  function mlFamilyRepair(){
+    if(!state)return;
+    state.family=state.family||{parents:[],siblings:0};
+    state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];
+    const father=state.family.parents.find(p=>String(p.type||"").toLowerCase().includes("apa"));
+    const mother=state.family.parents.find(p=>String(p.type||"").toLowerCase().includes("anya"));
+    const last=state.last||"Life";
+    if(father)mlSetFamilyName(father,last);
+    if(mother){
+      const current=String(mother.name||"").trim().split(/\s+/)[0]||"Anya";
+      const motherLast=String(mother.maidenName||"").trim()||pick(surnames.filter(s=>s!==last));
+      mother.maidenName=motherLast;
+      mother.name=current+" "+motherLast;
+    }
+    (state.meta?.characters||[]).forEach(c=>{
+      if(String(c.type||"").includes("Apa")||String(c.type||"Testvér")||String(c.type||"Gyermek"))mlSetFamilyName(c,last);
+      if(String(c.type||"").includes("Anya")&&mother)mlSetFamilyName(c,mother.maidenName);
+    });
+  }
+  function mlClass(c){
+    if(!c)return "Ismerős";
+    if(String(c.type||"").startsWith("Család"))return "Család";
+    return c.type==="Barát"?"Barát":"Ismerős";
+  }
+  function mlPromoteFriend(id){
+    const c=state?.meta?.characters?.find(x=>x.id===id);
+    if(!c||c.alive===false)return toast("Ez a karakter már nem érhető el.");
+    if(mlClass(c)!=="Ismerős")return toast("Ez a karakter már a baráti köröd része.");
+    const ok=c.closeness>=35&&c.trust>=35;
+    const choices=[
+      ["🤝 Szeretném, ha barátok lennénk",()=>{if(ok){c.type="Barát";c.closeness=clamp(c.closeness+8);c.trust=clamp(c.trust+6);log(c.name+"-nel mostantól barátok vagytok.","Kapcsolat");return"Barátok lettetek."}c.closeness=clamp(c.closeness+3);return"Jól esett neki, de még több közös élmény kell a szoros barátsághoz."}],
+      ["🙂 Maradjunk egyelőre ismerősök",()=>{c.closeness=clamp(c.closeness+1);return"Most még csak ismerősök maradtatok."}]
+    ];
+    state.meta.activeDecision={type:"friend-promotion",npcId:id,choices};
+    const modal=$( "modal"),body=$( "modalBody");
+    body.innerHTML='<div class="eyebrow">KAPCSOLAT • ISMERŐS</div><h2>🤝 Közelebb kerültök?</h2><p class="muted">'+mlSafeText(c.name,"Ismerős")+" már többször felbukkant az életedben. Szeretnéd elmélyíteni a kapcsolatot?"+'</p>'+choices.map((x,i)=>'<button class="choice" onclick="mlFriendDecision('+i+')">'+x[0]+'</button>').join("");
+    modal.classList.remove("hidden");
+  }
+  window.mlFriendDecision=function(i){
+    const d=state?.meta?.activeDecision;if(!d||d.type!=="friend-promotion")return;
+    const c=state.meta.characters.find(x=>x.id===d.npcId),choice=d.choices[i];if(!c||!choice)return;
+    const msg=choice[1]();state.meta.activeDecision=null;$( "modal").classList.add("hidden");log(msg,"Kapcsolat");save();render();
+  };
+  const _npcCreate05=npcCreate;
+  npcCreate=function(type="Ismerős",age=state.age){
+    const c=_npcCreate05(type,age);
+    c.type=type==="Barát"?"Ismerős":type;
+    c.closeness=c.type==="Ismerős"?rand(15,45):c.closeness;
+    c.trust=c.type==="Ismerős"?rand(20,65):c.trust;
+    return c;
+  };
+  const _npcNormalize05=npcNormalize;
+  npcNormalize=function(){
+    _npcNormalize05();
+    mlFamilyRepair();
+    (state.meta.characters||[]).forEach(c=>{if(!String(c.type||"").startsWith("Család"))c.type= c.type==="Barát"?"Barát":"Ismerős"});
+  };
+  const _renderRelations05=renderRelations;
+  renderRelations=function(){
+    _renderRelations05();
+    const cards=document.querySelectorAll("#tab-relations .npc-card");
+    cards.forEach(card=>{
+      const b=card.querySelector(".npc-main b");if(!b)return;
+      const c=(state.meta.characters||[]).find(x=>x.name===b.textContent);if(!c)return;
+      const cls=mlClass(c);
+      const pill=card.querySelector(".pill");if(pill)pill.textContent=cls;
+      const actions=card.querySelector(".npc-actions");
+      if(actions&&cls==="Ismerős"){
+        const btn=document.createElement("button");btn.className="ghost npc-action";btn.textContent="🤝 Barátság";btn.onclick=()=>mlPromoteFriend(c.id);actions.prepend(btn);
+      }
+    });
+  };
+  function stripCategoryBack(){
+    document.querySelectorAll(".category-back").forEach(x=>x.remove());
+  }
+  const _mlOpen05=window.mlOpenCategory;
+  window.mlOpenCategory=function(key){
+    _mlOpen05(key);setTimeout(stripCategoryBack,0);
+  };
+  function ensureHudMenu(){
+    const top=document.querySelector(".top-actions");if(!top)return;
+    let b=document.getElementById("mlHudMenuBack");
+    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";b.setAttribute("aria-label","Menü");b.textContent="☰";b.onclick=()=>closeTabs();top.insertBefore(b,top.firstChild)}
+    b.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
+  }
+  const _show05=showTab;showTab=function(tab){_show05(tab);ensureHudMenu();stripCategoryBack()};
+  const _close05=closeTabs;closeTabs=function(){_close05();ensureHudMenu()};
+  const observer=new MutationObserver(()=>ensureHudMenu());observer.observe(document.body,{attributes:true,attributeFilter:["class"]});
+  window.mlPromoteFriend=mlPromoteFriend;
+  mlFamilyRepair();ensureHudMenu();
 })();
