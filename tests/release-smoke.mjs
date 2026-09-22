@@ -7,9 +7,9 @@ const sw=fs.readFileSync("sw.js","utf8");
 const manifest=JSON.parse(fs.readFileSync("manifest.json","utf8"));
 
 const VERSION=(app.match(/const VERSION="([^"]+)"/)||[])[1];
-assert.equal(VERSION,"0.5.0","app.js version");
+assert.equal(VERSION,"0.5.1","app.js version");
 assert.equal((html.match(/v0\.3\.0/g)||[]).length,2,"index version badge/footer");
-assert.match(sw,/const VERSION="0.5.0";/,"service worker version");
+assert.match(sw,/const VERSION="0.5.1";/,"service worker version");
 
 assert.doesNotThrow(()=>new Function(app),"app.js syntax");
 
@@ -47,7 +47,7 @@ assert.equal(manifest.lang,"hu");
 assert.equal(manifest.display,"standalone");
 assert.ok(Array.isArray(manifest.icons)&&manifest.icons.length>0,"PWA icon missing");
 
-console.log("MegaLife v0.5.0 release smoke tests: PASS");
+console.log("MegaLife v0.5.1 release smoke tests: PASS");
 
 
 assert.ok(!html.includes("AKTUÁLIS ÉV"),"current year must not be visible");
@@ -87,3 +87,8 @@ assert.match(app,/MegaLife v0\.5\.0 — clear social classes, family surnames, H
 assert.match(app,/function mlFamilyRepair\(/,"family surname repair missing");
 assert.match(app,/function mlPromoteFriend\(/,"friend promotion decision missing");
 assert.match(app,/id="mlHudMenuBack"/,"HUD menu back missing");
+
+assert.match(app,/MegaLife v0\.5\.1 — HUD-only navigation and strict character classes/,"HUD navigation/classification missing");
+assert.match(app,/const PARENT=\{/,"nested navigation map missing");
+assert.match(app,/function familyRepair051\(\)/,"family surname repair missing");
+assert.match(app,/c\.type==="Barát"\?"Barát":"Ismerős"/,"character classification missing");
