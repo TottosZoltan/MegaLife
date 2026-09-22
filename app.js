@@ -2229,7 +2229,8 @@ render=function(){
     }
     if(ROOTS.includes(key))renderRoot(key);
     else {
-      try{oldCategoryOpen(key)}catch(e){}
+      const currentShow=showTab;
+      try{showTab=baseShow;oldCategoryOpen(key)}catch(e){}finally{showTab=currentShow}
     }
     baseShow(key);
     setHud();
@@ -2239,7 +2240,8 @@ render=function(){
     if(ROOTS.includes(key)){navStack=[];renderRoot(key);baseShow(key);setHud();return}
     const parent=PARENT[key];
     if(parent)navStack=[parent];
-    oldCategoryOpen(key);
+    const currentShow=showTab;
+    try{showTab=baseShow;oldCategoryOpen(key)}catch(e){}finally{showTab=currentShow}
     setHud();
   };
   showTab=function(tab){
