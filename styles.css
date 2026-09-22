@@ -875,3 +875,13 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 @media(min-width:651px){
   .ad-slot{display:none}
 }
+
+
+/* MegaLife v0.2.0 — life-depth UI */
+.story-year{display:none!important}
+.ml20-small{margin-top:7px;padding:7px 9px;font-size:11px}
+@media(max-width:650px){
+  .story-head{justify-content:flex-start}
+  .ml20-depth{display:none!important}
+  .legacy-tab.ml-page-open .panel{margin-bottom:12px}
+}
