@@ -100,3 +100,6 @@ assert.match(app,/const ROOTS=\["relations","career","finance","assets","activit
 assert.match(app,/MegaLife v0\.5\.3 — definitive HUD navigation/,"HUD navigation fix missing");
 assert.match(app,/aria-label",inside\?"Vissza":"Kilépés"/,"HUD exit label missing");
 assert.match(app,/function exitToLife\(/,"life exit navigation missing");
+
+assert.match(app,/MegaLife v0\.5\.3 — definitive HUD navigation, refresh-safe/,"navigation fix missing");
+assert.match(app,/window\.mlOpenCategory=function\(key\)/,"HUD category navigation missing");
