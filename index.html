@@ -10,7 +10,7 @@
 <body>
 <div id="app">
 <header class="topbar">
-  <div class="brand">MEGA<span>LIFE</span><small> LIFE SIMULATOR</small><em class="version-badge">v0.2.2</em></div>
+  <div class="brand">MEGA<span>LIFE</span><small> LIFE SIMULATOR</small><em class="version-badge">v0.3.0</em></div>
   <div class="top-actions"><button id="refreshBtn" class="icon-btn" onclick="refreshPage()" aria-label="Frissítés">↻</button><button class="profile-btn" onclick="openProfile()" aria-label="Profil">👤</button></div>
 </header>
 
@@ -24,14 +24,14 @@
 <section id="gameScreen" class="hidden">
   <div class="life-hud">
     <section class="profile card">
-      <div class="avatar" id="avatar">A</div>
+      <div class="avatar ml-character-avatar" id="avatar" aria-label="A karaktered"></div>
       <div class="profile-main"><h2 id="pName">—</h2><div id="pMeta" class="muted">—</div></div>
       <div class="hud-money"><span>VAGYON</span><b id="wealth">0 Ft</b></div>
     </section>
 
     <section class="story card">
       <div class="story-head">
-        <div class="story-title"><span class="eyebrow">ÉLETNAPLÓ</span><h1 id="ageText">0 éves</h1></div>
+        <div class="journal-paper-head" aria-hidden="true"><i></i><i></i><i></i></div>
       </div>
       <div id="lifeLog" class="life-log"></div><div id="returnShortcut" class="return-shortcut-wrap hidden"></div>
       <div id="choiceBanner" class="choice-banner hidden"></div>
@@ -50,7 +50,7 @@
     </section>
 
     <section class="stats-dock card">
-      <div class="dock-title">ÁLLAPOT</div>
+      <div class="dock-title ml-status-label" aria-hidden="true"></div>
       <div id="statBars" class="hud-stats"></div>
     </section>
     <div id="adSlot" class="ad-slot" aria-label="Hirdetési hely" role="region"><span class="ad-slot-label">HIRDETÉSI HELY</span></div>
@@ -70,7 +70,7 @@
 </main>
 
 <div id="modal" class="modal hidden"><div class="modal-box"><div id="modalBody"></div></div></div>
-<div id="toast"></div><footer class="app-footer">MegaLife <span id="versionText">v0.2.2</span></footer>
+<div id="toast"></div><footer class="app-footer">MegaLife <span id="versionText">v0.3.0</span></footer>
 <script src="app.js"></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",async()=>{try{const r=await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"});await r.update()}catch(e){}})}</script>
 <div id="refreshOverlay" class="refresh-overlay hidden" aria-live="polite"><div class="refresh-box"><div class="refresh-spinner"></div><b>Frissítés…</b><small>Az oldal újratöltése folyamatban</small></div></div></body></html>
