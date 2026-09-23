@@ -4,7 +4,7 @@ A MegaLife egy eredeti, böngészőben futó élet-szimulátor, amely a life-sim
 
 ## Release
 
-**Jelenlegi stabil fejlesztési ág: v0.5.6**.
+**Jelenlegi stabil fejlesztési ág: v0.5.7**.
 
 ## Jelenlegi rendszerek
 
@@ -159,7 +159,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a régi mentések automatikusan kapnak karakter-adatokat a családtagokból és új ismerősökből
 - ez a réteg későbbi NPC-karrier, saját család, konfliktus, barátság és romantikus életutak alapja
 
-### v0.5.6 — Living Characters
+### v0.5.7 — Living Characters
 - a fő karakter és az NPC-k most ténylegesen látható, eredeti SVG karakterként jelennek meg
 - moduláris kinézet: bőrtónus, arcforma, hajforma, hajszín, szemszín, szemüveg, szakáll, testalkat, ruha és kiegészítő
 - minden karakter saját, mentett megjelenést kap, ezért ugyanaz az NPC később is felismerhető
@@ -171,14 +171,14 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a vizuális rendszer alapot ad későbbi ruhákhoz, életkor-változásokhoz, családi hasonlósághoz és részletesebb karaktercsomagokhoz
 
 
-### v0.5.6 — NPC életutak
+### v0.5.7 — NPC életutak
 - az ismert NPC-k évente saját életutat is követnek: öregedés, tanulás, munka és státuszváltozás
 - bizonyos karaktereknél párkapcsolat, házasság és saját gyermekek is kialakulhatnak
 - a karakterek életútja nem csak a játékos körül történik, hanem a háttérben is továbbhalad
 - a családba később bekerülő gyermekek automatikusan kapnak saját karakterprofilt és vizuális megjelenést
 
 
-### v0.5.6 — Kategorizált interakciós rendszer
+### v0.5.7 — Kategorizált interakciós rendszer
 - az Egyebek lap most kategóriahubként működik
 - a hobbi külön aloldal lett: Egyebek → Hobbik → saját/új hobbi
 - a legtöbb interakció kategóriákba és alkategóriákba került
@@ -190,7 +190,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - az aloldalakon belül marad a játékos, nem dob vissza automatikusan a főképernyőre
 
 
-### v0.5.6 — Kapcsolati osztályok és HUD navigáció
+### v0.5.7 — Kapcsolati osztályok és HUD navigáció
 - a felső HUD kapott egy Menü gombot a teljes oldalas lapokból való visszalépéshez
 - az aloldalak saját visszanyilait eltávolítottuk
 - az Egyebek/Karrier/Pénzügyek/Vagyon/Kapcsolatok kategóriaoldalai teljes oldalas menüként működnek
@@ -202,7 +202,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - régi mentéseknél a családi neveket automatikusan korrigáljuk
 
 
-### v0.5.6 — HUD navigáció és karakterosztályok
+### v0.5.7 — HUD navigáció és karakterosztályok
 - a külön oldalak felső visszanyila kikerült; a HUD-ban egyetlen Menü/Vissza gomb kezeli a navigációt
 - fő kategóriából a HUD gomb visszavisz a főképernyőre
 - alkategóriából a HUD gomb egy szinttel visszalép a szülő kategóriába
@@ -213,7 +213,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - az anya saját vezetéknevet/anyaági családnevet használ
 
 
-### v0.5.6 — Navigációs javítás
+### v0.5.7 — Navigációs javítás
 - a főképernyő frissítése többé nem nyitja meg automatikusan az Egyebek menüt
 - a fő HUD-ban lévő plusz/Több gomb csak akkor nyitja meg az Egyebek kategóriaoldalt, amikor ténylegesen megnyomod
 - a fő kategóriák tetején nincs külön visszanyíl
@@ -226,7 +226,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - az anya külön leánykori vezetéknevet használ
 
 
-### v0.5.6 — HUD navigáció javítása
+### v0.5.7 — HUD navigáció javítása
 - a fő HUD vezérlője nem „Menü”, hanem „Kilépés”
 - fő kategóriában × jelzi, hogy visszatérés történik a fő életképernyőre
 - alkategóriában ‹ jelzi az egy szinttel feljebb lépést
@@ -235,7 +235,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a régi, oldalon belüli vissza/menü chrome eltávolításra került
 
 
-### v0.5.6 — Navigáció javítás
+### v0.5.7 — Navigáció javítás
 - frissítéskor és mentés betöltésekor mindig a fő életképernyő marad látható
 - az Egyebek csak a HUD ☰ gombjának explicit megnyomására nyílik meg
 - a kategóriaoldalak felső visszanyila megszűnt
@@ -244,7 +244,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a korábbi render-átirányítások felül lettek írva, hogy ne nyissanak meg menüt frissítéskor
 
 
-### v0.5.6 — Navigáció stabilizálás
+### v0.5.7 — Navigáció stabilizálás
 - a plusz gomb kizárólag az Egyebek kategóriahubot nyitja meg
 - frissítés után nem marad megnyitott almenüállapot
 - a felső vissza nyíl közvetlenül a főképernyőre visz a gyökér kategóriákból
@@ -252,7 +252,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - a felső fejlécben csak a szükséges navigáció marad
 
 
-### v0.5.6 — Főoldal + hierarchikus menürendszer
+### v0.5.7 — Főoldal + hierarchikus menürendszer
 - frissítéskor, belépéskor és kilépéskor mindig a fő életképernyő nyílik meg
 - a fő HUD-ban egyetlen vissza/bezárás gomb kezeli a navigációt
 - főoldal → kategória → alkategória → egyedi karakter/interakció útvonal készült
@@ -265,7 +265,7 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - családi névlogika javítva: apa, testvérek és gyerekek a főszereplő vezetéknevét kapják; az anya külön leánykori vezetéknevet használ
 
 
-### v0.5.6 — Mobil navigáció javítás
+### v0.5.7 — Mobil navigáció javítás
 - frissítés után mindig a fő életképernyő nyílik meg
 - az Egyebek nem nyílik meg automatikusan
 - a mobil HUD felső visszanyila kezeli a teljes hierarchiát
