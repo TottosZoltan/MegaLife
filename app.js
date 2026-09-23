@@ -2773,3 +2773,20 @@ render=function(){
   document.addEventListener("DOMContentLoaded",()=>{setTimeout(forceHome056,0)},{once:true});
   forceHome056();
 })();
+
+/* MegaLife v0.5.7 — permanently disable the obsolete Egyebek root */
+(function(){
+  const oldRoute=window.mlRoute, oldOpen=window.mlOpenCategory, oldShow=window.showTab;
+  function blocked(k){return String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"}
+  window.mlRoute=function(k){if(blocked(k))return window.closeTabs?.();return oldRoute(k)};
+  window.mlOpenCategory=function(k){if(blocked(k))return window.closeTabs?.();return oldOpen(k)};
+  window.showTab=function(k){if(blocked(k))return window.closeTabs?.();return oldShow(k)};
+  const plus=document.querySelector("#quickPlus,[data-plus],#plusButton,.quick-plus");
+  if(plus)plus.onclick=e=>{e.preventDefault();e.stopPropagation();window.closeTabs?.()};
+  document.querySelectorAll('[onclick*="activities"]').forEach(el=>{
+    const raw=el.getAttribute("onclick")||"";
+    if(/activities|Egyebek|Több/.test(raw))el.setAttribute("onclick","closeTabs();return false;");
+  });
+  const nav=[...document.querySelectorAll(".mobile-nav-item")].find(x=>/Több|Egyebek/.test(x.textContent||""));
+  if(nav)nav.remove();
+})();
