@@ -273,3 +273,10 @@ A MegaLife jelenlegi kódalapja több korábbi iterációból áll, ezért az ú
 - alkategóriából egy szinttel lép vissza
 - megszűnt a régi kategória-vissza gomb és a duplikált felső navigáció
 - a „Több”/Egyebek belépés csak explicit felhasználói műveletre történik
+
+
+### v0.5.7 — Egyebek gyökéroldal eltávolítva
+- a korábbi Egyebek/Több gyökérmenü nem jelenik meg többé
+- az elavult activities gyökérútvonal blokkolva van, így frissítés vagy régi hivatkozás sem tudja megnyitni
+- a mobil alsó menüből kikerült a Több/Egyebek elem
+- a felső HUD-os visszalépés marad az egyetlen navigációs visszalépési pont
