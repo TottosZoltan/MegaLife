@@ -2774,19 +2774,114 @@ render=function(){
   forceHome056();
 })();
 
-/* MegaLife v0.5.7 — permanently disable the obsolete Egyebek root */
+/* MegaLife v0.5.8 — real HUD menu, no obsolete Egyebek root */
 (function(){
-  const oldRoute=window.mlRoute, oldOpen=window.mlOpenCategory, oldShow=window.showTab;
-  function blocked(k){return String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"}
-  window.mlRoute=function(k){if(blocked(k))return window.closeTabs?.();return oldRoute(k)};
-  window.mlOpenCategory=function(k){if(blocked(k))return window.closeTabs?.();return oldOpen(k)};
-  window.showTab=function(k){if(blocked(k))return window.closeTabs?.();return oldShow(k)};
-  const plus=document.querySelector("#quickPlus,[data-plus],#plusButton,.quick-plus");
-  if(plus)plus.onclick=e=>{e.preventDefault();e.stopPropagation();window.closeTabs?.()};
-  document.querySelectorAll('[onclick*="activities"]').forEach(el=>{
-    const raw=el.getAttribute("onclick")||"";
-    if(/activities|Egyebek|Több/.test(raw))el.setAttribute("onclick","closeTabs();return false;");
-  });
+  const previousRoute=window.mlRoute;
+  const previousOpen=window.mlOpenCategory;
+  const previousShow=window.showTab;
+  const previousClose=window.closeTabs;
+
+  function menuPage(){
+    const card=(icon,title,desc,key)=>'<button class="category-card" onclick="mlRoute(\\''+key+'\\')"><span class="category-icon">'+icon+'</span><span><b>'+title+'</b><small>'+desc+'</small></span><strong>›</strong></button>';
+    return '<div class="ml-hud-menu-page">'+
+      '<div class="ml-hud-menu-head"><button type="button" class="ml-hud-menu-back" onclick="closeTabs()" aria-label="Vissza">‹</button><div><h2>Menü</h2><p>Válaszd ki, mit szeretnél kezelni.</p></div></div>'+
+      '<div class="category-list">'+
+      card("❤️","Kapcsolatok","Család, barátok, ismerősök és romantika.","relations")+
+      card("💼","Karrier","Munka, tanulás és vállalkozás.","career")+
+      card("💰","Pénzügyek","Bank, befektetések, hitelek és játékok.","finance")+
+      card("🏠","Vagyon","Ingatlanok, járművek és luxuscikkek.","assets")+
+      card("🏃","Mindennapok","Edzés, pihenés, orvos és szabadidő.","daily")+
+      card("🎯","Hobbik","Saját hobbik és új hobbik.","hobbies")+
+      card("✈️","Utazás","Új helyek és élmények.","travel")+
+      card("📱","Közösségi élet","Közösségi platformok és online élet.","social")+
+      card("🐾","Háziállatok","Új társ és gondozás.","pets")+
+      card("🕶️","Bűnözés","Kockázatos döntések és következmények.","crime")+
+      '</div></div>';
+  }
+
+  function openHudMenu(){
+    if(!state)return;
+    const box=$("tab-activities");
+    if(!box)return;
+    document.querySelectorAll(".legacy-tab").forEach(el=>{
+      el.classList.add("hidden");
+      el.classList.remove("ml-page-open");
+    });
+    box.innerHTML=menuPage();
+    box.classList.remove("hidden");
+    box.classList.add("ml-page-open","ml-hud-menu-page-root");
+    document.body.classList.add("ml-tab-open");
+    $("gameScreen")?.classList.add("ml-tab-dim");
+    const top=document.querySelector(".top-actions");
+    const hud=document.getElementById("mlHudMenuBack");
+    if(hud)hud.classList.add("hidden");
+    if(top)top.setAttribute("data-hud-menu-open","true");
+    box.scrollTop=0;
+  }
+
+  window.openHudMenu=openHudMenu;
+  window.mlRoute=function(k){
+    if(String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"){
+      openHudMenu();
+      return;
+    }
+    return previousRoute(k);
+  };
+  window.mlOpenCategory=function(k){
+    if(String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"){
+      openHudMenu();
+      return;
+    }
+    return previousOpen(k);
+  };
+  window.showTab=function(k){
+    if(String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"){
+      openHudMenu();
+      return;
+    }
+    return previousShow(k);
+  };
+
+  const oldClose=window.closeTabs;
+  window.closeTabs=function(){
+    const r=oldClose.apply(this,arguments);
+    const hud=document.getElementById("mlHudMenuBack");
+    if(hud){
+      hud.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
+      hud.textContent="☰";
+      hud.title="Menü";
+      hud.onclick=openHudMenu;
+    }
+    document.querySelector(".top-actions")?.removeAttribute("data-hud-menu-open");
+    return r;
+  };
+
+  function syncHudMenu(){
+    const hud=document.getElementById("mlHudMenuBack");
+    if(!hud)return;
+    const menuOpen=document.querySelector(".ml-hud-menu-page-root");
+    hud.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open")||!!menuOpen);
+    hud.textContent="☰";
+    hud.title="Menü";
+    hud.onclick=openHudMenu;
+  }
+
+  document.addEventListener("click",e=>{
+    const el=e.target.closest?.(".ml-hud-menu-back");
+    if(el){
+      e.preventDefault();
+      e.stopPropagation();
+      window.closeTabs();
+    }
+  },true);
+
+  document.querySelectorAll('[onclick*="showTab(\\'activities\\')"],[onclick*="showTab("activities")"]')
+    .forEach(el=>el.setAttribute("onclick","openHudMenu();return false;"));
+
   const nav=[...document.querySelectorAll(".mobile-nav-item")].find(x=>/Több|Egyebek/.test(x.textContent||""));
   if(nav)nav.remove();
+
+  const observer=new MutationObserver(syncHudMenu);
+  observer.observe(document.body,{attributes:true,attributeFilter:["class"]});
+  syncHudMenu();
 })();
