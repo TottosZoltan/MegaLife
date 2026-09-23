@@ -951,3 +951,10 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
  .ml-hud-menu-head{padding-top:4px}
  .ml-hud-menu{min-width:44px;min-height:44px}
 }
+
+
+/* MegaLife character creation hardening */
+#startScreen{position:relative;z-index:10;pointer-events:auto!important;}
+#startScreen .form-grid,#startScreen label,#startScreen input,#startScreen select,#startScreen button{position:relative;z-index:11;pointer-events:auto!important;}
+#startScreen input,#startScreen select{user-select:text;-webkit-user-select:text;touch-action:auto!important;-webkit-touch-callout:default;}
+#startScreen input:focus,#startScreen select:focus{outline:none;}
