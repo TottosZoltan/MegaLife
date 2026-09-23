@@ -92,6 +92,7 @@ function proposal(){if(state.age<18)return toast("18 éves kor előtt nem jegyez
   };
   window.addEventListener("touchstart",e=>{
     if(refreshing||document.body.classList.contains("ml-tab-open")||$("gameScreen")?.classList.contains("hidden")||e.touches.length!==1)return;
+     if(e.target.closest("input,select,textarea,button"))return;
     const scroller=e.target.closest(".life-log");
     if(scroller&&scroller.scrollTop>0)return;
     if(!scroller&&window.scrollY>0)return;
