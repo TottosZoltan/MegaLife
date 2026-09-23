@@ -113,3 +113,5 @@ assert.match(app,/function familyIdentity055/,"family identity repair missing");
 assert.match(app,/window\.mlPerson/,"individual character navigation missing");
 
 assert.match(app,/MegaLife v0\.5\.6 — final mobile navigation and refresh hardening/,"final navigation hardening missing");
+
+assert.match(app,/MegaLife v0\.5\.7 — permanently disable the obsolete Egyebek root/,"obsolete Egyebek blocker missing");
