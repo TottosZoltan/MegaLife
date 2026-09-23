@@ -18,7 +18,7 @@
 <section id="startScreen" class="start card">
   <div class="hero-icon">∞</div><div class="start-kicker">ÉLET-SZIMULÁTOR</div><h1>MegaLife</h1><p>Éld a saját történeted. Dönts, fejlődj, építs kapcsolatokat és nézd meg, hová jut az életed.</p>
   <div class="form-grid"><label>Keresztnév<input id="firstName" maxlength="20" placeholder="Alex"></label><label>Vezetéknév<input id="lastName" maxlength="20" placeholder="Kovács"></label></div><button type="button" class="setup-toggle" onclick="toggleSetup()">⚙️ További beállítások <span>⌄</span></button><div id="advancedSetup" class="advanced-setup hidden"><label>Nem<select id="gender"><option value="female">Nő</option><option value="male">Férfi</option><option value="nonbinary">Nem bináris</option></select></label><label>Ország<select id="country"><option>Magyarország</option><option>Németország</option><option>USA</option><option>Egyesült Királyság</option><option>Japán</option><option>Kanada</option><option>Ausztrália</option></select></label></div>
-  <button id="startBtn" class="primary big">Élet kezdése</button><div id="saveNotice" class="muted"></div>
+  <button id="startBtn" class="primary big" type="button" onclick="start();return false;">Élet kezdése</button><div id="saveNotice" class="muted"></div>
 </section>
 
 <section id="gameScreen" class="hidden">
