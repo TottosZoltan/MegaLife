@@ -975,3 +975,34 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 /* MegaLife v0.5.7 — mobile HUD navigation */
 .ml-hud-menu{position:relative;z-index:20}
 #tab-activities{min-height:100%}
+
+
+/* MegaLife v0.5.8 — full-screen HUD menu */
+.ml-hud-menu-page-root{
+  background:var(--bg,#090d14)!important;
+  padding:18px!important;
+  overflow:auto!important;
+}
+.ml-hud-menu-page{
+  width:100%;
+  min-height:100%;
+  box-sizing:border-box;
+}
+.ml-hud-menu-head{
+  display:grid;
+  grid-template-columns:46px 1fr;
+  align-items:center;
+  gap:10px;
+  padding:2px 0 16px;
+}
+.ml-hud-menu-head h2{margin:0;font-size:24px;font-weight:900}
+.ml-hud-menu-head p{margin:4px 0 0;color:var(--muted,#8d9bb5);font-size:12px}
+.ml-hud-menu-back{
+  width:42px;height:42px;border:1px solid #354158;border-radius:13px;
+  background:#17202e;color:#fff;font-size:30px;line-height:1;cursor:pointer;
+  display:grid;place-items:center;
+}
+@media(max-width:650px){
+  .ml-hud-menu-page-root{inset:0!important;width:100%!important;border:0!important;border-radius:0!important;padding:calc(14px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom))!important}
+  .ml-hud-menu-head{padding-top:4px}
+}
