@@ -160,10 +160,21 @@ function load(){
   state=null;return false
 }
 function start(){
-  state=fresh();
-  state.meta={version:VERSION,slot:currentSlot};
-  log("Megszülettél. A történeted most kezdődik.","Sors");
-  save();render();toast("Új élet "+currentSlot+" elindítva!");
+  try{
+    state=fresh();
+    state.meta={version:VERSION,slot:currentSlot};
+    normalize();
+    log("Megszülettél. A történeted most kezdődik.","Sors");
+    save();
+    render();
+    toast("Új élet "+currentSlot+" elindítva!");
+  }catch(e){
+    console.error("MegaLife character creation error:",e);
+    state=null;
+    $("startScreen")?.classList.remove("hidden");
+    $("gameScreen")?.classList.add("hidden");
+    toast("A karakter létrehozása nem sikerült. Frissítsd az oldalt.");
+  }
 }
 function newLife(){
   try{localStorage.removeItem(slotKey(currentSlot));}catch(e){}
