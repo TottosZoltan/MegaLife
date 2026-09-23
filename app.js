@@ -2152,8 +2152,7 @@ render=function(){
       '<span><b>'+escNav(c.name||"Ismeretlen")+'</b><small>'+Number(c.age||0)+' éves • '+escNav(c.type||"Ismerős")+'</small><small>Kapcsolat '+Math.round(Number(c.closeness)||0)+'% • Bizalom '+Math.round(Number(c.trust)||0)+'%</small></span><strong>›</strong></button>').join("");
     const add=(kind==="friends"||kind==="acquaintances")?'<button type="button" class="action" onclick="mlNpcNew(&quot;Ismerős&quot;)"><b>➕ Új ismerős</b><small>Random generált karakter.</small></button>':"";
     const title={family:"👨‍👩‍👧 Család",friends:"🤝 Barátok",acquaintances:"👋 Ismerősök",romance:"❤️ Romantika"}[kind];
-    el.innerHTML=page(title,"Nyisd meg a karaktert további részletekért.",cards||'<p class="muted">Még nincs ide tartozó karaktered.</p>'+add);
-    if(!cards&&add)el.querySelector(".category-list").insertAdjacentHTML("beforeend",add);
+    el.innerHTML=page(title,"Nyisd meg a karaktert további részletekért.",(cards||'<p class="muted">Még nincs ide tartozó karaktered.</p>')+add);
   }
 
   function renderPerson(id){
@@ -2210,7 +2209,20 @@ render=function(){
     if(ROOTS.includes(last)){renderRoot(last);tab(last)?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab(last)?.classList.add("ml-page-open");syncHud();return}
     if(last.startsWith("person:")){renderPerson(last.slice(7));tab("relations")?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab("relations")?.classList.add("ml-page-open");syncHud();return}
     if(["family","friends","acquaintances","romance"].includes(last)){renderPeople(last);tab("relations")?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab("relations")?.classList.add("ml-page-open");syncHud();return}
-    if(SUBS.includes(last)){renderChild(last);if(PARENT[last]!=="activities")renderRootChild(last);tab(PARENT[last])?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab(PARENT[last])?.classList.add("ml-page-open");syncHud();return}
+    if(SUBS.includes(last)){
+      if(last==="social"){
+        renderSocial();
+        tab("social")?.classList.remove("hidden");
+        document.body.classList.add("ml-tab-open","ml-tab-dim");
+        tab("social")?.classList.add("ml-page-open");
+      }else{
+        if(PARENT[last]==="activities")renderChild(last);else renderRootChild(last);
+        tab(PARENT[last])?.classList.remove("hidden");
+        document.body.classList.add("ml-tab-open","ml-tab-dim");
+        tab(PARENT[last])?.classList.add("ml-page-open");
+      }
+      syncHud();return
+    }
     goHome();
   }
 
