@@ -1,4 +1,4 @@
-const VERSION="0.5.7";
+const VERSION="0.5.9";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -2056,8 +2056,10 @@ render=function(){
   mlFamilyRepair();ensureHudMenu();
 })();
 
-/* MegaLife v0.5.1 — HUD-only navigation and strict character classes */
+/* MegaLife v0.5.9 — single navigation system
+   One source of truth for HUD/menu routing. No legacy navigation wrappers. */
 (function(){
+  const ROOTS=["relations","career","finance","assets"];
   const PARENT={
     family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",
     jobs:"career",education:"career",business:"career",
@@ -2065,823 +2067,210 @@ render=function(){
     property:"assets",vehicles:"assets",luxury:"assets",
     daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"
   };
-  let stack=[];
-  function rootFor(tab){return ["relations","career","finance","assets","activities"].includes(tab)}
-  function cleanChrome(){
-    document.querySelectorAll(".ml-tab-chrome").forEach(x=>x.remove());
-  }
-  function syncHudMenu(){
-    const top=document.querySelector(".top-actions");if(!top)return;
-    let b=document.getElementById("mlHudMenuBack");
-    if(!b){
-      b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";
-      b.setAttribute("aria-label","Menü / Vissza");top.insertBefore(b,top.firstChild);
-    }
-    b.textContent=stack.length?"‹":"☰";
-    b.title=stack.length?"Vissza":"Menü";
-    b.onclick=()=>{
-      if(stack.length){
-        const parent=stack.pop();
-        _open(parent,false);
-      }else closeTabs();
-    };
-    b.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
-  }
-  const _ensure=ensureTabChrome015;
-  ensureTabChrome015=function(tab){cleanChrome()};
-  const _show=showTab;
-  function _open(key,push=true){
-    if(!state)return;
-    if(push&&PARENT[key])stack.push(PARENT[key]);
-    _show(key);
-    cleanChrome();syncHudMenu();
-  }
-  showTab=function(tab){
-    if(tab==="life"){stack=[];_show("life");syncHudMenu();return}
-    if(rootFor(tab))stack=[];
-    _open(tab,false);
-  };
-  const _oldOpen=window.mlOpenCategory;
-  window.mlOpenCategory=function(key){
-    if(PARENT[key])stack=[PARENT[key]];
-    else if(rootFor(key))stack=[];
-    _oldOpen(key);
-    cleanChrome();syncHudMenu();
-  };
-  closeTabs=function(){stack=[];_show("life");cleanChrome();syncHudMenu()};
-  document.addEventListener("click",e=>{
-    const x=e.target.closest?.(".ml-tab-chrome");if(x){e.preventDefault();e.stopPropagation()}
-  },true);
+  const SUBS=Object.keys(PARENT);
+  const route=[];
+  const tab=k=>$("tab-"+k);
+  const escNav=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  let menuOpen=false;
 
-  function familyType(c){return String(c?.type||"").toLowerCase()}
-  function isFamily(c){return familyType(c).startsWith("család")}
-  function setSurname(c,last){
-    if(!c)return;
-    const parts=String(c.name||"").trim().split(/\s+/);
-    const first=parts[0]||"Ismeretlen";
-    c.name=first+" "+last;
-  }
-  function familyRepair051(){
-    if(!state)return;
-    state.family=state.family||{};
-    state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];
-    state.meta=state.meta||{};state.meta.characters=Array.isArray(state.meta.characters)?state.meta.characters:[];
-    const last=String(state.last||"Life").trim()||"Life";
-    let father=state.meta.characters.find(c=>familyType(c).includes("apa"));
-    let mother=state.meta.characters.find(c=>familyType(c).includes("anya"));
-    if(!father)father=state.meta.characters.find(c=>c===state.family.parents[0]);
-    if(!mother)mother=state.meta.characters.find(c=>c===state.family.parents[1]);
-    if(!father){
-      const p=state.family.parents.find(x=>/apa/i.test(String(x.type||"")));
-      if(p){father=npcCreate("Család • Apa",Math.max(18,state.age+rand(24,36)));father.name=mlSafeText(p.name,father.name);father.closeness=70;father.trust=75;state.meta.characters.push(father)}
-    }
-    if(!mother){
-      const p=state.family.parents.find(x=>/anya/i.test(String(x.type||"")));
-      if(p){mother=npcCreate("Család • Anya",Math.max(18,state.age+rand(22,34)));mother.name=mlSafeText(p.name,mother.name);mother.closeness=75;mother.trust=80;state.meta.characters.push(mother)}
-    }
-    if(father){father.type="Család • Apa";setSurname(father,last)}
-    if(mother){
-      mother.type="Család • Anya";
-      const first=String(mother.name||"Anya").trim().split(/\s+/)[0]||"Anya";
-      mother.maidenName=String(mother.maidenName||"").trim()||pick(surnames.filter(s=>s!==last));
-      mother.name=first+" "+mother.maidenName;
-    }
-    const siblingCount=Math.min(6,Number(state.family.siblings)||0);
-    let siblings=state.meta.characters.filter(c=>familyType(c).includes("testvér"));
-    while(siblings.length<siblingCount){
-      const s=npcCreate("Család • Testvér",Math.max(0,state.age+rand(-6,6)));
-      s.type="Család • Testvér";setSurname(s,last);s.closeness=rand(50,82);s.trust=rand(50,85);
-      state.meta.characters.push(s);siblings.push(s);
-    }
-    siblings.forEach(s=>{s.type="Család • Testvér";setSurname(s,last)});
-    state.meta.characters.filter(isFamily).forEach(c=>{
-      if(familyType(c).includes("anya")){c.type="Család • Anya";const first=String(c.name||"Anya").trim().split(/\s+/)[0]||"Anya";c.maidenName=c.maidenName||mother?.maidenName||pick(surnames.filter(s=>s!==last));c.name=first+" "+c.maidenName}
-      else if(familyType(c).includes("apa")||familyType(c).includes("testvér")||familyType(c).includes("gyermek")){if(familyType(c).includes("apa"))c.type="Család • Apa";if(familyType(c).includes("testvér"))c.type="Család • Testvér";if(familyType(c).includes("gyermek"))c.type="Család • Gyermek";setSurname(c,last)}
-    });
-  }
-  function classify051(){
-    if(!state?.meta?.characters)return;
-    state.meta.characters.forEach(c=>{
-      if(isFamily(c))return;
-      c.type=c.type==="Barát"?"Barát":"Ismerős";
-      if(c.type==="Ismerős"){c.closeness=clamp(Number(c.closeness)||20);c.trust=clamp(Number(c.trust)||50)}
-    });
-    familyRepair051();
-  }
-  const _norm=normalize;
-  normalize=function(){_norm();classify051()};
-  const _render=render;
-  render=function(){_render();classify051();syncHudMenu()};
-  syncHudMenu();classify051();
-})();
-
-/* MegaLife v0.5.2 — navigation reset, pure renders and family/relationship classification */
-(function(){
-  const ROOTS=["relations","career","finance","assets","activities"];
-  const PARENT={
-    family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",
-    jobs:"career",education:"career",business:"career",
-    bank:"finance",investments:"finance",loans:"finance",gambling:"finance",
-    property:"assets",vehicles:"assets",luxury:"assets",
-    daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"
-  };
-  let navStack=[];
-  const rootCopy={
-    activities:[["🏃","Mindennapok","Edzés, meditáció, buli és egészség.","daily"],["🎯","Hobbik","Válassz és fejlessz saját hobbit.","hobbies"],["✈️","Utazás","Új helyek és élmények.","travel"],["📱","Közösségi élet","Online profilok és közösségi élet.","social"],["🐾","Háziállatok","Gondozás és új társ az életedben.","pets"],["🕶️","Bűnözés","Kockázatos döntések és következmények.","crime"]],
-    career:[["💼","Munka","Állások és karrierváltás.","jobs"],["🎓","Tanulás","Tanulás és egyetem.","education"],["🏢","Vállalkozás","Saját üzlet építése.","business"]],
-    finance:[["🏦","Bank","Készpénz és banki pénz.","bank"],["📈","Befektetések","Kockázat és hozam.","investments"],["💸","Hitelek","Hitel és tartozás.","loans"],["🎰","Szerencsejáték","Magas kockázatú pénzügyi játék.","gambling"]],
-    assets:[["🏠","Ingatlan","Lakás és ingatlanvagyon.","property"],["🚗","Járművek","Autók és közlekedés.","vehicles"],["💎","Luxus","Luxuscikkek és értéktárgyak.","luxury"]],
-    relations:[["👨‍👩‍👧","Család","Szülők, testvérek és gyerekek.","family"],["🤝","Barátok","A közeli baráti köröd.","friends"],["🧑","Ismerősök","Akikkel az élet során találkoztál.","acquaintances"],["❤️","Romantika","Randik, párkapcsolat, eljegyzés és házasság.","romance"]]
-  };
-  function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-  function rootHtml(key){
-    const titles={activities:["☰ Egyebek","Mindennapi dolgok és szabadidő."],career:["💼 Karrier","Munka, tanulás és vállalkozás."],finance:["💰 Pénzügyek","A pénzügyeid külön kategóriákban."],assets:["🏠 Vagyon","Ingatlan, járművek és luxus."],relations:["❤️ Kapcsolatok","Család, barátok és az élet során megismert emberek."]};
-    const cards=(rootCopy[key]||[]).map(x=>'<button class="category-card" onclick="mlOpenCategory(\''+x[3]+'\')"><span class="category-icon">'+x[0]+'</span><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span><strong>›</strong></button>').join("");
-    return '<div class="category-page"><div class="category-title"><h2>'+titles[key][0]+'</h2><p>'+titles[key][1]+'</p></div><div class="category-list">'+cards+'</div></div>';
-  }
-  function renderRoot(key){
-    const box=$("tab-"+key);if(box)box.innerHTML=rootHtml(key);
-  }
-  function setHud(){
-    const top=document.querySelector(".top-actions");if(!top)return;
-    let b=$("mlHudMenuBack");
-    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
-    b.textContent=navStack.length?"‹":"☰";
-    b.setAttribute("aria-label",navStack.length?"Vissza":"Menü");
-    b.title=navStack.length?"Vissza":"Menü";
-    b.onclick=()=>{
-      if(navStack.length){
-        const p=navStack.pop();
-        if(ROOTS.includes(p)){renderRoot(p);baseShow(p)}
-        else {open(p,false)}
-      }else{navStack=[];baseShow("life")}
-      setHud();
-    };
-    b.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
-  }
-  const baseShow=showTab;
-  function open(key,push=true){
-    if(!state)return;
-    const parent=PARENT[key];
-    if(push){
-      if(parent)navStack=[parent];
-      else if(ROOTS.includes(key))navStack=[];
-    }
-    if(ROOTS.includes(key))renderRoot(key);
-    else {
-      const currentShow=showTab;
-      try{showTab=baseShow;oldCategoryOpen(key)}catch(e){}finally{showTab=currentShow}
-    }
-    baseShow(key);
-    setHud();
-  }
-  const oldCategoryOpen=window.mlOpenCategory;
-  window.mlOpenCategory=function(key){
-    if(ROOTS.includes(key)){navStack=[];renderRoot(key);baseShow(key);setHud();return}
-    const parent=PARENT[key];
-    if(parent)navStack=[parent];
-    const currentShow=showTab;
-    try{showTab=baseShow;oldCategoryOpen(key)}catch(e){}finally{showTab=currentShow}
-    setHud();
-  };
-  showTab=function(tab){
-    if(tab==="life"){navStack=[];baseShow("life");setHud();return}
-    if(ROOTS.includes(tab)){navStack=[];renderRoot(tab);baseShow(tab);setHud();return}
-    open(tab,true);
-  };
-  closeTabs=function(){navStack=[];baseShow("life");setHud()};
-  /* Critical fix: render() must never navigate away from the life screen. */
-  renderActivities=function(){renderRoot("activities")};
-  renderCareer=function(){renderRoot("career")};
-  renderFinance=function(){renderRoot("finance")};
-  renderAssets=function(){renderRoot("assets")};
-  renderRelations=function(){renderRoot("relations")};
-  /* Keep the family naming model deterministic: father/siblings/children use the player's surname,
-     mother keeps a different maiden surname. */
-  function familyRepair052(){
-    if(!state)return;
-    state.family=state.family||{};
-    state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];
-    state.meta=state.meta||{};
-    state.meta.characters=Array.isArray(state.meta.characters)?state.meta.characters:[];
-    const last=String(state.last||"Life").trim()||"Life";
-    const family=state.meta.characters.filter(c=>String(c.type||"").toLowerCase().startsWith("család"));
-    let father=family.find(c=>/apa/i.test(c.type));
-    let mother=family.find(c=>/anya/i.test(c.type));
-    const first=s=>String(s||"").trim().split(/\s+/)[0]||"Ismeretlen";
-    if(!father){
-      const p=state.family.parents.find(x=>/apa/i.test(String(x.type||"")));
-      if(p){father=npcCreate("Család • Apa",Math.max(18,state.age+rand(24,36)));father.name=first(p.name)+" "+last;father.closeness=70;father.trust=75;state.meta.characters.push(father)}
-    }
-    if(!mother){
-      const p=state.family.parents.find(x=>/anya/i.test(String(x.type||"")));
-      if(p){mother=npcCreate("Család • Anya",Math.max(18,state.age+rand(22,34)));mother.name=first(p.name)+" "+(p.maidenName||pick(surnames.filter(s=>s!==last)));mother.maidenName=mother.name.split(/\s+/).slice(1).join(" ");mother.closeness=75;mother.trust=80;state.meta.characters.push(mother)}
-    }
-    if(father){father.type="Család • Apa";father.name=first(father.name)+" "+last}
-    if(mother){
-      mother.type="Család • Anya";
-      const ml=String(mother.maidenName||"").trim()||pick(surnames.filter(s=>s!==last));
-      mother.maidenName=ml;mother.name=first(mother.name)+" "+ml;
-    }
-    state.meta.characters.filter(c=>/család/i.test(String(c.type||""))).forEach(c=>{
-      if(/anya/i.test(c.type)){c.type="Család • Anya";const ml=c.maidenName||mother?.maidenName||pick(surnames.filter(s=>s!==last));c.maidenName=ml;c.name=first(c.name)+" "+ml}
-      else if(/apa/i.test(c.type)){c.type="Család • Apa";c.name=first(c.name)+" "+last}
-      else if(/testvér/i.test(c.type)){c.type="Család • Testvér";c.name=first(c.name)+" "+last}
-      else if(/gyermek/i.test(c.type)){c.type="Család • Gyermek";c.name=first(c.name)+" "+last}
-    });
-  }
-  function classify052(){
-    (state?.meta?.characters||[]).forEach(c=>{
-      if(/^\s*Család/i.test(String(c.type||"")))return;
-      c.type=c.type==="Barát"?"Barát":"Ismerős";
-      c.closeness=clamp(Number(c.closeness)||20);
-      c.trust=clamp(Number(c.trust)||50);
-    });
-    familyRepair052();
-  }
-  const baseNormalize=normalize;
-  normalize=function(){baseNormalize();classify052()};
-  const baseRender=render;
-  render=function(){baseRender();classify052();setHud()};
-  classify052();setHud();
-})();
-
-/* MegaLife v0.5.3 — definitive HUD navigation */
-(function(){
-  const ROOTS=["relations","career","finance","assets","activities"];
-  const PARENT={family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"};
-  let stack=[];
-  const all=["life","relations","career","finance","assets","activities","achievements","stats","social"];
-  function hideAll(){all.forEach(k=>{$("tab-"+k)?.classList.add("hidden");$("tab-"+k)?.classList.remove("ml-page-open")})}
-  function clean(){document.querySelectorAll(".ml-tab-chrome,.category-back").forEach(x=>x.remove())}
-  function hud(){
-    const top=document.querySelector(".top-actions");if(!top)return;
-    let b=$("mlHudMenuBack");
-    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
-    const inside=stack.length>0;
-    b.textContent=inside?"‹":"×";
-    b.setAttribute("aria-label",inside?"Vissza":"Kilépés");
-    b.title=inside?"Vissza":"Kilépés";
-    b.onclick=inside?()=>{const p=stack.pop();open(p,false)}:()=>exitToLife();
-    b.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
-  }
-  function showRoot(key){
-    const el=$("tab-"+key);if(!el)return;
-    hideAll();
-    if(key!=="life"){
-      document.body.classList.add("ml-tab-open");
-      el.classList.remove("hidden");el.classList.add("ml-page-open");
-    }else document.body.classList.remove("ml-tab-open");
-    hud();
-  }
-  function renderRoot(key){
-    if(key==="activities")renderActivities();
-    else if(key==="relations")renderRelations();
-    else if(key==="career")renderCareer();
-    else if(key==="finance")renderFinance();
-    else if(key==="assets")renderAssets();
-  }
-  function open(key,push){
-    if(!state)return;
-    const parent=PARENT[key];
-    if(push&&parent)stack=[parent];
-    if(ROOTS.includes(key)){stack=[];renderRoot(key);showRoot(key);return}
-    if(parent&&!stack.length)stack=[parent];
-    const old=window.mlOpenCategory;
-    try{
-      // Use the already-built action page, but prevent older navigation wrappers from changing the stack.
-      if(typeof old==="function")old(key);
-    }catch(e){}
-    showRoot(parent||"activities");
-    const target=$("tab-"+(parent||"activities"));
-    if(target)target.querySelectorAll(".category-back").forEach(x=>x.remove());
-    hud();
-  }
-  function exitToLife(){
-    stack=[];
-    hideAll();
+  function hideAll(){
+    document.querySelectorAll(".legacy-tab,.tab").forEach(el=>el.classList.add("hidden"));
     document.body.classList.remove("ml-tab-open","ml-tab-dim");
-    $("tab-life")?.classList.remove("hidden");
-    renderLife();
-    clean();
-    hud();
-    scrollLifeLogToLatest?.();
+    document.querySelectorAll(".ml-tab-chrome,.category-back,.tab-back").forEach(el=>el.remove());
   }
-  window.mlOpenCategory=function(key){
-    if(ROOTS.includes(key)){stack=[];renderRoot(key);showRoot(key);return}
-    stack=PARENT[key]?[PARENT[key]]:[];
-    open(key,false);
-  };
-  window.showTab=function(tab){
-    if(tab==="life"){exitToLife();return}
-    if(ROOTS.includes(tab)){stack=[];renderRoot(tab);showRoot(tab);return}
-    open(tab,true);
-  };
-  window.closeTabs=exitToLife;
-  // Render functions are now pure: refresh/render never opens Egyebek.
-  const pureActivities=renderActivities,pureRelations=renderRelations,pureCareer=renderCareer,pureFinance=renderFinance,pureAssets=renderAssets;
-  renderActivities=function(){pureActivities();};
-  renderRelations=function(){pureRelations();};
-  renderCareer=function(){pureCareer();};
-  renderFinance=function(){pureFinance();};
-  renderAssets=function(){pureAssets();};
-  // Never let a normal render put the player into a tab.
-  const oldRender=render;
-  render=function(){oldRender();if(!document.body.classList.contains("ml-tab-open"))exitToLife();else hud()};
-  document.querySelectorAll(".category-back").forEach(x=>x.remove());
-  // The +/more entry remains a single explicit route into Egyebek.
-  const moreBtns=[...document.querySelectorAll('[onclick*="showTab(\'activities\')"],[onclick*="showTab(\"activities\")"]')];
-  moreBtns.forEach(b=>b.setAttribute("aria-label","Egyebek"));
-  hud();
-})();
 
-/* MegaLife v0.5.3 — definitive HUD navigation, refresh-safe */
-(function(){
-  const ROOTS=["relations","career","finance","assets","activities"];
-  const PARENT={family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"};
-  let stack=[];
-  let tabOpen=false;
-  function life(){return $("tab-life")}
-  function hideTabs(){document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"))}
-  function hud(){
-    const top=document.querySelector(".top-actions");if(!top)return;
-    let b=$("mlHudMenuBack");
-    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
-    b.textContent=stack.length?"‹":"☰";
-    b.setAttribute("aria-label",stack.length?"Vissza":"Menü");
-    b.title=stack.length?"Vissza":"Menü";
-    b.onclick=()=>stack.length?back():openRoot("activities");
-    b.classList.toggle("hidden",!tabOpen);
-  }
-  function activate(tab){
-    hideTabs();
-    if(tab==="life"){tabOpen=false;life()?.classList.remove("hidden");document.body.classList.remove("ml-tab-open")}
-    else{tabOpen=true;$( "tab-"+tab)?.classList.remove("hidden");document.body.classList.add("ml-tab-open")}
-    hud();
-  }
-  function openRoot(key){
-    if(!ROOTS.includes(key))return;
-    stack=[];tabOpen=true;
-    if(key==="activities")renderActivities();else if(key==="relations")renderRelations();else if(key==="career")renderCareer();else if(key==="finance")renderFinance();else if(key==="assets")renderAssets();
-    activate(key);
-  }
-  function openChild(key){
-    const p=PARENT[key];if(!p)return;
-    stack=[p];tabOpen=true;
-    // Call the category renderer once, then activate its parent tab without allowing old wrappers to navigate.
-    const fn=window._mlOriginalCategoryOpen;
-    if(typeof fn==="function"){try{fn(key)}catch(e){}}
-    activate(p);
-  }
-  function back(){
-    if(!stack.length)return openRoot("activities");
-    const p=stack.pop();
-    if(ROOTS.includes(p)){openRoot(p);return}
-    openChild(p);
-  }
-  function exit(){
-    stack=[];tabOpen=false;hideTabs();life()?.classList.remove("hidden");document.body.classList.remove("ml-tab-open");hud();
-  }
-  window.mlOpenCategory=function(key){ROOTS.includes(key)?openRoot(key):openChild(key)};
-  window.showTab=function(key){
-    if(key==="life"){exit();return}
-    ROOTS.includes(key)?openRoot(key):openChild(key);
-  };
-  window.closeTabs=exit;
-  // Snapshot the category renderer before this navigation layer overrides anything.
-  if(!window._mlOriginalCategoryOpen)window._mlOriginalCategoryOpen=window.mlOpenCategory;
-  // Explicitly restore pure rendering wrappers so refresh/load cannot open a category.
-  const pureA=renderActivities,pureC=renderCareer,pureF=renderFinance,pureS=renderAssets,pureR=renderRelations;
-  renderActivities=function(){try{pureA()}catch(e){}};renderCareer=function(){try{pureC()}catch(e){}};renderFinance=function(){try{pureF()}catch(e){}};renderAssets=function(){try{pureS()}catch(e){}};renderRelations=function(){try{pureR()}catch(e){}};
-  const oldRender=render;
-  render=function(){oldRender();if(!tabOpen)activate("life");else hud()};
-  // Start/refresh must always begin on the life screen.
-  exit();
-})();
-
-/* MegaLife v0.5.4 — navigation state hardening and relationship classes */
-(function(){
-  const ROOT_TABS=["relations","career","finance","assets","activities","achievements","stats","social"];
-  function mlHideAllTabs054(){document.querySelectorAll(".legacy-tab").forEach(el=>{el.classList.add("hidden");el.classList.remove("ml-page-open")});document.body.classList.remove("ml-tab-open");$("gameScreen")?.classList.remove("ml-tab-dim")}
-  function mlShow054(tab,fromMenu=false){
-    if(!state)return;
-    if(tab==="life"){mlHideAllTabs054();render();return}
-    const target=$("tab-"+tab);if(!target)return;
-    mlHideAllTabs054();target.classList.remove("hidden");target.classList.add("ml-page-open");document.body.classList.add("ml-tab-open");$("gameScreen")?.classList.add("ml-tab-dim");
-    ensureTabChrome015(target);
-    target.querySelector(".ml-tab-title")?.setAttribute("data-root",fromMenu?"menu":"sub");
-    target.scrollTop=0;
-  }
-  window.mlNavBack054=function(){
-    const cur=document.querySelector(".legacy-tab.ml-page-open");if(!cur){mlShow054("life");return}
-    const key=cur.id.replace("tab-","");
-    if(window.__mlCategoryParent?.[key]){const p=window.__mlCategoryParent[key];delete window.__mlCategoryParent[key];mlOpenCategory(p);return}
-    mlShow054("life");
-  };
-  const oldChrome=window.ensureTabChrome015;
-  ensureTabChrome015=function(tab){
-    if(!tab)return;
-    const old=tab.querySelector(".ml-tab-chrome");if(old)old.remove();
-    const title=ML_TAB_TITLES_015[tab.id.replace("tab-","")]||"MegaLife";
-    tab.insertAdjacentHTML("afterbegin",'<div class="ml-tab-chrome"><button type="button" class="ml-tab-back" onclick="mlNavBack054()" aria-label="Vissza">‹</button><div class="ml-tab-title">'+title+'</div><button type="button" class="ml-tab-close" onclick="mlShow054(\'life\')" aria-label="Bezárás">×</button></div>');
-  };
-  window.__mlCategoryParent={};
-  const prevOpen=window.mlOpenCategory;
-  window.mlOpenCategory=function(key){
-    const parent={daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",family:"relations",friends:"relations",acquaintances:"relations",romance:"relations"};
-    if(parent[key])window.__mlCategoryParent[key]=parent[key];
-    const box=$("tab-"+(ROOT_TABS.includes(key)?key:(parent[key]||"activities")));if(!box)return;
-    if(key==="activities"||key==="career"||key==="finance"||key==="assets"||key==="relations"){prevOpen(key);return}
-    const original=window.__mlCategoryRenderers?.[key];
-    if(original){box.innerHTML=original();mlShow054(box.id.replace("tab-",""));return}
-    prevOpen(key);
-  };
-  showTab=mlShow054;closeTabs=function(){mlShow054("life")};
-  // Plus must only open the categorized Activities hub.
-  window.mlOpenActivities054=function(){mlOpenCategory("activities")};
-  const plus=document.querySelector("#quickPlus,[data-plus],#plusButton");
-  if(plus)plus.onclick=function(e){e.preventDefault();e.stopPropagation();mlOpenActivities054()};
-  // Prevent stale menu state from reopening after refresh.
-  localStorage.removeItem("megalife-open-tab");
-  document.addEventListener("click",e=>{
-    const back=e.target.closest?.(".ml-tab-back");if(back){e.preventDefault();e.stopImmediatePropagation();mlNavBack054();return}
-  },true);
-})();
-
-/* MegaLife v0.5.5 — single HUD navigation, home-safe refresh, hierarchical interaction pages */
-(function(){
-  const ROOT=["relations","career","finance","assets","activities"];
-  const P={
-    family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",
-    jobs:"career",education:"career",business:"career",
-    bank:"finance",investments:"finance",loans:"finance",gambling:"finance",
-    property:"assets",vehicles:"assets",luxury:"assets",
-    daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"
-  };
-  let route=["life"];
-  const esc054=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  function tab(k){return $("tab-"+k)}
-  function hideTabs(){document.querySelectorAll(".tab,.legacy-tab").forEach(x=>x.classList.add("hidden"));document.body.classList.remove("ml-tab-open","ml-tab-dim")}
-  function home(){
-    route=["life"];hideTabs();tab("life")?.classList.remove("hidden");document.body.classList.remove("ml-tab-open","ml-tab-dim");
-    document.querySelectorAll(".ml-tab-chrome,.category-back").forEach(x=>x.remove());hud();
-  }
-  function hud(){
-    const top=document.querySelector(".top-actions");if(!top)return;
-    let b=$("mlHudMenuBack");
-    if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
-    if(route.length===1){b.textContent="×";b.setAttribute("aria-label","Bezárás");b.title="Vissza a főoldalra";b.onclick=home}
-    else{b.textContent="‹";b.setAttribute("aria-label","Vissza");b.title="Vissza";b.onclick=back}
-    b.classList.toggle("hidden",route[0]==="life");
-  }
-  function showRoot(k){
-    if(!ROOT.includes(k))return;
-    route=[k];renderRoot(k);activate(k);hud();
-  }
-  function activate(k){
-    hideTabs();tab(k)?.classList.remove("hidden");document.body.classList.add("ml-tab-open");hud();
-  }
-  function renderRoot(k){
-    if(k==="relations")rootRelations();
-    if(k==="career")rootCareer();
-    if(k==="finance")rootFinance();
-    if(k==="assets")rootAssets();
-    if(k==="activities")rootActivities();
-  }
-  function card(icon,title,desc,action){
-    return '<button class="category-card" onclick="'+action+'"><span class="category-icon">'+icon+'</span><span><b>'+esc054(title)+'</b><small>'+esc054(desc)+'</small></span><strong>›</strong></button>';
+  function card(icon,title,desc,key){
+    return '<button type="button" class="category-card" onclick="mlRoute(&quot;'+escNav(key)+'&quot;)">'+
+      '<span class="category-icon">'+icon+'</span><span><b>'+escNav(title)+'</b><small>'+escNav(desc)+'</small></span><strong>›</strong></button>';
   }
   function page(title,desc,body){
-    return '<div class="category-page"><div class="category-title"><h2>'+title+'</h2><p>'+desc+'</p></div><div class="category-list">'+body+'</div></div>';
+    return '<div class="category-page"><div class="category-title"><h2>'+escNav(title)+'</h2><p>'+escNav(desc)+'</p></div><div class="category-list">'+body+'</div></div>';
   }
-  function rootRelations(){
-    tab("relations").innerHTML=page("❤️ Kapcsolatok","A kapcsolataid három fő körben élnek.",[
-      card("👨‍👩‍👧","Család","Szülők, testvérek és gyerekek.","mlRoute('family')"),
-      card("🤝","Barátok","Azok, akikkel tudatosan megerősítetted a barátságot.","mlRoute('friends')"),
-      card("👋","Ismerősök","Akikkel csak néhányszor találkoztál az életben.","mlRoute('acquaintances')"),
-      card("❤️","Romantika","Randik, párkapcsolatok, eljegyzés és házasság.","mlRoute('romance')")
-    ].join(""));
+
+  function renderRoot(key){
+    const el=tab(key); if(!el)return;
+    const maps={
+      relations:[
+        card("👨‍👩‍👧","Család","Szülők, testvérek és gyerekek.","family"),
+        card("🤝","Barátok","A közeli baráti köröd.","friends"),
+        card("👋","Ismerősök","Azok, akikkel találkoztál.","acquaintances"),
+        card("❤️","Romantika","Randi, kapcsolat, eljegyzés és házasság.","romance")
+      ],
+      career:[
+        card("💼","Munka","Álláskeresés és karrierváltás.","jobs"),
+        card("🎓","Tanulás","Tanulás és egyetem.","education"),
+        card("🏢","Vállalkozás","Saját üzlet indítása és kezelése.","business")
+      ],
+      finance:[
+        card("🏦","Bank","Készpénz, bank és pénzmozgások.","bank"),
+        card("📈","Befektetések","Kockázat és hozam.","investments"),
+        card("💸","Hitelek","Hitel és tartozás.","loans"),
+        card("🎰","Szerencsejáték","Kockázatos pénzügyi játékok.","gambling")
+      ],
+      assets:[
+        card("🏠","Ingatlan","Lakás és ingatlanvagyon.","property"),
+        card("🚗","Járművek","Autók és közlekedési eszközök.","vehicles"),
+        card("💎","Luxus","Luxuscikkek és értéktárgyak.","luxury")
+      ]
+    };
+    const titles={relations:["❤️ Kapcsolatok","Család, barátok, ismerősök és romantika."],career:["💼 Karrier","Munka, tanulás és vállalkozás."],finance:["💰 Pénzügyek","Bank, befektetés, hitel és szerencsejáték."],assets:["🏠 Vagyon","Ingatlan, járművek és luxus."]};
+    el.innerHTML=page(titles[key][0],titles[key][1],maps[key].join(""));
   }
-  function rootCareer(){tab("career").innerHTML=page("💼 Karrier","Munka, tanulás és vállalkozás.",[
-    card("💼","Munka","Álláskeresés és karrierváltás.","mlRoute('jobs')"),
-    card("🎓","Tanulás","Iskola, tanulás és egyetem.","mlRoute('education')"),
-    card("🏢","Vállalkozás","Saját üzlet indítása és kezelése.","mlRoute('business')")
-  ].join(""))}
-  function rootFinance(){tab("finance").innerHTML=page("💰 Pénzügyek","A pénzügyi döntéseid külön kezelhetők.",[
-    card("🏦","Bank","Készpénz, bank és pénzmozgások.","mlRoute('bank')"),
-    card("📈","Befektetések","Hosszabb távú és kockázatos befektetések.","mlRoute('investments')"),
-    card("💸","Hitelek","Hitel és tartozás kezelése.","mlRoute('loans')"),
-    card("🎰","Szerencsejáték","Kockázatos pénzügyi játékok.","mlRoute('gambling')")
-  ].join(""))}
-  function rootAssets(){tab("assets").innerHTML=page("🏠 Vagyon","A tárgyaid és nagyobb vásárlásaid.",[
-    card("🏠","Ingatlan","Lakás és ingatlanvagyon.","mlRoute('property')"),
-    card("🚗","Járművek","Autók és közlekedési eszközök.","mlRoute('vehicles')"),
-    card("💎","Luxus","Luxuscikkek és értéktárgyak.","mlRoute('luxury')")
-  ].join(""))}
-  function rootActivities(){tab("activities").innerHTML=page("☰ Egyebek","Minden egyéb interakció kategóriákban.",[
-    card("🏃","Mindennapok","Edzés, meditáció, buli és orvos.","mlRoute('daily')"),
-    card("🎯","Hobbik","Saját hobbik és új hobbik választása.","mlRoute('hobbies')"),
-    card("✈️","Utazás","Utazás és új helyek.","mlRoute('travel')"),
-    card("📱","Közösségi élet","Közösségi média és online élet.","mlRoute('social')"),
-    card("🐾","Háziállatok","Háziállat választása és gondozása.","mlRoute('pets')"),
-    card("🕶️","Bűnözés","Kockázatos döntések és következmények.","mlRoute('crime')")
-  ].join(""))}
-  function family(){
-    const cs=(state?.meta?.characters||[]).filter(c=>/^Család/i.test(String(c.type||"")));
-    const body=cs.map(c=>personCard(c)).join("")||'<p class="muted">A családi karakterek még készülnek.</p>';
-    tab("relations").innerHTML=page("👨‍👩‍👧 Család","A családtagok külön-külön megnyithatók és interaktálhatók.",body);
+
+  function renderMenu(){
+    const el=tab("activities"); if(!el)return;
+    el.innerHTML=
+      '<div class="ml-hud-menu-page">'+
+        '<div class="ml-hud-menu-head">'+
+          '<button type="button" class="ml-hud-menu-back" onclick="closeTabs()" aria-label="Vissza">‹</button>'+
+          '<div><h2>Menü</h2><p>Válaszd ki, mit szeretnél kezelni.</p></div>'+
+        '</div>'+
+        '<div class="category-list">'+
+          card("❤️","Kapcsolatok","Család, barátok, ismerősök és romantika.","relations")+
+          card("💼","Karrier","Munka, tanulás és vállalkozás.","career")+
+          card("💰","Pénzügyek","Bank, befektetések, hitelek és játékok.","finance")+
+          card("🏠","Vagyon","Ingatlanok, járművek és luxuscikkek.","assets")+
+          card("🏃","Mindennapok","Edzés, meditáció, buli és orvos.","daily")+
+          card("🎯","Hobbik","Saját hobbik és új hobbik.","hobbies")+
+          card("✈️","Utazás","Utazás és új helyek.","travel")+
+          card("📱","Közösségi élet","Közösségi média és online élet.","social")+
+          card("🐾","Háziállatok","Új társ és gondozás.","pets")+
+          card("🕶️","Bűnözés","Kockázatos döntések és következmények.","crime")+
+        '</div>'+
+      '</div>';
   }
-  function people(kind){
-    let cs=(state?.meta?.characters||[]).filter(c=>c.alive!==false);
-    if(kind==="friends")cs=cs.filter(c=>c.type==="Barát");
-    if(kind==="acquaintances")cs=cs.filter(c=>c.type==="Ismerős");
-    if(kind==="romance")cs=cs.filter(c=>["Randi","Jegyes","Házastárs"].includes(c.type));
-    const body=cs.map(c=>personCard(c)).join("")||'<p class="muted">Még nincs ide tartozó karaktered.</p>';
-    const add=(kind==="friends"||kind==="acquaintances")?'<button class="action" onclick="mlNpcNew(\''+(kind==="friends"?"Ismerős":"Ismerős")+'\')"><b>➕ Új ismerős</b><small>Random generált karakter, saját háttérrel és kinézettel.</small></button>':"";
-    tab("relations").innerHTML=page(kind==="friends"?"🤝 Barátok":kind==="acquaintances"?"👋 Ismerősök":"❤️ Romantika","Egyenként megnyithatod őket, és a kapcsolat fejlődhet.",body+add);
+
+  function renderPeople(kind){
+    const el=tab("relations"); if(!el)return;
+    let chars=(state?.meta?.characters||[]).filter(c=>c&&c.alive!==false);
+    if(kind==="family")chars=chars.filter(c=>/^Család/i.test(String(c.type||"")));
+    if(kind==="friends")chars=chars.filter(c=>c.type==="Barát");
+    if(kind==="acquaintances")chars=chars.filter(c=>c.type==="Ismerős");
+    if(kind==="romance")chars=chars.filter(c=>["Randi","Jegyes","Házastárs"].includes(c.type));
+    const cards=chars.map(c=>'<button type="button" class="person-card" onclick="mlPerson(&quot;'+escNav(c.id)+'&quot;)">'+
+      '<span class="npc-avatar">'+(window.mlAvatarSvg?window.mlAvatarSvg(c,"62"):escNav((c.name||"?")[0]))+'</span>'+
+      '<span><b>'+escNav(c.name||"Ismeretlen")+'</b><small>'+Number(c.age||0)+' éves • '+escNav(c.type||"Ismerős")+'</small><small>Kapcsolat '+Math.round(Number(c.closeness)||0)+'% • Bizalom '+Math.round(Number(c.trust)||0)+'%</small></span><strong>›</strong></button>').join("");
+    const add=(kind==="friends"||kind==="acquaintances")?'<button type="button" class="action" onclick="mlNpcNew(&quot;Ismerős&quot;)"><b>➕ Új ismerős</b><small>Random generált karakter.</small></button>':"";
+    const title={family:"👨‍👩‍👧 Család",friends:"🤝 Barátok",acquaintances:"👋 Ismerősök",romance:"❤️ Romantika"}[kind];
+    el.innerHTML=page(title,"Nyisd meg a karaktert további részletekért.",cards||'<p class="muted">Még nincs ide tartozó karaktered.</p>'+add);
+    if(!cards&&add)el.querySelector(".category-list").insertAdjacentHTML("beforeend",add);
   }
-  function personCard(c){
-    return '<button class="person-card" onclick="mlPerson(\''+esc054(c.id)+'\')"><span class="npc-avatar">'+(window.mlAvatarSvg?window.mlAvatarSvg(c,"62"):esc054((c.name||"?")[0]))+'</span><span><b>'+esc054(c.name)+'</b><small>'+Number(c.age||0)+' éves • '+esc054(c.type||"Ismerős")+'</small><small>Kapcsolat '+Math.round(Number(c.closeness)||0)+'% • Bizalom '+Math.round(Number(c.trust)||0)+'%</small></span><strong>›</strong></button>';
-  }
-  function person(id){
+
+  function renderPerson(id){
+    const el=tab("relations"); if(!el)return;
     const c=(state?.meta?.characters||[]).find(x=>x.id===id);
-    if(!c){back();return}
+    if(!c){goBack();return}
     const family=/^Család/i.test(String(c.type||""));
     const cls=c.type==="Barát"?"Barát":c.type==="Ismerős"?"Ismerős":family?"Család":"Kapcsolat";
-    let actions='';
-    if(c.type==="Ismerős")actions+='<button class="action" onclick="mlFriendPromoteFromPage(\''+esc054(c.id)+'\')"><b>🤝 Közelebb kerülünk?</b><small>Ha több közös élményetek van, ismerősből barát lehet.</small></button>';
-    actions+='<div class="grid">'+(NPC_ACTIONS||[]).map(a=>'<button class="action" onclick="mlNpcInteract(\''+esc054(c.id)+'\',\''+a[1]+'\')"><b>'+a[0]+'</b><small>Interakció vele.</small></button>').join("")+'</div>';
-    if(family)actions+='<button class="action" onclick="mlNpcInteract(\''+esc054(c.id)+'\',\'talk\')"><b>👨‍👩‍👧 Beszélgetés</b><small>Tartsd életben a családi kapcsolatot.</small></button>';
-    tab("relations").innerHTML='<div class="person-page"><div class="person-hero">'+(window.mlAvatarSvg?window.mlAvatarSvg(c,"128"):"")+'</div><div class="category-title"><h2>'+esc054(c.name)+'</h2><p>'+Number(c.age||0)+' éves • '+cls+' • '+esc054(c.status||"saját életút")+'</p></div>'+panel("Karakter",'<div class="grid"><div class="action"><b>❤️ Kapcsolat</b><small>'+Math.round(Number(c.closeness)||0)+'%</small></div><div class="action"><b>🤝 Bizalom</b><small>'+Math.round(Number(c.trust)||0)+'%</small></div><div class="action"><b>📖 Háttértörténet</b><small>'+esc054(c.background||"Saját életút.")+'</small></div></div>')+panel("Interakciók",actions)+'</div>';
+    let actions="";
+    if(c.type==="Ismerős")actions+='<button type="button" class="action" onclick="mlFriendPromoteFromPage(&quot;'+escNav(c.id)+'&quot;)"><b>🤝 Közelebb kerülünk?</b><small>Elmélyítheted a kapcsolatot.</small></button>';
+    actions+='<div class="grid">'+(Array.isArray(NPC_ACTIONS)?NPC_ACTIONS.map(a=>'<button type="button" class="action" onclick="mlNpcInteract(&quot;'+escNav(c.id)+'&quot;,&quot;'+escNav(a[1])+'&quot;)"><b>'+escNav(a[0])+'</b><small>Interakció vele.</small></button>').join(""):"")+'</div>';
+    el.innerHTML='<div class="person-page"><div class="person-hero">'+(window.mlAvatarSvg?window.mlAvatarSvg(c,"128"):"")+'</div>'+
+      '<div class="category-title"><h2>'+escNav(c.name)+'</h2><p>'+Number(c.age||0)+' éves • '+cls+' • '+escNav(c.status||"saját életút")+'</p></div>'+
+      panel("Karakter",'<div class="grid"><div class="action"><b>❤️ Kapcsolat</b><small>'+Math.round(Number(c.closeness)||0)+'%</small></div><div class="action"><b>🤝 Bizalom</b><small>'+Math.round(Number(c.trust)||0)+'%</small></div><div class="action"><b>📖 Háttértörténet</b><small>'+escNav(c.background||"Saját életút.")+'</small></div></div>')+
+      panel("Interakciók",actions)+'</div>';
   }
-  function genericChild(key){
-    const b={
-      daily:page("🏃 Mindennapok","A hétköznapi tevékenységeid.",'<div class="grid"><button class="action" onclick="activity(\'exercise\')"><b>🏋️ Edzés</b><small>Egészség és boldogság.</small></button><button class="action" onclick="activity(\'meditate\')"><b>🧘 Meditáció</b><small>Stresszcsökkentés.</small></button><button class="action" onclick="activity(\'party\')"><b>🎉 Buli</b><small>Szórakozás.</small></button><button class="action" onclick="activity(\'doctor\')"><b>🏥 Orvos</b><small>Egészségügyi ellátás.</small></button></div>'),
-      travel:page("✈️ Utazás","Fedezz fel új helyeket.",'<button class="action" onclick="travel()"><b>🌍 Utazás</b><small>250 000 Ft.</small></button>'),
-      pets:page("🐾 Háziállatok","Új társ az életedben.",'<button class="action" onclick="pet()"><b>🐕 Háziállat választása</b><small>Új családtag.</small></button>'),
-      crime:page("🕶️ Bűnözés","Kockázatos döntés.",'<button class="action" onclick="crime()"><b>🎲 Bűncselekmény</b><small>Valódi következményekkel.</small></button>'),
-      social:page("📱 Közösségi élet","Online élet és hírnév.",'<button class="action" onclick="showTab(\'social\')"><b>📱 Közösségi profilok</b><small>Posztolj és építs követőtábort.</small></button>'),
-      hobbies:page("🎯 Hobbik","Válaszd ki és fejleszd a hobbidat.",'<div class="grid">'+(typeof HOBBIES!=="undefined"?HOBBIES.map(h=>'<button class="action" onclick="startHobby(\''+h.id+'\')"><b>'+h.name+'</b><small>'+h.desc+'</small></button>').join(""):"")+'</div>')
-    };
-    tab("activities").innerHTML=b[key]||page(key,"","");
-  }
-  function genericRootChild(key){
-    const maps={
-      jobs:()=>page("💼 Munka","Válassz állást.",'<div class="grid">'+jobs.map((j,i)=>'<button class="action" onclick="getJob('+i+')"><b>'+esc054(j[0])+'</b><small>'+fmt(j[1])+' / év • IQ '+j[2]+'+</small></button>').join("")+'</div>'),
-      education:()=>page("🎓 Tanulás","Fejleszd a tudásod.",'<div class="grid"><button class="action" onclick="study()"><b>📚 Tanulás</b><small>Intelligencia és fegyelem.</small></button><button class="action" onclick="university()"><b>🎓 Egyetem</b><small>Diploma.</small></button></div>'),
-      business:()=>page("🏢 Vállalkozás","Saját üzlet.",'<button class="action" onclick="startBusiness()"><b>🚀 Indítás</b><small>1 000 000 Ft indulótőke.</small></button>'),
-      bank:()=>page("🏦 Bank","Pénzmozgások.",'<div class="grid"><button class="action" onclick="bank(50000)"><b>💰 Betét</b><small>+50 000 Ft</small></button><button class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>50 000 Ft</small></button></div>'),
-      investments:()=>page("📈 Befektetések","Kockázat és hozam.",'<button class="action" onclick="invest()"><b>📊 Befektetés</b><small>100 000 Ft-tól.</small></button>'),
-      loans:()=>page("💸 Hitelek","Tartozás és kölcsön.",'<button class="action" onclick="loan()"><b>💸 Hitel</b><small>Új hitel felvétele.</small></button>'),
-      gambling:()=>page("🎰 Szerencsejáték","Magas kockázat.",'<button class="action" onclick="gamble()"><b>🎰 Játék</b><small>Nyerhetsz vagy veszíthetsz.</small></button>'),
-      property:()=>page("🏠 Ingatlan","Lakhatás.",'<button class="action" onclick="buyHouse()"><b>🏠 Lakás vásárlása</b><small>6 000 000 Ft</small></button>'),
-      vehicles:()=>page("🚗 Járművek","Közlekedés.",'<button class="action" onclick="buyCar()"><b>🚗 Autó vásárlása</b><small>3 000 000 Ft</small></button>'),
-      luxury:()=>page("💎 Luxus","Értéktárgyak.",'<button class="action" onclick="buyLuxury()"><b>💎 Luxusóra</b><small>1 200 000 Ft</small></button>')
-    };
-    tab(P[key]||key).innerHTML=maps[key]?maps[key]():page(key,"","");
-  }
-  window.mlRoute=function(key){
-    route.push(key);
-    const parent=P[key];
-    if(ROOT.includes(key)){renderRoot(key);activate(key)}
-    else if(["family","friends","acquaintances","romance"].includes(key)){people(key==="family"?"family":key)}
-    else if(P[key]==="activities")genericChild(key);
-    else genericRootChild(key);
-    hud();
-  };
-  window.mlPerson=function(id){route.push("person:"+id);person(id);activate("relations");hud()};
-  window.mlFriendPromoteFromPage=function(id){if(typeof mlPromoteFriend==="function")mlPromoteFriend(id);};
-  window.showTab=function(k){if(k==="life"){home();return}if(ROOT.includes(k)){showRoot(k);return}mlRoute(k)};
-  window.closeTabs=home;
-  window.mlOpenCategory=window.mlRoute;
-  function back(){
-    if(route.length<=1){home();return}
-    route.pop();
-    const k=route[route.length-1];
-    if(k.startsWith("person:"))person(k.slice(7));
-    else if(ROOT.includes(k)){renderRoot(k);activate(k)}
-    else if(["family","friends","acquaintances","romance"].includes(k))people(k==="family"?"family":k);
-    else if(P[k]==="activities")genericChild(k);
-    else genericRootChild(k);
-    hud();
-  }
-  function resetOnLoad(){route=["life"];hideTabs();tab("life")?.classList.remove("hidden");document.body.classList.remove("ml-tab-open","ml-tab-dim");hud()}
-  // Do not let refresh/render/open wrappers redirect to a menu.
-  window.mlHome=home;
-  document.querySelectorAll(".ml-tab-chrome,.category-back").forEach(x=>x.remove());
-  document.querySelectorAll('[onclick*="showTab(\'activities\')"]').forEach(b=>b.setAttribute("onclick","mlRoute('activities')"));
-  document.querySelectorAll('[onclick*="showTab(\\\"activities\\\")"]').forEach(b=>b.setAttribute("onclick","mlRoute('activities')"));
-  resetOnLoad();
-  document.addEventListener("DOMContentLoaded",resetOnLoad,{once:true});
-  window.addEventListener("pageshow",()=>{if(!state)return;resetOnLoad()});
-})();
 
-/* MegaLife v0.5.5 — family identity repair */
-(function(){
-  function familyIdentity055(){
+  function renderChild(key){
+    const el=tab(PARENT[key]||"activities"); if(!el)return;
+    const views={
+      daily:page("🏃 Mindennapok","A hétköznapi tevékenységeid.",'<div class="grid"><button type="button" class="action" onclick="activity(&quot;exercise&quot;)"><b>🏋️ Edzés</b><small>Egészség és boldogság.</small></button><button type="button" class="action" onclick="activity(&quot;meditate&quot;)"><b>🧘 Meditáció</b><small>Stresszcsökkentés.</small></button><button type="button" class="action" onclick="activity(&quot;party&quot;)"><b>🎉 Buli</b><small>Szórakozás.</small></button><button type="button" class="action" onclick="activity(&quot;doctor&quot;)"><b>🏥 Orvos</b><small>Egészségügyi ellátás.</small></button></div>'),
+      travel:page("✈️ Utazás","Fedezz fel új helyeket.",'<button type="button" class="action" onclick="travel()"><b>🌍 Utazás</b><small>250 000 Ft.</small></button>'),
+      pets:page("🐾 Háziállatok","Új társ az életedben.",'<button type="button" class="action" onclick="pet()"><b>🐕 Háziállat választása</b><small>Új családtag.</small></button>'),
+      crime:page("🕶️ Bűnözés","Kockázatos döntés.",'<button type="button" class="action" onclick="crime()"><b>🎲 Bűncselekmény</b><small>Valódi következményekkel.</small></button>'),
+      social:page("📱 Közösségi élet","Online élet és hírnév.",'<button type="button" class="action" onclick="showTab(&quot;social&quot;)"><b>📱 Közösségi profilok</b><small>Posztolj és építs követőtábort.</small></button>'),
+      hobbies:page("🎯 Hobbik","Válaszd ki és fejleszd a hobbidat.",'<div class="grid">'+(typeof HOBBIES!=="undefined"?HOBBIES.map(h=>'<button type="button" class="action" onclick="startHobby(&quot;'+escNav(h.id)+'&quot;)"><b>'+escNav(h.name)+'</b><small>'+escNav(h.desc)+'</small></button>').join(""):"")+'</div>')
+    };
+    el.innerHTML=views[key]||page(key,"","");
+  }
+
+  function renderRootChild(key){
+    const el=tab(PARENT[key]||"activities"); if(!el)return;
+    const views={
+      jobs:page("💼 Munka","Válassz állást.",'<div class="grid">'+jobs.map((j,i)=>'<button type="button" class="action" onclick="getJob('+i+')"><b>'+escNav(j[0])+'</b><small>'+fmt(j[1])+' / év • IQ '+j[2]+'+</small></button>').join("")+'</div>'),
+      education:page("🎓 Tanulás","Fejleszd a tudásod.",'<div class="grid"><button type="button" class="action" onclick="study()"><b>📚 Tanulás</b><small>Intelligencia és fegyelem.</small></button><button type="button" class="action" onclick="university()"><b>🎓 Egyetem</b><small>Diploma.</small></button></div>'),
+      business:page("🏢 Vállalkozás","Saját üzlet.",'<button type="button" class="action" onclick="startBusiness()"><b>🚀 Indítás</b><small>1 000 000 Ft indulótőke.</small></button>'),
+      bank:page("🏦 Bank","Pénzmozgások.",'<div class="grid"><button type="button" class="action" onclick="bank(50000)"><b>💰 Betét</b><small>+50 000 Ft</small></button><button type="button" class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>50 000 Ft</small></button></div>'),
+      investments:page("📈 Befektetések","Kockázat és hozam.",'<button type="button" class="action" onclick="invest()"><b>📊 Befektetés</b><small>100 000 Ft-tól.</small></button>'),
+      loans:page("💸 Hitelek","Tartozás és kölcsön.",'<button type="button" class="action" onclick="loan()"><b>💸 Hitel</b><small>Új hitel felvétele.</small></button>'),
+      gambling:page("🎰 Szerencsejáték","Magas kockázat.",'<button type="button" class="action" onclick="gamble()"><b>🎰 Játék</b><small>Nyerhetsz vagy veszíthetsz.</small></button>'),
+      property:page("🏠 Ingatlan","Lakhatás.",'<button type="button" class="action" onclick="buyHouse()"><b>🏠 Lakás vásárlása</b><small>6 000 000 Ft</small></button>'),
+      vehicles:page("🚗 Járművek","Közlekedés.",'<button type="button" class="action" onclick="buyCar()"><b>🚗 Autó vásárlása</b><small>3 000 000 Ft</small></button>'),
+      luxury:page("💎 Luxus","Értéktárgyak.",'<button type="button" class="action" onclick="buyLuxury()"><b>💎 Luxusóra</b><small>1 200 000 Ft</small></button>')
+    };
+    el.innerHTML=views[key]||page(key,"","");
+  }
+
+  function renderRoute(){
+    hideAll();
     if(!state)return;
-    state.family=state.family||{parents:[],siblings:0};
-    state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];
-    const last=String(state.last||"Life").trim()||"Life";
-    let father=state.family.parents.find(p=>/apa/i.test(String(p.type||"")));
-    let mother=state.family.parents.find(p=>/anya/i.test(String(p.type||"")));
-    if(!father){father={name:"Apa "+last,type:"Apa",alive:true};state.family.parents.unshift(father)}
-    if(!mother){let ml=pick(surnames.filter(s=>s!==last));mother={name:"Anya "+ml,type:"Anya",maidenName:ml,alive:true};state.family.parents.push(mother)}
-    const firstName=x=>String(x?.name||"Ismeretlen").trim().split(/\s+/)[0]||"Ismeretlen";
-    father.name=firstName(father)+" "+last;father.type="Apa";
-    mother.maidenName=String(mother.maidenName||"").trim()||pick(surnames.filter(s=>s!==last));
-    mother.name=firstName(mother)+" "+mother.maidenName;mother.type="Anya";
-    (state.meta?.characters||[]).forEach(c=>{
-      const t=String(c.type||"");
-      if(/Apa|Testvér/i.test(t)){c.type=/Apa/i.test(t)?"Család • Apa":"Család • Testvér";c.name=firstName(c)+" "+last}
-      else if(/Anya/i.test(t)){c.type="Család • Anya";c.name=firstName(c)+" "+mother.maidenName}
-      else if(/Gyermek/i.test(t)){c.type="Család • Gyermek";c.name=firstName(c)+" "+last}
-    });
+    if(route.length===0){tab("life")?.classList.remove("hidden");syncHud();return}
+    const last=route[route.length-1];
+    if(last==="menu"){renderMenu();tab("activities")?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab("activities").classList.add("ml-page-open","ml-hud-menu-page-root");tab("activities").scrollTop=0;syncHud();return}
+    if(ROOTS.includes(last)){renderRoot(last);tab(last)?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab(last)?.classList.add("ml-page-open");syncHud();return}
+    if(last.startsWith("person:")){renderPerson(last.slice(7));tab("relations")?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab("relations")?.classList.add("ml-page-open");syncHud();return}
+    if(["family","friends","acquaintances","romance"].includes(last)){renderPeople(last);tab("relations")?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab("relations")?.classList.add("ml-page-open");syncHud();return}
+    if(SUBS.includes(last)){renderChild(last);if(PARENT[last]!=="activities")renderRootChild(last);tab(PARENT[last])?.classList.remove("hidden");document.body.classList.add("ml-tab-open","ml-tab-dim");tab(PARENT[last])?.classList.add("ml-page-open");syncHud();return}
+    goHome();
   }
-  const norm055=normalize;
-  normalize=function(){norm055();familyIdentity055()};
-  familyIdentity055();
-})();
 
-/* MegaLife v0.5.7 — final mobile navigation and refresh hardening */
-(function(){
-  const ROOTS056=["relations","career","finance","assets","activities"];
-  const PARENT056={family:"relations",friends:"relations",acquaintances:"relations",romance:"relations",jobs:"career",education:"career",business:"career",bank:"finance",investments:"finance",loans:"finance",gambling:"finance",property:"assets",vehicles:"assets",luxury:"assets",daily:"activities",hobbies:"activities",travel:"activities",social:"activities",pets:"activities",crime:"activities"};
-  let route056=["life"];
-  const tab056=k=>$("tab-"+k);
-  function hide056(){document.querySelectorAll(".tab,.legacy-tab").forEach(x=>x.classList.add("hidden"));document.body.classList.remove("ml-tab-open","ml-tab-dim");document.querySelectorAll(".ml-tab-chrome,.category-back,.tab-back").forEach(x=>x.remove())}
-  function hud056(){
+  function syncHud(){
     const top=document.querySelector(".top-actions");if(!top)return;
     let b=$("mlHudMenuBack");
     if(!b){b=document.createElement("button");b.id="mlHudMenuBack";b.className="icon-btn ml-hud-menu";top.insertBefore(b,top.firstChild)}
+    const inMenu=route[route.length-1]==="menu";
+    const atHome=route.length===0;
+    b.classList.toggle("hidden",atHome||inMenu);
     b.textContent="‹";
     b.setAttribute("aria-label","Vissza");
     b.title="Vissza";
-    b.classList.toggle("hidden",route056[0]==="life");
-    b.onclick=()=>{if(route056.length>1){route056.pop();renderRoute056()}else exit056()};
+    b.onclick=goBack;
+    if(atHome){b.textContent="☰";b.setAttribute("aria-label","Menü");b.title="Menü";b.onclick=openMenu}
   }
-  function activate056(k){hide056();tab056(k)?.classList.remove("hidden");document.body.classList.add("ml-tab-open");hud056()}
-  function renderRoot056(k){
-    if(k==="relations")rootRelations?.();
-    else if(k==="career")rootCareer?.();
-    else if(k==="finance")rootFinance?.();
-    else if(k==="assets")rootAssets?.();
-    else if(k==="activities")rootActivities?.();
-  }
-  function renderRoute056(){
-    const k=route056[route056.length-1];
-    if(k==="life"){exit056();return}
-    const p=PARENT056[k];
-    if(ROOTS056.includes(k)){renderRoot056(k);activate056(k);return}
-    if(k==="family"||k==="friends"||k==="acquaintances"||k==="romance"){people(k==="family"?"family":k);activate056("relations");hud056();return}
-    if(k.startsWith("person:")){person(k.slice(7));activate056("relations");hud056();return}
-    if(p==="activities")genericChild(k);
-    else genericRootChild(k);
-    activate056(p||"activities");hud056();
-  }
-  function open056(k){
-    if(k==="life"){exit056();return}
-    route056.push(k);renderRoute056();
-  }
-  function exit056(){
-    route056=["life"];hide056();tab056("life")?.classList.remove("hidden");hud056();
-    if(typeof renderMainLifeLog==="function")renderMainLifeLog();else if(typeof renderLife==="function")renderLife();
-  }
-  window.mlRoute=open056;
-  window.mlPerson=function(id){route056.push("person:"+id);renderRoute056()};
-  window.mlOpenCategory=open056;
-  window.showTab=function(k){open056(k)};
-  window.closeTabs=exit056;
-  // Replace every old "Több/Egyebek" inline handler with the single route.
-  document.querySelectorAll("[onclick]").forEach(el=>{
-    const raw=el.getAttribute("onclick")||"";
-    if(/showTab\(\s*['\"]activities['\"]\s*\)/.test(raw))el.setAttribute("onclick","mlRoute('activities');return false;");
-  });
-  // The quick + button is the only intentional entry into Egyebek.
-  const plus=document.querySelector("#quickPlus,[data-plus],#plusButton,.quick-plus");
-  if(plus){plus.onclick=e=>{e.preventDefault();e.stopPropagation();open056("activities")}}
-  // Never restore an old tab from storage or a stale navigation wrapper.
-  localStorage.removeItem("megalife-open-tab");
-  let booted=false;
-  function forceHome056(){
+
+  function openMenu(){if(!state)return;route.length=0;route.push("menu");renderRoute()}
+  function goHome(){route.length=0;hideAll();tab("life")?.classList.remove("hidden");syncHud()}
+  function goBack(){if(route.length===0)return;if(route.length===1&&route[0]==="menu"){goHome();return}route.pop();if(route.length===0)goHome();else renderRoute()}
+  function goTo(key){
     if(!state)return;
-    if(!booted){booted=true;exit056();return}
-    if(route056[0]!=="life" && !document.body.classList.contains("ml-tab-open"))exit056();
-  }
-  window.addEventListener("pageshow",forceHome056);
-  window.addEventListener("load",()=>{setTimeout(forceHome056,0)});
-  document.addEventListener("DOMContentLoaded",()=>{setTimeout(forceHome056,0)},{once:true});
-  forceHome056();
-})();
-
-/* MegaLife v0.5.8 — real HUD menu, no obsolete Egyebek root */
-(function(){
-  const previousRoute=window.mlRoute;
-  const previousOpen=window.mlOpenCategory;
-  const previousShow=window.showTab;
-  const previousClose=window.closeTabs;
-
-  function menuPage(){
-    const card=(icon,title,desc,key)=>'<button class="category-card" onclick="mlRoute(&quot;'+key+'&quot;)"><span class="category-icon">'+icon+'</span><span><b>'+title+'</b><small>'+desc+'</small></span><strong>›</strong></button>';
-    return '<div class="ml-hud-menu-page">'+
-      '<div class="ml-hud-menu-head"><button type="button" class="ml-hud-menu-back" onclick="closeTabs()" aria-label="Vissza">‹</button><div><h2>Menü</h2><p>Válaszd ki, mit szeretnél kezelni.</p></div></div>'+
-      '<div class="category-list">'+
-      card("❤️","Kapcsolatok","Család, barátok, ismerősök és romantika.","relations")+
-      card("💼","Karrier","Munka, tanulás és vállalkozás.","career")+
-      card("💰","Pénzügyek","Bank, befektetések, hitelek és játékok.","finance")+
-      card("🏠","Vagyon","Ingatlanok, járművek és luxuscikkek.","assets")+
-      card("🏃","Mindennapok","Edzés, pihenés, orvos és szabadidő.","daily")+
-      card("🎯","Hobbik","Saját hobbik és új hobbik.","hobbies")+
-      card("✈️","Utazás","Új helyek és élmények.","travel")+
-      card("📱","Közösségi élet","Közösségi platformok és online élet.","social")+
-      card("🐾","Háziállatok","Új társ és gondozás.","pets")+
-      card("🕶️","Bűnözés","Kockázatos döntések és következmények.","crime")+
-      '</div></div>';
+    key=String(key||"");
+    if(key==="life"){goHome();return}
+    if(key==="activities"){openMenu();return}
+    if(key==="menu"){openMenu();return}
+    if(ROOTS.includes(key)){route.length=0;route.push(key);renderRoute();return}
+    if(PARENT[key]){
+      const parent=PARENT[key];
+      route.length=0;route.push(parent,key);
+      renderRoute();return;
+    }
+    if(key.startsWith("person:")){route.push(key);renderRoute();return}
   }
 
-  function openHudMenu(){
-    if(!state)return;
-    const box=$("tab-activities");
-    if(!box)return;
-    document.querySelectorAll(".legacy-tab").forEach(el=>{
-      el.classList.add("hidden");
-      el.classList.remove("ml-page-open");
-    });
-    box.innerHTML=menuPage();
-    box.classList.remove("hidden");
-    box.classList.add("ml-page-open","ml-hud-menu-page-root");
-    document.body.classList.add("ml-tab-open");
-    $("gameScreen")?.classList.add("ml-tab-dim");
-    const top=document.querySelector(".top-actions");
-    const hud=document.getElementById("mlHudMenuBack");
-    if(hud)hud.classList.add("hidden");
-    if(top)top.setAttribute("data-hud-menu-open","true");
-    box.scrollTop=0;
-  }
+  window.mlRoute=goTo;
+  window.mlOpenCategory=goTo;
+  window.showTab=goTo;
+  window.closeTabs=goHome;
+  window.openHudMenu=openMenu;
+  window.mlHome=goHome;
+  window.mlPerson=id=>{if(!state)return;route.length=0;route.push("relations","person:"+id);renderRoute()};
+  window.mlFriendPromoteFromPage=id=>{if(typeof mlPromoteFriend==="function")mlPromoteFriend(id)};
 
-  window.openHudMenu=openHudMenu;
-  window.mlRoute=function(k){
-    if(String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"){
-      openHudMenu();
-      return;
+  // Existing game actions call this after mutating state. Keep the current page stable
+  // until the action finishes, then return to the life screen only when explicitly requested.
+  window.__mlRenderNavigation=renderRoute;
+  const previousRender=render;
+  render=function(){
+    previousRender();
+    if(state){
+      if(route.length)renderRoute();
+      else goHome();
     }
-    return previousRoute(k);
-  };
-  window.mlOpenCategory=function(k){
-    if(String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"){
-      openHudMenu();
-      return;
-    }
-    return previousOpen(k);
-  };
-  window.showTab=function(k){
-    if(String(k||"").toLowerCase()==="activities"||String(k||"").toLowerCase()==="egyebek"){
-      openHudMenu();
-      return;
-    }
-    return previousShow(k);
   };
 
-  const oldClose=window.closeTabs;
-  window.closeTabs=function(){
-    const r=oldClose.apply(this,arguments);
-    const hud=document.getElementById("mlHudMenuBack");
-    if(hud){
-      hud.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open"));
-      hud.textContent="☰";
-      hud.title="Menü";
-      hud.onclick=openHudMenu;
-    }
-    document.querySelector(".top-actions")?.removeAttribute("data-hud-menu-open");
-    return r;
-  };
-
-  function syncHudMenu(){
-    const hud=document.getElementById("mlHudMenuBack");
-    if(!hud)return;
-    const menuOpen=document.querySelector(".ml-hud-menu-page-root");
-    hud.classList.toggle("hidden",!document.body.classList.contains("ml-tab-open")||!!menuOpen);
-    hud.textContent="☰";
-    hud.title="Menü";
-    hud.onclick=openHudMenu;
-  }
-
-  document.addEventListener("click",e=>{
-    const el=e.target.closest?.(".ml-hud-menu-back");
-    if(el){
-      e.preventDefault();
-      e.stopPropagation();
-      window.closeTabs();
-    }
-  },true);
-
-  document.querySelectorAll('[onclick*="showTab(\\'activities\\')"],[onclick*="showTab(&quot;activities&quot;)"]')
-    .forEach(el=>el.setAttribute("onclick","openHudMenu();return false;"));
-
-  const nav=[...document.querySelectorAll(".mobile-nav-item")].find(x=>/Több|Egyebek/.test(x.textContent||""));
-  if(nav)nav.remove();
-
-  const observer=new MutationObserver(syncHudMenu);
-  observer.observe(document.body,{attributes:true,attributeFilter:["class"]});
-  syncHudMenu();
+  // The main renderer must never inject obsolete back buttons.
+  window.ensureTabBackButtons=function(){};
+  document.querySelectorAll(".mobile-nav-item").forEach(el=>el.remove());
+  const legacyMore=[...document.querySelectorAll("[onclick]")].filter(el=>/showTab\\?\\(\\s*['"]activities['"]/.test(el.getAttribute("onclick")||""));
+  legacyMore.forEach(el=>el.setAttribute("onclick","openHudMenu();return false;"));
+  renderRoute();
 })();
