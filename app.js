@@ -2782,7 +2782,7 @@ render=function(){
   const previousClose=window.closeTabs;
 
   function menuPage(){
-    const card=(icon,title,desc,key)=>'<button class="category-card" onclick="mlRoute(\\''+key+'\\')"><span class="category-icon">'+icon+'</span><span><b>'+title+'</b><small>'+desc+'</small></span><strong>›</strong></button>';
+    const card=(icon,title,desc,key)=>'<button class="category-card" onclick="mlRoute(&quot;'+key+'&quot;)"><span class="category-icon">'+icon+'</span><span><b>'+title+'</b><small>'+desc+'</small></span><strong>›</strong></button>';
     return '<div class="ml-hud-menu-page">'+
       '<div class="ml-hud-menu-head"><button type="button" class="ml-hud-menu-back" onclick="closeTabs()" aria-label="Vissza">‹</button><div><h2>Menü</h2><p>Válaszd ki, mit szeretnél kezelni.</p></div></div>'+
       '<div class="category-list">'+
@@ -2875,7 +2875,7 @@ render=function(){
     }
   },true);
 
-  document.querySelectorAll('[onclick*="showTab(\\'activities\\')"],[onclick*="showTab("activities")"]')
+  document.querySelectorAll('[onclick*="showTab(\\'activities\\')"],[onclick*="showTab(&quot;activities&quot;)"]')
     .forEach(el=>el.setAttribute("onclick","openHudMenu();return false;"));
 
   const nav=[...document.querySelectorAll(".mobile-nav-item")].find(x=>/Több|Egyebek/.test(x.textContent||""));
