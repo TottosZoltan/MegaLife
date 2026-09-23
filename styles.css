@@ -898,7 +898,7 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 
 /* MegaLife v0.2.2 — NPC stat profile */
 .npc-stats{display:block;margin-top:4px;color:#aeb9ca;font-size:10px;line-height:1.35}
-/* MegaLife v0.5.6 — living character visuals and journal/status cleanup */
+/* MegaLife v0.5.7 — living character visuals and journal/status cleanup */
 .ml-character-avatar{overflow:hidden;display:grid;place-items:center;padding:0!important;background:transparent!important;border:0!important}
 .ml-avatar-svg{display:block;width:100%;height:100%}
 .journal-paper-head{height:100%;display:flex;align-items:center;gap:7px;padding:0 10px}
@@ -914,7 +914,7 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
   .journal-paper-head i{width:6px;height:6px}
 }
 
-/* MegaLife v0.5.6 — category navigation */
+/* MegaLife v0.5.7 — category navigation */
 .category-page{padding:4px 0 24px}
 .category-back{border:0;background:transparent;color:var(--muted,#8d9bb5);font:inherit;font-weight:700;padding:8px 4px 12px;cursor:pointer}
 .category-back span{margin-left:5px}
@@ -931,34 +931,34 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 .category-page .panel{margin-top:8px}
 @media(max-width:650px){.category-card{min-height:72px}.category-title h2{font-size:1.2rem}}
 
-/* MegaLife v0.5.6 — HUD menu and relationship classification */
+/* MegaLife v0.5.7 — HUD menu and relationship classification */
 .ml-hud-menu{font-weight:800}
 .ml-hud-menu.hidden{display:none!important}
 .npc-action{white-space:nowrap}
 
-/* MegaLife v0.5.6 — HUD-only back/menu control */
+/* MegaLife v0.5.7 — HUD-only back/menu control */
 .ml-tab-chrome{display:none!important}
 .ml-hud-menu{display:inline-grid;place-items:center}
 
-/* MegaLife v0.5.6 — HUD menu/back control */
+/* MegaLife v0.5.7 — HUD menu/back control */
 .ml-hud-menu{font-weight:900;font-size:21px;line-height:1}
 .top-actions .ml-hud-menu.hidden{display:none!important}
 .category-page{min-height:100%}
 
-/* MegaLife v0.5.6 — definitive HUD exit control */
+/* MegaLife v0.5.7 — definitive HUD exit control */
 .ml-hud-menu{font-weight:900;font-size:22px;line-height:1}
 
-/* MegaLife v0.5.6 — HUD-only navigation */
+/* MegaLife v0.5.7 — HUD-only navigation */
 .ml-hud-menu{order:-1;z-index:20}
 .ml-hud-menu.hidden{display:none!important}
 .category-page>.category-back{display:none!important}
 
-/* MegaLife v0.5.6 — navigation chrome cleanup */
+/* MegaLife v0.5.7 — navigation chrome cleanup */
 .ml-tab-chrome{position:sticky;top:0;z-index:50;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;min-height:52px;padding:env(safe-area-inset-top) 6px 0;background:var(--bg,#111827);border-bottom:1px solid rgba(255,255,255,.07)}
 .ml-tab-back,.ml-tab-close{width:40px;height:40px;border:0;background:transparent;color:inherit;font-size:30px;line-height:1;cursor:pointer}
 .ml-tab-title{text-align:center;font-weight:800}
 
-/* MegaLife v0.5.6 — one HUD back button and hierarchical pages */
+/* MegaLife v0.5.7 — one HUD back button and hierarchical pages */
 .ml-tab-chrome{display:none!important}
 .category-back{display:none!important}
 .ml-hud-menu{position:relative;z-index:20}
@@ -972,6 +972,6 @@ input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #43d9ff12
 .person-hero .ml-avatar-svg{width:128px;height:156px;border-radius:24px}
 @media(max-width:650px){.person-card{min-height:78px}.ml-hud-menu{min-width:44px;min-height:44px}}
 
-/* MegaLife v0.5.6 — mobile HUD navigation */
+/* MegaLife v0.5.7 — mobile HUD navigation */
 .ml-hud-menu{position:relative;z-index:20}
 #tab-activities{min-height:100%}
