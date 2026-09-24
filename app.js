@@ -1,4 +1,4 @@
-const VERSION="0.3.1";
+const VERSION="0.4.0";
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(n),clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[Math.floor(Math.random()*a.length)];
 const names={female:["Anna","Emma","Lili","Nóra","Luca","Hanna","Sára","Zsófia"],male:["Bence","Dávid","Máté","Levente","Ádám","Marcell","Balázs","Péter"],neutral:["Alex","Noa","Sam","Robin","Dani"]},surnames=["Kovács","Nagy","Tóth","Szabó","Horváth","Varga","Kiss","Molnár","Farkas","Németh"];
 const jobs=[["Munkanélküli",0,0],["Pincér",220000,10],["Eladó",260000,10],["Irodai asszisztens",330000,25],["Szakmunkás",420000,25],["Programozó",750000,55],["Mérnök",820000,60],["Orvos",1250000,80],["Ügyvéd",1050000,70],["Tanár",520000,45],["Rendőr",560000,45],["Pilóta",1100000,70],["Művész",480000,45],["Tartalomkészítő",650000,50],["Cégvezető",1800000,85],["Vállalkozó",0,65]];
@@ -12,7 +12,7 @@ function log(text,type="Élet"){state.events.push({age:state.age,year:state.year
 function wealth(){return state.money+state.bank-state.debt+state.assets.reduce((s,a)=>s+(a.value||0),0)}
 function fmt(n){return money(Math.round(n))}
 function normalize(){if(!state)return;state.first=String(state.first||"Alex");state.last=String(state.last||"Life");state.gender=state.gender||"neutral";state.country=state.country||"Magyarország";state.age=Math.max(0,Number(state.age)||0);state.year=Number(state.year)||new Date().getFullYear();state.money=Math.max(0,Math.round(Number(state.money)||0));state.bank=Math.max(0,Math.round(Number(state.bank)||0));state.debt=Math.max(0,Math.round(Number(state.debt)||0));for(const k of["health","happiness","smarts","looks","discipline","karma"])state[k]=clamp(Number(state[k])||0);state.relationships=Array.isArray(state.relationships)?state.relationships:[];state.relationships.forEach(r=>{r.name=String(r.name||"Ismeretlen");r.type=String(r.type||"Ismerős");r.age=Math.max(0,Number(r.age)||state.age);r.closeness=clamp(Number(r.closeness)||0)});state.children=Array.isArray(state.children)?state.children:[];state.children.forEach(ch=>{ch.name=String(ch.name||"Gyermek");ch.age=Math.max(0,Number(ch.age)||0)});state.hobbies=Array.isArray(state.hobbies)?state.hobbies:[];state.hobbies.forEach(h=>{h.id=String(h.id||"");h.name=String(h.name||"Hobbi");h.level=Math.max(1,Number(h.level)||1);h.years=Math.max(0,Number(h.years)||0)});state.assets=Array.isArray(state.assets)?state.assets:[];state.events=Array.isArray(state.events)?state.events:[];state.achievements=Array.isArray(state.achievements)?state.achievements:[];state.crimes=Array.isArray(state.crimes)?state.crimes:[];state.family=state.family||{parents:[],siblings:0};state.family.parents=Array.isArray(state.family.parents)?state.family.parents:[];state.social=state.social||{followers:0,posts:0,platforms:{}};state.social.platforms=state.social.platforms||{};state.stats=state.stats||{};for(const k of["years","earned","spent","days","actions","relationships","children","crimes","investProfit"])state.stats[k]=Number(state.stats[k])||0;state.flags=state.flags||{married:false,university:false};state.traits=Array.isArray(state.traits)?state.traits:[];state.jail=Math.max(0,Number(state.jail)||0);state.business=state.business||null;state.job=Array.isArray(state.job)&&state.job.length>=3?state.job:jobs[0];state.education=state.education||"Általános iskola";state.degree=state.degree||null;state.business=state.business||null;state.pet=state.pet||null;state.meta=state.meta||{};state.meta.version=VERSION;state.meta.slot=currentSlot||1;}
-function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("ageText").textContent=state.age+" éves";$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();renderSocial()}
+function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();renderSocial()}
 function renderStats(){const d=[["❤️ Egészség",state.health],["😊 Boldogság",state.happiness],["🧠 Intelligencia",state.smarts],["✨ Kinézet",state.looks],["🎯 Fegyelem",state.discipline]];$("statBars").innerHTML='<div class="stats">'+d.map(x=>'<div class="stat"><span>'+x[0]+'</span><div class="bar"><i style="width:'+x[1]+'%"></i></div><b>'+Math.round(x[1])+'</b></div>').join("")+"</div>"}
 function panel(t,b){return'<div class="card panel"><h3>'+t+"</h3>"+b+"</div>"}
 function renderLife(){const jail=state.jail>0?panel("⚖️ Jogi helyzet",`<div class="action"><b>Börtönben vagy</b><small>Még ${state.jail} év van hátra.</small></div>`):"";const traits=panel("Személyiséged",`<div class="row">${state.traits.map(t=>`<span class="pill">${t}</span>`).join("")}</div>`);const ev=state.events.slice(0,12).map(e=>`<div class="event"><span class="tag">${e.year} • ${e.type}</span>${e.text}</div>`).join("")||'<div class="muted">Még nincs történés. Nyomd meg a Következő év gombot!</div>';const f=`<div class="grid"><div class="action"><b>👨‍👩‍👧 Szülők</b><small>${state.family.parents.map(p=>p.name).join(" • ")}</small></div><div class="action"><b>👶 Gyerekek</b><small>${state.children.length} gyermek</small></div><div class="action"><b>👥 Testvérek</b><small>${state.family.siblings} testvér</small></div><div class="action"><b>💼 Munka</b><small>${state.job[0]}</small></div></div>`;$("tab-life").innerHTML=jail+traits+panel("Életút",f)+panel("Legutóbbi események",ev)}
@@ -200,7 +200,7 @@ function deleteSaveSlot(n){
 function renderSlots(){}
 function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");$("versionText")&&($("versionText").textContent="v"+VERSION);return}
   $("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");
-  $("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country+" • Élet "+currentSlot;$("ageText").textContent=state.age+" éves";$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();$("versionText")&&($("versionText").textContent="v"+VERSION);
+  $("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country+" • Élet "+currentSlot;$("wealth").textContent=fmt(wealth());renderStats();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();$("versionText")&&($("versionText").textContent="v"+VERSION);
 }
 
 /* 10,000 unique event combinations: 100 situations × 100 variants. */
@@ -517,7 +517,7 @@ function renderMainLifeLog(){
  box.innerHTML=Object.entries(groups).map(([key,items])=>{const [age,year]=key.split("|");return '<section class="life-thread"><div class="thread-node"><span>'+age+'</span><small>'+year+'</small></div><div class="thread-content"><div class="thread-title">'+age+' éves <span>'+year+'</span></div><div class="thread-events">'+items.map(e=>'<article class="thread-event"><span class="tag">'+(e.type||"Élet")+'</span><div>'+String(e.text||"")+'</div></article>').join("")+'</div></div></section>'}).join("");
 }
 function ensureTabBackButtons(){["life","relations","career","finance","assets","activities","achievements","stats","social"].forEach(tab=>{const el=$("tab-"+tab);if(!el)return;let back=el.querySelector(".tab-back");if(!back){back=document.createElement("button");back.className="tab-back";back.type="button";back.setAttribute("aria-label","Vissza");back.textContent="‹";back.onclick=closeTabs;el.prepend(back)}})}
-function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("ageText").textContent=state.age+" éves";$("wealth").textContent=fmt(wealth());renderStats();renderMainLifeLog();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();ensureTabBackButtons()}
+function render(){if(!state){$("startScreen").classList.remove("hidden");$("gameScreen").classList.add("hidden");return}$("startScreen").classList.add("hidden");$("gameScreen").classList.remove("hidden");$("pName").textContent=state.first+" "+state.last;$("avatar").textContent=state.first[0].toUpperCase();$("pMeta").textContent=state.age+" éves • "+state.gender+" • "+state.country;$("wealth").textContent=fmt(wealth());renderStats();renderMainLifeLog();renderLife();renderRelations();renderCareer();renderFinance();renderAssets();renderActivities();renderAchievements();renderStatsTab();renderSocial();ensureTabBackButtons()}
 
 /* MegaLife v0.0.27 — pull-to-refresh indicator + newest journal position */
 function scrollLifeLogToLatest(){const box=$("lifeLog");if(box)setTimeout(()=>{box.scrollTop=box.scrollHeight},0)}
@@ -1745,4 +1745,214 @@ render=function(){
   const _annual22=annualEvent;annualEvent=function(){_annual22();if(state&&state.age>=8&&Math.random()<.45){if(state.meta.characters.length<60)state.meta.characters.push(npcCreate("Ismerős",state.age));const pool=state.meta.characters.filter(x=>x.alive&&!npcIsFamily(x));if(pool.length){const c=pick(pool);c.lastSeenAge=state.age;log("Véletlen találkozás: "+c.name+" felbukkant az életedben.","Karakter");c.closeness=clamp(c.closeness+rand(1,5))}}};
   const _next22=nextYear;nextYear=function(){if(!state||!state.alive)return _next22();if(state.meta?.activeDecision||$("modal")&&!$("modal").classList.contains("hidden"))return toast("Előbb válaszd ki, mit teszel.");const saved=localStorage.getItem("megalife-event-settings");try{const cfg=mlEventSettings();localStorage.setItem("megalife-event-settings",JSON.stringify({...cfg,choiceEvents:0}));const result=_next22();if(saved===null)localStorage.removeItem("megalife-event-settings");else localStorage.setItem("megalife-event-settings",saved);if(state&&state.alive){if(Math.random()<.5)npcDecision();normalize();save();render()}return result}catch(e){if(saved===null)localStorage.removeItem("megalife-event-settings");else localStorage.setItem("megalife-event-settings",saved);throw e}};
   window.mlNpcInteract=npcInteract;window.mlNpcNew=npcNew;window.mlNpcDecisionResolve=mlNpcDecisionResolve;window.mlNpcDecision=npcDecision;npcNormalize();
+})();
+/* MegaLife v0.3.0 — Living Characters visual engine */
+(function(){
+  const SKINS=["#f6d7bd","#e8b894","#c98e67","#a96f4d","#704531","#4a2c22"];
+  const HAIRS=["#171717","#3a2419","#6b4328","#a86b32","#d3a45b","#e7d8bd","#6f6f78","#8b2f2f"];
+  const SHIRTS=["#3157a4","#5d3f91","#287a68","#a85b36","#6d7280","#b23b52","#2e3948","#d0a63c"];
+  const EYES=["#2a211d","#3b6f8f","#4b6b3d","#6f4d35","#20252b"];
+  const HAIRSTYLES=["short","crop","wave","long","curly","bob","fade","bun"];
+  const FACES=["round","oval","square","soft","long"];
+  const BODIES=["slim","regular","athletic","broad"];
+  const GLASSES=["none","round","square"];
+  const ACCESSORIES=["none","earring","cap","necklace"];
+  const hash=s=>{let h=2166136261;for(let i=0;i<String(s).length;i++)h=Math.imul(h^String(s).charCodeAt(i),16777619);return h>>>0};
+  const pickSeed=(a,n)=>a[hash(n)%a.length];
+  function appearance(seed){
+    const s=String(seed||Math.random().toString(36));
+    return {seed:s,skin:pickSeed(SKINS,s+"skin"),hair:pickSeed(HAIRS,s+"hair"),shirt:pickSeed(SHIRTS,s+"shirt"),eyes:pickSeed(EYES,s+"eyes"),hairStyle:pickSeed(HAIRSTYLES,s+"hs"),face:pickSeed(FACES,s+"face"),body:pickSeed(BODIES,s+"body"),glasses:pickSeed(GLASSES,s+"glasses"),accessory:pickSeed(ACCESSORIES,s+"acc"),beard:pickSeed(["none","none","none","short","full"],s+"beard")};
+  }
+  function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  function svg(c,size="96"){
+    const a=c.appearance||appearance(c.id||c.name||Math.random()),age=Number(c.age)||0;
+    const rx={round:29,oval:25,square:23,soft:27,long:21}[a.face]||27;
+    const bodyW={slim:30,regular:38,athletic:43,broad:48}[a.body]||38;
+    let hair="";
+    if(a.hairStyle==="short")hair='<path d="M31 48 Q33 19 48 16 Q67 18 68 48 Q58 39 31 48Z"/>';
+    if(a.hairStyle==="crop")hair='<path d="M31 43 Q35 15 49 15 Q64 16 68 42 Q56 33 31 43Z"/>';
+    if(a.hairStyle==="wave")hair='<path d="M29 48 Q31 18 48 15 Q67 17 70 47 Q65 35 58 37 Q50 25 43 37 Q35 33 29 48Z"/>';
+    if(a.hairStyle==="long")hair='<path d="M29 49 Q29 16 49 14 Q70 16 70 50 L63 70 L57 46 Q48 51 38 45 L35 68Z"/>';
+    if(a.hairStyle==="curly")hair='<path d="M28 49 Q26 35 32 25 Q39 12 50 15 Q64 12 71 28 Q74 39 68 51 Q62 42 58 42 Q52 30 46 42 Q38 34 34 50Z"/>';
+    if(a.hairStyle==="bob")hair='<path d="M28 48 Q28 16 49 15 Q70 17 70 49 L64 64 L59 44 Q49 50 39 44 L34 65Z"/>';
+    if(a.hairStyle==="fade")hair='<path d="M33 39 Q36 17 49 16 Q62 17 66 39 Q58 31 33 39Z"/>';
+    if(a.hairStyle==="bun")hair='<circle cx="66" cy="18" r="9"/><path d="M29 48 Q30 18 49 15 Q67 18 70 48 Q60 37 56 40 Q48 31 41 40 Q34 35 29 48Z"/>';
+    const beard=a.beard==="none"?"":a.beard==="short"?'<path d="M38 52 Q49 61 60 52 Q58 69 49 70 Q40 68 38 52Z" opacity=".72"/>':'<path d="M35 51 Q49 63 63 51 Q62 73 49 76 Q36 72 35 51Z" opacity=".82"/>';
+    const glasses=a.glasses==="none"?"":a.glasses==="round"?'<circle cx="40" cy="43" r="7" fill="none" stroke="#20242a" stroke-width="2"/><circle cx="58" cy="43" r="7" fill="none" stroke="#20242a" stroke-width="2"/><path d="M47 43h4" stroke="#20242a" stroke-width="2"/>':'<rect x="33" y="37" width="14" height="11" rx="3" fill="none" stroke="#20242a" stroke-width="2"/><rect x="51" y="37" width="14" height="11" rx="3" fill="none" stroke="#20242a" stroke-width="2"/><path d="M47 42h4" stroke="#20242a" stroke-width="2"/>';
+    const acc=a.accessory==="earring"?'<circle cx="67" cy="51" r="2" fill="#e0c36b"/>':a.accessory==="cap"?'<path d="M28 32 Q49 13 70 32 L68 36 Q48 27 29 36Z" fill="#273b67"/><path d="M64 33 Q76 34 79 38" stroke="#273b67" stroke-width="3" fill="none"/>':a.accessory==="necklace"?'<path d="M39 79 Q49 91 59 79" fill="none" stroke="#d6b35d" stroke-width="2"/>':"";
+    const beardHair=age>=55?'<path d="M35 29 Q49 23 65 29" stroke="#d9d9d9" stroke-width="2" opacity=".45"/>':"";
+    const svg=[];
+    svg.push('<svg class="ml-avatar-svg" viewBox="0 0 98 120" width="'+size+'" height="'+size+'" role="img" aria-label="'+esc(c.name||"Karakter")+'">');
+    svg.push('<defs><linearGradient id="bg'+hash(a.seed)+'" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#202c42"/><stop offset="1" stop-color="#111827"/></linearGradient></defs>');
+    svg.push('<rect width="98" height="120" rx="22" fill="url(#bg'+hash(a.seed)+')"/>');
+    svg.push('<path d="M'+(49-bodyW/2)+' 76 Q49 67 '+(49+bodyW/2)+' 76 L88 120 H10Z" fill="'+a.shirt+'"/>');
+    svg.push('<rect x="43" y="65" width="12" height="18" rx="5" fill="'+a.skin+'"/><ellipse cx="49" cy="43" rx="'+rx+'" ry="30" fill="'+a.skin+'"/>');
+    svg.push('<ellipse cx="39" cy="44" rx="3" ry="2.5" fill="'+a.eyes+'"/><ellipse cx="59" cy="44" rx="3" ry="2.5" fill="'+a.eyes+'"/>');
+    svg.push('<path d="M36 36 Q40 33 44 36 M54 36 Q58 33 62 36" stroke="#34261f" stroke-width="2.5" fill="none" stroke-linecap="round"/>');
+    svg.push('<path d="M49 44 Q46 50 50 51" stroke="#8b5b46" stroke-width="1.8" fill="none"/><path d="M42 57 Q49 61 56 57" stroke="#7e3f42" stroke-width="2" fill="none" stroke-linecap="round"/>');
+    svg.push('<g fill="'+a.hair+'">'+hair+'</g>'+beard+glasses+acc+beardHair+'</svg>');
+    return svg.join("");
+  }
+  function ensurePlayer(){
+    if(!state)return;
+    state.appearance=state.appearance&&typeof state.appearance==="object"?state.appearance:appearance(state.first+"|"+state.last+"|"+state.gender+"|"+state.year);
+    if(!state.appearance.seed)state.appearance=appearance(state.first+"|"+state.last+"|"+Date.now());
+  }
+  const _fresh30=fresh;
+  fresh=function(){const x=_fresh30();x.appearance=appearance(x.first+"|"+x.last+"|"+x.gender+"|"+Date.now());return x};
+  const _norm30=normalize;
+  normalize=function(){_norm30();if(state)ensurePlayer()};
+  function syncNpc(){(state?.meta?.characters||[]).forEach((c,i)=>{if(!c.appearance)c.appearance=appearance(c.id||c.name||("npc"+i))})}
+  const _render30=render;
+  render=function(){_render30();if(!state)return;ensurePlayer();syncNpc();const p=$("avatar");if(p){p.classList.add("ml-character-avatar");p.innerHTML=svg(state,"118")}};
+  const _renderRelations30=renderRelations;
+  renderRelations=function(){_renderRelations30();syncNpc();document.querySelectorAll("#tab-relations .npc-card").forEach(card=>{const name=card.querySelector(".npc-main b")?.textContent;const c=(state.meta.characters||[]).find(x=>x.name===name);const av=card.querySelector(".npc-avatar");if(c&&av)av.innerHTML=svg(c,"54")})};
+  window.mlAvatarSvg=svg;window.mlAvatarAppearance=appearance;
+  normalize();
+})();
+/* end v0.3.0 character engine */
+/* MegaLife v0.3.1 — NPC life trajectories and persistent world characters */
+(function(){
+  function npcLifeJob(c){
+    if(c.age<14)return "tanuló";
+    if(c.age<18)return Math.random()<.45?"tanuló":"pályakezdő";
+    const pool=[],s=c.stats||{};
+    if((s.finance||0)>65)pool.push("vállalkozó","irodai dolgozó");
+    if((s.communication||0)>65)pool.push("tanár","értékesítő","menedzser");
+    if((s.creativity||0)>65)pool.push("művész","tartalomkészítő");
+    if((s.fitness||0)>65)pool.push("sporttal foglalkozó");
+    pool.push("irodai dolgozó","szakmunkás","kereskedő","szabadúszó");
+    return pick(pool);
+  }
+  function advanceNpc(c){
+    if(!c||c.alive===false)return null;
+    c.age=Math.min(110,Number(c.age||0)+1);c.stats=c.stats||{};
+    c.stats.health=clamp(Number(c.stats.health)||60);
+    if(c.age>=75)c.stats.health=clamp(c.stats.health-rand(0,4));
+    if(c.age>=18&&(!c.status||c.status==="tanuló"||Math.random()<.08))c.status=npcLifeJob(c);
+    if(c.age>=18&&c.closeness>=35&&Math.random()<.035&&!/házas/i.test(c.status||""))c.status="házas • "+npcLifeJob(c);
+    if(c.age>=22&&c.age<=42&&/házas/i.test(c.status||"")&&Math.random()<.08){
+      c.children=Array.isArray(c.children)?c.children:[];if(c.children.length<3)c.children.push({age:0,name:pick(["Léna","Mira","Dani","Áron","Nóri","Milán"])});
+    }
+    if(c.age>=82&&Math.random()<.045){c.alive=false;return c.name+" meghalt "+c.age+" éves korában."}
+    return null;
+  }
+  function syncFamilyCharacters(){
+    if(!state?.meta?.characters)return;
+    (state.children||[]).forEach(ch=>{
+      let c=state.meta.characters.find(x=>x.type==="Család • Gyermek"&&x.name===ch.name);
+      if(!c){c={id:"npc-child-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,6),name:ch.name,gender:pick(["female","male","neutral"]),age:Number(ch.age)||0,type:"Család • Gyermek",closeness:70,trust:80,status:"gyermek",background:"A te gyermeked, saját történettel és fejlődő személyiséggel.",stats:{health:rand(55,95),happiness:rand(55,95),smarts:rand(30,85),looks:rand(30,90),discipline:rand(25,80),karma:rand(35,90),communication:rand(25,85),finance:rand(10,60),creativity:rand(25,90),fitness:rand(30,90),leadership:rand(15,70)},knownAge:state.age,lastSeenAge:state.age,alive:true};state.meta.characters.push(c)}
+      c.age=Number(ch.age)||c.age;c.alive=ch.alive!==false;
+    });
+  }
+  function advanceNpcWorld(){
+    if(!state||!state.meta?.characters)return;
+    syncFamilyCharacters();const notes=[];
+    state.meta.characters.forEach(c=>{
+      const oldAge=c.age,note=advanceNpc(c);if(note)notes.push(note);
+      if(c.alive!==false&&oldAge<18&&c.age===18)notes.push(c.name+" felnőtt lett.");
+      if(c.alive!==false&&oldAge<25&&c.age===25)notes.push(c.name+" új életpályát kezdett.");
+    });
+    state.meta.characters=state.meta.characters.filter(c=>c.alive!==false||c.type?.startsWith("Család"));
+    notes.slice(0,2).forEach(n=>log(n,"Karakter"));
+  }
+  const _next31=nextYear;
+  nextYear=function(){
+    const before=state?.age,result=_next31();
+    if(state&&state.alive&&Number(state.age)!==Number(before)){advanceNpcWorld();normalize();save();render()}
+    return result;
+  };
+  const _renderRel31=renderRelations;
+  renderRelations=function(){
+    _renderRel31();
+    document.querySelectorAll("#tab-relations .npc-card").forEach(card=>{
+      const b=card.querySelector(".npc-main b");if(!b)return;
+      const c=(state.meta.characters||[]).find(x=>x.name===b.textContent);
+      if(c){const meta=card.querySelector(".npc-main .muted");if(meta)meta.textContent=c.age+" éves • "+(c.alive===false?"elhunyt":"kapcsolat "+Math.round(c.closeness)+"% • bizalom "+Math.round(c.trust)+"%")+" • "+(c.status||"saját életút")}
+    });
+  };
+  window.mlAdvanceNpcWorld=advanceNpcWorld;advanceNpcWorld();
+})();
+
+/* MegaLife v0.4.0 — categorized interaction navigation */
+(function(){
+  const cats={
+    activities:[
+      ["🏃 Mindennapi tevékenységek","exercise","Edzés, meditáció, buli és orvosi ellátás."],
+      ["🎯 Hobbik","hobbies","Válassz hobbit, kezdd el, majd fejleszd."],
+      ["✈️ Utazás","travel","Utazások és új helyek felfedezése."],
+      ["📱 Közösségi élet","social","Közösségi platformok, posztok és trendek."],
+      ["🐾 Háziállatok","pets","Háziállat választása és gondozása."],
+      ["🕶️ Bűnözés","crime","Kockázatos döntések és következmények."]
+    ],
+    career:[
+      ["💼 Munka","jobs","Álláskeresés és karrierváltás."],
+      ["🎓 Tanulás","education","Tanulás, egyetem és végzettség."],
+      ["🏢 Vállalkozás","business","Saját vállalkozás indítása és kezelése."]
+    ],
+    finance:[
+      ["🏦 Bank","bank","Készpénz, bankbetét és pénzmozgások."],
+      ["📈 Befektetések","investments","Befektetés és kockázatos hozam."],
+      ["💸 Hitelek","loans","Hitel felvétele és tartozás kezelése."],
+      ["🎰 Szerencsejáték","gambling","Kockázatos pénzügyi játékok."]
+    ],
+    assets:[
+      ["🏠 Ingatlan","property","Lakás és ingatlanvagyon."],
+      ["🚗 Járművek","vehicles","Autók és közlekedési eszközök."],
+      ["💎 Luxus","luxury","Luxuscikkek és értéktárgyak."]
+    ],
+    relations:[
+      ["👨‍👩‍👧 Család","family","Szülők, testvérek, gyerekek és családi interakciók."],
+      ["🤝 Barátok","friends","Közeli barátok és közös programok."],
+      ["🧑 Ismerősök","acquaintances","Új emberek megismerése és kapcsolatok építése."],
+      ["❤️ Romantika","romance","Randi, kapcsolat, eljegyzés és házasság."]
+    ]
+  };
+  function page(title,subtitle,body,back){
+    return '<div class="category-page"><button class="category-back" onclick="mlOpenCategory(\''+(back||"")+'\')">‹ <span>'+(back?"Vissza":"Menü")+'</span></button><div class="category-title"><h2>'+title+'</h2><p>'+subtitle+'</p></div>'+body+'</div>';
+  }
+  function hub(key,title,subtitle){
+    const list=cats[key].map(x=>'<button class="category-card" onclick="mlOpenCategory(\''+x[1]+'\')"><span class="category-icon">'+x[0].split(" ")[0]+'</span><span><b>'+x[0].slice(x[0].indexOf(" ")+1)+'</b><small>'+x[2]+'</small></span><strong>›</strong></button>').join("");
+    return page(title,subtitle,'<div class="category-list">'+list+'</div>','');
+  }
+  function daily(){return page("🏃 Mindennapi tevékenységek","A hétköznapi döntéseid egy helyen.",'<div class="grid"><button class="action" onclick="activity(\'exercise\')"><b>🏋️ Edzés</b><small>Egészség és boldogság.</small></button><button class="action" onclick="activity(\'meditate\')"><b>🧘 Meditáció</b><small>Stresszcsökkentés.</small></button><button class="action" onclick="activity(\'party\')"><b>🎉 Buli</b><small>Szórakozás társaságban.</small></button><button class="action" onclick="activity(\'doctor\')"><b>🏥 Orvos</b><small>Egészségügyi ellátás.</small></button></div>','activities')}
+  function hobbies(){const owned=state.hobbies.map(x=>{const h=hobbyById(x.id)||{name:x.name,desc:""};return '<div class="hobby-card"><div class="hobby-head"><b>'+h.name+'</b><span>Lv. '+x.level+'</span></div><small>'+h.desc+'</small><div class="hobby-bar"><i style="width:'+x.level+'%"></i></div><button class="action" onclick="practiceHobby(\''+x.id+'\')"><b>🎯 Gyakorlás</b><small>Fejlődj a hobbidban.</small></button></div>'}).join("")||'<p class="muted">Még nincs hobbid.</p>';const avail=HOBBIES.filter(h=>!state.hobbies.some(x=>x.id===h.id)).map(h=>'<button class="action" onclick="startHobby(\''+h.id+'\')"><b>'+h.name+'</b><small>'+fmt(h.cost)+' indulás • '+h.desc+'</small></button>').join("");return page("🎯 Hobbik","Válaszd ki, mivel szeretnéd tölteni a szabadidődet.",panel("Saját hobbik",owned)+panel("Új hobbi",'<div class="grid">'+avail+'</div>'),"activities")}
+  function social(){renderSocial();return $("tab-social").innerHTML+'<button class="category-back" onclick="mlOpenCategory(\'activities\')">‹ <span>Vissza</span></button>'}
+  function travelPage(){return page("✈️ Utazás","Fedezz fel új helyeket.",'<button class="action" onclick="travel()"><b>🌍 Utazás indítása</b><small>250 000 Ft • új élmény és esemény.</small></button>',"activities")}
+  function pets(){return page("🐾 Háziállatok","Új társ az életedben.",'<button class="action" onclick="pet()"><b>🐕 Háziállat választása</b><small>Válassz magad mellé egy új családtagot.</small></button>',"activities")}
+  function crimePage(){return page("🕶️ Bűnözés","Kockázatos döntés, valódi következményekkel.",'<button class="action" onclick="crime()"><b>🎲 Bűncselekmény</b><small>Csak megfelelő életkorban és helyzetben.</small></button>',"activities")}
+  function jobs(){const current='<div class="grid"><div class="action"><b>'+state.job[0]+'</b><small>Éves fizetés: '+fmt(state.job[1])+'</small></div></div>';const j=jobs.map((x,i)=>'<button class="action" onclick="getJob('+i+')"><b>'+x[0]+'</b><small>'+fmt(x[1])+' / év • IQ '+x[2]+'+</small></button>').join("");return page("💼 Munka","Válassz munkát vagy építs karriert.",panel("Jelenlegi munka",current)+panel("Elérhető állások",'<div class="grid">'+j+'</div>'),"career")}
+  function education(){return page("🎓 Tanulás","Fejleszd a tudásod és a lehetőségeidet.",'<div class="grid"><button class="action" onclick="study()"><b>📚 Tanulás</b><small>Intelligencia és fegyelem.</small></button><button class="action" onclick="university()"><b>🎓 Egyetem</b><small>Diploma és jobb állások.</small></button></div>',"career")}
+  function business(){return page("🏢 Vállalkozás","Építs saját üzletet.",state.business?'<div class="grid"><div class="action"><b>'+state.business.name+'</b><small>Érték: '+fmt(state.business.value)+'</small></div><button class="action" onclick="sellBusiness()"><b>💼 Vállalkozás eladása</b><small>Értékesítsd a céged.</small></button></div>':'<button class="action" onclick="startBusiness()"><b>🚀 Vállalkozás indítása</b><small>1 000 000 Ft indulótőke.</small></button>',"career")}
+  function bank(){return page("🏦 Bank","Kezeld a készpénzed és banki pénzed.",panel("Egyenleg",'<div class="grid"><div class="action"><b>Készpénz</b><small>'+fmt(state.money)+'</small></div><div class="action"><b>Bank</b><small>'+fmt(state.bank)+'</small></div></div>')+'<div class="grid"><button class="action" onclick="bank(50000)"><b>💰 Betét</b><small>+50 000 Ft</small></button><button class="action" onclick="bank(-50000)"><b>💳 Kivét</b><small>-50 000 Ft bankból</small></button></div>',"finance")}
+  function investments(){return page("📈 Befektetések","Kockázat és lehetséges hozam.",'<button class="action" onclick="invest()"><b>📊 Befektetés</b><small>Fektess be a rendelkezésre álló pénzedből.</small></button>',"finance")}
+  function loans(){return page("💸 Hitelek","Kölcsön és tartozás kezelése.",panel("Jelenlegi tartozás",'<div class="action"><b>'+fmt(state.debt)+'</b><small>Fennálló tartozás</small></div>')+'<button class="action" onclick="loan()"><b>💸 Hitel felvétele</b><small>Új hitel felvétele.</small></button>',"finance")}
+  function gambling(){return page("🎰 Szerencsejáték","Magas kockázatú pénzügyi játék.",'<button class="action" onclick="gamble()"><b>🎰 Játék</b><small>Nyerhetsz vagy veszíthetsz.</small></button>',"finance")}
+  function property(){return page("🏠 Ingatlan","Lakhatás és ingatlanvagyon.",'<button class="action" onclick="buyHouse()"><b>🏠 Lakás vásárlása</b><small>6 000 000 Ft</small></button>',"assets")}
+  function vehicles(){return page("🚗 Járművek","Közlekedés és autók.",'<button class="action" onclick="buyCar()"><b>🚗 Autó vásárlása</b><small>3 000 000 Ft</small></button>',"assets")}
+  function luxury(){return page("💎 Luxus","Értéktárgyak és luxuscikkek.",'<button class="action" onclick="buyLuxury()"><b>💎 Luxusóra vásárlása</b><small>1 200 000 Ft</small></button>',"assets")}
+  function relationsCategory(type){
+    const chars=state.meta.characters||[];
+    let arr=type==="family"?chars.filter(npcIsFamily):type==="friends"?chars.filter(c=>!npcIsFamily(c)&&c.closeness>=35):type==="acquaintances"?chars.filter(c=>!npcIsFamily(c)&&c.closeness<35):[];
+    if(type==="romance")return page("❤️ Romantika","A romantikus kapcsolataid.",panel("Kapcsolatok",state.relationships.map((x,i)=>'<div class="list-item"><div><b>'+mlSafeText(x.name,"Ismeretlen")+'</b><br><small class="muted">'+x.age+' éves • '+x.type+' • '+Math.round(x.closeness)+'%</small></div><button class="ghost" onclick="interact('+i+')">Interakció</button></div>').join("")||'<p class="muted">Még nincs romantikus kapcsolatod.</p>')+'<div class="grid"><button class="action" onclick="dateAction()"><b>❤️ Randi</b><small>Új romantikus kapcsolat.</small></button><button class="action" onclick="proposal()"><b>💎 Eljegyzés</b><small>Magas kapcsolat esetén.</small></button><button class="action" onclick="marryAction()"><b>💍 Házasság</b><small>Megfelelő kapcsolat esetén.</small></button><button class="action" onclick="childAction()"><b>👶 Gyermek</b><small>Gyermekvállalás.</small></button></div>',"relations");
+    const cards=arr.map(c=>'<div class="list-item npc-card"><div class="npc-main"><div class="npc-avatar">'+mlSafeText(c.name,"?").charAt(0).toUpperCase()+'</div><div><b>'+mlSafeText(c.name,"Ismeretlen")+'</b><br><small class="muted">'+c.age+' éves • '+Math.round(c.closeness)+'% • '+(c.status||"saját életút")+'</small></div></div><div class="npc-actions">'+NPC_ACTIONS.map(a=>'<button class="ghost npc-action" onclick="mlNpcInteract(\''+c.id+'\',\''+a[1]+'\')">'+a[0]+'</button>').join("")+'</div></div>').join("")||'<p class="muted">Nincs itt megjeleníthető karakter.</p>';
+    const add=type==="friends"||type==="acquaintances"?'<button class="action" onclick="mlNpcNew(\''+(type==="friends"?"Barát":"Ismerős")+'\')"><b>➕ Új karakter</b><small>Random név, háttér, statok és kinézet.</small></button>':"";
+    return page(cats.relations.find(x=>x[1]===type)[0],cats.relations.find(x=>x[1]===type)[2],cards+add,"relations");
+  }
+  const renderMap={activities:()=>hub("activities","☰ Egyebek","Válaszd ki, mit szeretnél csinálni."),career:()=>hub("career","💼 Karrier","A munkával, tanulással és vállalkozással kapcsolatos dolgok."),finance:()=>hub("finance","💰 Pénzügyek","A pénzügyi döntéseidet külön kategóriákban kezelheted."),assets:()=>hub("assets","🏠 Vagyon","Ingatlan, járművek és luxuscikkek."),relations:()=>hub("relations","❤️ Kapcsolatok","Család, barátok, ismerősök és romantikus kapcsolatok.")};
+  const renderers={daily, hobbies, travel:travelPage, social, pets, crime:crimePage, jobs, education, business, bank, investments, loans, gambling, property, vehicles, luxury, family:()=>relationsCategory("family"),friends:()=>relationsCategory("friends"),acquaintances:()=>relationsCategory("acquaintances"),romance:()=>relationsCategory("romance")};
+  window.mlOpenCategory=function(key){
+    const box=$("tab-"+(cats[key]?key:key==="family"||key==="friends"||key==="acquaintances"||key==="romance"?"relations":key==="jobs"||key==="education"||key==="business"?"career":key==="bank"||key==="investments"||key==="loans"||key==="gambling"?"finance":key==="property"||key==="vehicles"||key==="luxury"?"assets":"activities"));
+    if(!box)return;
+    if(renderers[key])box.innerHTML=renderers[key]();else if(renderMap[key])box.innerHTML=renderMap[key]();
+    if(key==="social")showTab("social");else showTab(box.id.replace("tab-",""));
+  };
+  renderActivities=function(){mlOpenCategory("activities")};
+  renderCareer=function(){mlOpenCategory("career")};
+  renderFinance=function(){mlOpenCategory("finance")};
+  renderAssets=function(){mlOpenCategory("assets")};
+  renderRelations=function(){mlOpenCategory("relations")};
+  document.addEventListener("click",e=>{
+    const b=e.target.closest?.(".category-card");if(b)e.preventDefault();
+  },true);
 })();
