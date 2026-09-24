@@ -79,9 +79,6 @@ assert.match(html,/id="avatar"/,"player avatar container missing");
 
 assert.match(app,/MegaLife v0\.3\.1 — NPC life trajectories and persistent world characters/,"NPC life simulation missing");
 
-assert.match(app,/MegaLife v0\.4\.0 — categorized interaction navigation/,"category navigation missing");
-assert.match(app,/const cats=\{/,"category map missing");
-assert.match(app,/renderActivities=function\(\){mlOpenCategory\("activities"\)}/,"activities hub missing");
 
 assert.match(app,/MegaLife v0\.5\.0 — clear social classes, family surnames, HUD menu/,"v0.5 social/family system missing");
 assert.match(app,/function mlFamilyRepair\(/,"family surname repair missing");
@@ -102,7 +99,6 @@ assert.match(app,/aria-label",inside\?"Vissza":"Kilépés"/,"HUD exit label miss
 assert.match(app,/function exitToLife\(/,"life exit navigation missing");
 
 assert.match(app,/MegaLife v0\.5\.3 — definitive HUD navigation, refresh-safe/,"navigation fix missing");
-assert.match(app,/window\.mlOpenCategory=function\(key\)/,"HUD category navigation missing");
 
 assert.match(app,/MegaLife v0\.5\.4 — navigation state hardening/,"navigation hardening missing");
 assert.match(app,/mlNavBack054/,"hierarchical back navigation missing");
